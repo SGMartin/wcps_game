@@ -9,11 +9,17 @@ from game.game_server import GameServer
 
 class AuthenticationClient:
     def __init__(self, this_server:GameServer):
+
+        ## network (internal)
+        self._stop_event = asyncio.Event()  # Event to signal stop
         self.ip = "127.0.0.1"
         self.port = 5012
         self.reader = None
         self.writer = None
         self.max_retries = 5
+        self._stop_event = asyncio.Event()  # Event to signal stop
+
+        ## related to gameserver... move there?
         self.session_id = -1
         self.authorized = False
         self.is_first_authorized = True
@@ -44,18 +50,18 @@ class AuthenticationClient:
         except Exception as e:
             logging.error(f"Error sending packet: {e}")
             await self.disconnect()
-            await self.reconnect()
+            #await self.reconnect()
 
     async def listen(self):
         if self.reader is None:
             raise ConnectionError("Client is not connected. Call 'connect' first.")
 
-        while True:
+        while not self._stop_event.is_set():  # Check stop event
             try:
                 data = await self.reader.read(1024)
                 if not data:
                     await self.disconnect()
-                    await self.reconnect()  # Attempt to reconnect
+                    #await self.reconnect()
                     continue
                 else:
                     incoming_packet = wcps_core.packets.InPacket(
@@ -74,11 +80,12 @@ class AuthenticationClient:
                 logging.error(f"Error during listening: {e}")
                 await self.disconnect()
 
-    #TODO: Make this call stop the AuthClient task
     async def disconnect(self):
         logging.info("Closing connection to authentication server")
-        self.writer.close()
-        await self.writer.wait_closed()
+        self._stop_event.set()  # Signal to stop the listening loop
+        if self.writer:
+            self.writer.close()
+            await self.writer.wait_closed()
         self.reader = None
         self.writer = None
 
