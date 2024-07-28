@@ -1,34 +1,63 @@
 import asyncio
 import datetime
-import time 
+import logging
 
 from clients import AuthenticationClient
 from game.game_server import GameServer
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+async def status_reporter(game_server):
+    while True:
+        if game_server:
+            logging.info(f"Connected players: {game_server.current_players}")
+            logging.info(f"Active rooms: {game_server.current_rooms}")
+        else:
+            logging.warning("Game server is not initialized.")
+
+        await asyncio.sleep(60)  # Report every 60 seconds
+
+async def task_monitor():
+    while True:
+        for task in asyncio.all_tasks():
+            if task.done():
+                logging.info(f"Task {task.get_name()} has finished.")
+            elif task.cancelled():
+                logging.warning(f"Task {task.get_name()} was cancelled.")
+        
+        await asyncio.sleep(30)  # Monitor tasks every 30 seconds
+
 async def main():
-    print("Starting WCPS Game Server...")
+    logging.info("Starting WCPS Game Server...")
 
     # Get the current date
     now = datetime.datetime.now()
     start_time = now.strftime("%d/%m/%Y")
-    
-    ##TODO: config loading here for GameServer
+    logging.info(f"Server started on {start_time}")
+
+    # Initialize and configure GameServer
     game_server = GameServer()
-    
-    print("Connecting to authentication server")
+
+    logging.info("Connecting to authentication server")
     auth_client = AuthenticationClient(game_server)
-    # Start a task to connect and manage packets from authentication server
+
+    # Start tasks for authentication client and pinging
     asyncio.create_task(auth_client.run())
-    # Start a separate task for sending pings
-    ping_task = asyncio.create_task(auth_client.ping_authentication_server())
+    asyncio.create_task(auth_client.ping_authentication_server())
 
+    # Start tasks for status reporting and task monitoring
+    asyncio.create_task(status_reporter(game_server))
+    asyncio.create_task(task_monitor())
 
-    keep_running = True
-
-
-    while keep_running:
-        print("running")
-        await asyncio.sleep(1)
+    try:
+        while True:
+            logging.info("Server is running. Awaiting connections...")
+            await asyncio.sleep(10)  # Adjust sleep duration as needed
+    except KeyboardInterrupt:
+        logging.info("Shutting down server...")
+    except Exception as e:
+        logging.error(f"Unexpected error occurred: {e}")
 
 if __name__ == "__main__":
     asyncio.run(main())
