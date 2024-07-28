@@ -8,7 +8,7 @@ from wcps_core.constants import ErrorCodes
 
 class AuthConnectionHandler(PacketHandler):
     async def process(self, server) -> None:
-        await server.send(GameServerDetails().build())
+        await server.send(GameServerDetails(self.this_server).build())
 
 class AuthorizeServerHandler(PacketHandler):
     async def process(self, server) -> None:

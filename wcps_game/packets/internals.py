@@ -4,24 +4,26 @@ from wcps_core.constants import InternalKeys, ErrorCodes
 from wcps_core.packets import OutPacket
 from wcps_core.packets import PacketList as corepackets
 
+from game.game_server import GameServer
+
 class GameServerDetails(OutPacket):
-    def __init__(self):
+    def __init__(self, this_server:GameServer):
         super().__init__(
         packet_id=corepackets.GameServerAuthentication,
         xor_key=InternalKeys.XOR_GAME_SEND
         )
 
         self.append(ErrorCodes.SUCCESS)
-        self.append("0") ## Server ID
-        self.append("Test ") ## Server name
-        self.append("127.0.0.1")
-        self.append(5340)
-        self.append(0) ## type
-        self.append(100) ## curr pop
-        self.append(500) ## max pop
+        self.append(this_server.id) ## Server ID
+        self.append(this_server.name) ## Server name
+        self.append(this_server.ip)
+        self.append(this_server.port)
+        self.append(this_server.server_type) ## type
+        self.append(this_server.current_players) ## curr pop
+        self.append(this_server.max_players) ## max pop
 
 class GameServerStatus(OutPacket):
-    def __init__(self):
+    def __init__(self, this_server:GameServer):
         super().__init__(
         packet_id=corepackets.GameServerStatus,
         xor_key=InternalKeys.XOR_GAME_SEND
@@ -29,5 +31,5 @@ class GameServerStatus(OutPacket):
 
         self.append(ErrorCodes.SUCCESS)
         self.append(int(time.time()))
-        self.append(3600) ## current server pop
-        self.append(50) ## current room pop
+        self.append(this_server.current_players) ## current server pop
+        self.append(this_server.current_rooms) ## current room pop

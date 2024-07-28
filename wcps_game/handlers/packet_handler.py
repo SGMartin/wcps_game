@@ -4,12 +4,14 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from clients import AuthenticationClient
+    from game.game_server import GameServer
 
 import wcps_core.packets
 
 class PacketHandler(abc.ABC):
-    def __init__(self):
+    def __init__(self, this_server: "GameServer"):
         self.in_packet = None
+        self.this_server = this_server
 
     async def handle(self, packet_to_handle: wcps_core.packets.InPacket) -> None:
         self.in_packet = packet_to_handle

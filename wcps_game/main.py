@@ -3,6 +3,7 @@ import datetime
 import time 
 
 from clients import AuthenticationClient
+from game.game_server import GameServer
 
 async def main():
     print("Starting WCPS Game Server...")
@@ -11,8 +12,11 @@ async def main():
     now = datetime.datetime.now()
     start_time = now.strftime("%d/%m/%Y")
     
+    ##TODO: config loading here for GameServer
+    game_server = GameServer()
+    
     print("Connecting to authentication server")
-    auth_client = AuthenticationClient("127.0.0.1", 5012)
+    auth_client = AuthenticationClient(game_server)
     asyncio.create_task(auth_client.run())
 
 
@@ -20,7 +24,7 @@ async def main():
 
 
     while keep_running:
-        print("Server running")
+        print("running")
         await asyncio.sleep(1)
 
 if __name__ == "__main__":

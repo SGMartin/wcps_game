@@ -5,22 +5,25 @@ import wcps_core.constants
 import wcps_core.packets
 
 from handlers.handler_list import get_handler_for_packet
+from game.game_server import GameServer
 
 class AuthenticationClient:
-    def __init__(self, ip: str, port: int):
-        self.ip = ip
-        self.port = port
+    def __init__(self, this_server:GameServer):
+        self.ip = "127.0.0.1"
+        self.port = 5012
         self.reader = None
         self.writer = None
         self.max_retries = 5
         self.session_id = -1
         self.authorized = False
         self.is_first_authorized = True
+        self.game_server = this_server
 
     async def connect(self):
         attempt = 0
         while attempt < self.max_retries:
             try:
+                #TODO: make this configurable and separate from GameServer stuff
                 self.reader, self.writer = await asyncio.open_connection(self.ip, self.port)
                 logging.info(f'Connected to auth server at {self.ip}:{self.port}')
                 return
@@ -62,7 +65,7 @@ class AuthenticationClient:
                     )
                     if incoming_packet.decoded_buffer:
                         print(f"IN:: {incoming_packet.decoded_buffer}")
-                        handler = get_handler_for_packet(incoming_packet.packet_id)
+                        handler = get_handler_for_packet(incoming_packet.packet_id, self.game_server)
                         if handler is not None:
                             asyncio.create_task(handler.handle(incoming_packet))
                         else:
