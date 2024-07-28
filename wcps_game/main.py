@@ -2,27 +2,21 @@ import asyncio
 import datetime
 import time 
 
-from networking import start_listeners
-from networking.auth_server import AuthenticationClient
+from clients import AuthenticationClient
 
 async def main():
+    print("Starting WCPS Game Server...")
+
     # Get the current date
     now = datetime.datetime.now()
     start_time = now.strftime("%d/%m/%Y")
+    
+    print("Connecting to authentication server")
+    auth_client = AuthenticationClient("127.0.0.1", 5012)
+    asyncio.create_task(auth_client.run())
+
+
     keep_running = True
-
-    print(f"Game Server started at {now}")
-
-    print("Initializing database pool...")
-    print("TODO!")
-
-
-    print("Attempt to connect to auth")
-    client = AuthenticationClient('127.0.0.1', 5012)
-    await client.run("")
-    # print("Launching background listeners")
-    # # Start the asyncio listeners
-    # asyncio.create_task(start_listeners())
 
 
     while keep_running:
