@@ -5,6 +5,17 @@ import logging
 from clients import AuthenticationClient
 from game.game_server import GameServer
 
+# ASCII LOGO
+WCPS_IMAGE = r"""
+
+____    __    ____  ______ .______     _______.   
+\   \  /  \  /   / /      ||   _  \   /       |   
+ \   \/    \/   / |  ,----'|  |_)  | |   (----`   
+  \            /  |  |     |   ___/   \   \       
+   \    /\    /   |  `----.|  |   .----)   |      
+    \__/  \__/     \______|| _|   |_______/       
+                            by SGMartin      
+"""
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -29,6 +40,7 @@ async def task_monitor():
         await asyncio.sleep(30)  # Monitor tasks every 30 seconds
 
 async def main():
+    print(WCPS_IMAGE)
     logging.info("Starting WCPS Game Server...")
 
     # Get the current date
