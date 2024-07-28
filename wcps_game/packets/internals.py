@@ -31,5 +31,6 @@ class GameServerStatus(OutPacket):
 
         self.append(ErrorCodes.SUCCESS)
         self.append(int(time.time()))
+        self.append(this_server.id) ## current server id
         self.append(this_server.current_players) ## current server pop
         self.append(this_server.current_rooms) ## current room pop
