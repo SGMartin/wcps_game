@@ -13,6 +13,9 @@ class AuthenticationClient:
         self.reader = None
         self.writer = None
         self.max_retries = 5
+        self.session_id = -1
+        self.authorized = False
+        self.is_first_authorized = True
 
     async def connect(self):
         attempt = 0
@@ -68,14 +71,13 @@ class AuthenticationClient:
                 logging.error(f"Error during listening: {e}")
                 await self.disconnect()
 
-
+    #TODO: Make this call stop the AuthClient task
     async def disconnect(self):
-        if self.writer:
-            logging.info('Closing the connection')
-            self.writer.close()
-            await self.writer.wait_closed()
-            self.reader = None
-            self.writer = None
+        logging.info("Closing connection to authentication server")
+        self.writer.close()
+        await self.writer.wait_closed()
+        self.reader = None
+        self.writer = None
 
     async def reconnect(self):
         attempt = 0
@@ -103,3 +105,9 @@ class AuthenticationClient:
         # Start listening in the background
         listening_task = asyncio.create_task(self.start_listening())
         await listening_task
+    
+    def authorize(self, session_id:int):
+        self.session_id = session_id
+        self.authorized = True
+        self.is_first_authorized = False
+

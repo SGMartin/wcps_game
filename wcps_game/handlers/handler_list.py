@@ -16,5 +16,6 @@ def get_handler_for_packet(packet_id: int) -> PacketHandler:
 
 handlers = {
     ## Internal packets ##
-   wcps_core.packets.PacketList.ClientConnection: handlers.internals.AuthConnectionHandler
+   wcps_core.packets.PacketList.ClientConnection: handlers.internals.AuthConnectionHandler,
+   wcps_core.packets.PacketList.GameServerAuthentication: handlers.internals.AuthorizeServerHandler
 }
