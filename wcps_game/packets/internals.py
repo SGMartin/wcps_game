@@ -1,13 +1,13 @@
 from wcps_core.constants import InternalKeys
 from wcps_core.packets import OutPacket
-
+from wcps_core.packets import PacketList as corepackets
 class InternalPacketsIds:
     SERVERKEEPALIVE = 0x999
 
 class GameServerDetails(OutPacket):
     def __init__(self):
         super().__init__(
-        packet_id=0x1000,
+        packet_id=corepackets.GameServerAuthentication,
         xor_key=InternalKeys.XOR_GAME_SEND
         )
 

@@ -4,7 +4,7 @@ import logging
 import wcps_core.constants
 import wcps_core.packets
 
-from handlers.packet_handler import get_handler_for_packet
+from handlers.handler_list import get_handler_for_packet
 
 class AuthenticationClient:
     def __init__(self, ip: str, port: int):
@@ -60,14 +60,14 @@ class AuthenticationClient:
                     if incoming_packet.decoded_buffer:
                         print(f"IN:: {incoming_packet.decoded_buffer}")
                         handler = get_handler_for_packet(incoming_packet.packet_id)
-                        if handler:
+                        if handler is not None:
                             asyncio.create_task(handler.handle(incoming_packet))
                         else:
                             print(f"Unknown handler for packet {incoming_packet.packet_id}")
             except Exception as e:
                 logging.error(f"Error during listening: {e}")
                 await self.disconnect()
-                await self.reconnect()
+
 
     async def disconnect(self):
         if self.writer:
