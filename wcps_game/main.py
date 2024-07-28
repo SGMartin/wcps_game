@@ -17,7 +17,10 @@ async def main():
     
     print("Connecting to authentication server")
     auth_client = AuthenticationClient(game_server)
+    # Start a task to connect and manage packets from authentication server
     asyncio.create_task(auth_client.run())
+    # Start a separate task for sending pings
+    ping_task = asyncio.create_task(auth_client.ping_authentication_server())
 
 
     keep_running = True

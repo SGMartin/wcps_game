@@ -4,8 +4,9 @@ import logging
 import wcps_core.constants
 import wcps_core.packets
 
-from handlers.handler_list import get_handler_for_packet
 from game.game_server import GameServer
+from handlers.handler_list import get_handler_for_packet
+from packets.internals import GameServerStatus
 
 class AuthenticationClient:
     def __init__(self, this_server:GameServer):
@@ -120,4 +121,11 @@ class AuthenticationClient:
         self.session_id = session_id
         self.authorized = True
         self.is_first_authorized = False
+    
+    async def ping_authentication_server(self):
+        while True:
+            if self.authorized:
+                ping_packet = GameServerStatus(self.game_server).build()
+                await self.send(ping_packet)
+            await asyncio.sleep(30)
 
