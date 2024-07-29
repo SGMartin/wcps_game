@@ -5,18 +5,21 @@ from wcps_core.constants import ErrorCodes as er
 from wcps_core.packets import OutPacket
 from game.game_server import GameServer, User, ClientXorKeys
 
+class PacketList():
+    ServerTime = 0x6100
+
 class ServerTime(OutPacket):
     class ErrorCodes(Enum):
         FormatCPrank = 90010           #Format C Drive?
-        DiffrentClientVersion = 90020  #Client version is different. Please download the patch
+        DifferentClientVersion = 90020  #Client version is different. Please download the patch
         ReInstallWindowsPrank = 90030  #Reinstalling Windows.?
 
-    def __init__(self, this_server:GameServer, error_code:ErrorCodes, u:User=None):
+    def __init__(self, this_server:GameServer, error_code:ErrorCodes):
         super().__init__(
         packet_id=corepackets.GameServerAuthentication,
         xor_key=ClientXorKeys.SEND
         )
-        if error_code != er.SUCCESS or not u:
+        if error_code != er.SUCCESS:
             self.append(error_code.value)
         else:
             ## get server time
