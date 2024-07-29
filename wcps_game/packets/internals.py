@@ -21,7 +21,7 @@ class GameServerDetails(OutPacket):
         self.append(this_server.ip)
         self.append(this_server.port)
         self.append(this_server.server_type)  # type
-        self.append(this_server.current_players)  # curr pop
+        self.append(this_server.get_player_count())  # curr pop
         self.append(this_server.max_players)  # max pop
 
 class GameServerStatus(OutPacket):
@@ -34,7 +34,7 @@ class GameServerStatus(OutPacket):
         self.append(ErrorCodes.SUCCESS)
         self.append(int(time.time()))
         self.append(this_server.id)  # current server id
-        self.append(this_server.current_players)  # current server pop
+        self.append(this_server.get_player_count())  # current server pop
         self.append(this_server.current_rooms)  # current room pop
 
 class InternalPlayerAuthorization(OutPacket):
