@@ -14,7 +14,7 @@ class RequestServerTimeHandler(PacketHandler):
         ## this client ver is reported as 3
         ## TODO: can this be used for anything?
 
-        if self._client_version != 3:
+        if not self._client_version.isdigit() or not int(self._client_version) == 3:
             await u.send(ServerTime(ServerTime.ErrorCodes.DifferentClientVersion).build())
             await u.disconnect()
             return
@@ -24,6 +24,7 @@ class RequestServerTimeHandler(PacketHandler):
             ##TODO: auth normal procedure here
             return
         
-        u.send(ServerTime(ServerTime.ErrorCodes.FormatCPrank).build())
+        ## 24576 0
+        await u.send(ServerTime(ErrorCodes.SUCCESS).build())
 
             

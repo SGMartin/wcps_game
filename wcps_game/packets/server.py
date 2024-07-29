@@ -6,7 +6,10 @@ from wcps_core.packets import OutPacket
 from game.game_server import GameServer, User, ClientXorKeys
 
 class PacketList():
+    LeaveServer = 0x6000
     ServerTime = 0x6100
+    Authorization = 0x6200
+    Ping = 0x6400
 
 class ServerTime(OutPacket):
     class ErrorCodes(Enum):
