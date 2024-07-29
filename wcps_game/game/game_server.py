@@ -1,14 +1,20 @@
 import asyncio
 import logging
 
+from typing import TYPE_CHECKING
+
 from wcps_core.constants import Ports, ServerTypes
 from wcps_core.packets import InPacket, Connection
+
+if TYPE_CHECKING:
+    from handlers.handler_list import get_handler_for_packet
+    from packets.internals import GameServerDetails
 
 class ClientXorKeys:
     SEND = 0x96
     RECEIVE = 0xC3
 
-class GameServer():
+class GameServer:
     def __init__(self):
         self.name = "WCPS"
         self.ip = "127.0.0.1"
@@ -19,17 +25,15 @@ class GameServer():
         self.id = 0
         self.server_type = ServerTypes.ENTIRE
 
-
-class User():
+class User:
     def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
-
         ## network related tasks
         self.reader = reader
         self.writer = writer
 
         ## Send a connection packet to the client
         asyncio.create_task(self.send(Connection(xor_key=ClientXorKeys.SEND).build()))
-        
+
         ## Start listening for client packets
         asyncio.create_task(self.listen())
 
@@ -41,14 +45,14 @@ class User():
                 break
 
             try:
-                incoming_packet =InPacket(buffer=data, receptor=self, xor_key=ClientXorKeys.RECEIVE)
+                incoming_packet = InPacket(buffer=data, receptor=self, xor_key=ClientXorKeys.RECEIVE)
                 if incoming_packet.decoded_buffer:
                     logging.info(f"IN:: {incoming_packet.decoded_buffer}")
-                    # handler = get_handler_for_packet(incoming_packet.packet_id)
-                    # if handler:
-                    #     asyncio.create_task(handler.handle(incoming_packet))
-                    # else:
-                    #     logging.error(f"Unknown handler for packet {incoming_packet.packet_id}")
+                    handler = get_handler_for_packet(incoming_packet.packet_id)
+                    if handler:
+                        asyncio.create_task(handler.handle(incoming_packet))
+                    else:
+                        logging.error(f"Unknown handler for packet {incoming_packet.packet_id}")
                 else:
                     logging.error(f"Cannot decrypt packet {incoming_packet}")
                     await self.disconnect()

@@ -24,6 +24,6 @@ class RequestServerTimeHandler(PacketHandler):
             ##TODO: auth normal procedure here
             return
         
-        u.send(ServerTime(ErrorCodes.SUCCESS).build())
-        
+        u.send(ServerTime(ServerTime.ErrorCodes.FormatCPrank).build())
+
             
