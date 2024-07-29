@@ -48,10 +48,9 @@ class GameServer:
         async with self.lock:
             return session_id in self.online_users
 
-    async def get_player_count(self) -> int:
-        async with self.lock:
-            return len(self.online_users)
-            
+    def get_player_count(self) -> int:
+        return len(self.online_users)
+
     async def get_player(self, session_id) -> 'User':
         async with self.lock:
             user = self.online_users.get(session_id)

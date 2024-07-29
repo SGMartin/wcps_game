@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 async def status_reporter(game_server):
     while True:
         if game_server:
-            logging.info(f"Connected players: {game_server.current_players}")
+            logging.info(f"Connected players: {game_server.get_player_count()}")
             logging.info(f"Active rooms: {game_server.current_rooms}")
         else:
             logging.warning("Game server is not initialized.")
