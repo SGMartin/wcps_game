@@ -1,3 +1,4 @@
+import locale
 from datetime import datetime
 from enum import Enum
 
@@ -28,13 +29,13 @@ class ServerTime(OutPacket):
             ## get server time
             self._now = datetime.utcnow()
             ## 0 offset dates
-            self._month = now.month - 1
-            self._year = now.year - 1900
+            self._month = self._now.month - 1
+            self._year = self._now.year - 1900
             ## get week
-            self._locale.setlocale(locale.LC_TIME, "")
-            self._week = dt.isocalendar()[1]
+            locale.setlocale(locale.LC_TIME, "")
+            self._week = self._now.isocalendar()[1]
             ## build final date block
-            self._date_string = now.strftime("%S/%M/%H/%d") + f"/{self._month}/{self._year}/{self._week}/{self._now.timetuple().tm_yday}/0"
+            self._date_string = self._now.strftime("%S/%M/%H/%d") + f"/{self._month}/{self._year}/{self._week}/{self._now.timetuple().tm_yday}/0"
 
             self.append(er.SUCCESS)
             self.append(self._date_string)
