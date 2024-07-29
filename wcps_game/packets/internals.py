@@ -6,7 +6,7 @@ from wcps_core.packets import OutPacket
 from wcps_core.packets import PacketList as corepackets
 
 if TYPE_CHECKING:
-    from game.game_server import GameServer
+    from game.game_server import GameServer, User
 
 class GameServerDetails(OutPacket):
     def __init__(self, this_server: 'GameServer'):
@@ -36,3 +36,18 @@ class GameServerStatus(OutPacket):
         self.append(this_server.id)  # current server id
         self.append(this_server.current_players)  # current server pop
         self.append(this_server.current_rooms)  # current room pop
+
+class InternalPlayerAuthorization(OutPacket):
+    def __init__(self, error_code:ErrorCodes, u:"User"):
+        super().__init__(
+            packet_id=corepackets.ClientAuthentication,
+            xor_key=InternalKeys.XOR_GAME_SEND
+        )
+
+        self.append(error_code)
+        if error_code == ErrorCodes.UPDATE or error_code.END_CONNECTION:
+            self.append(u.session_id)
+        else:
+            self.append(u.session_id)
+            self.Append(u.username)
+            self.append(u.rights)
