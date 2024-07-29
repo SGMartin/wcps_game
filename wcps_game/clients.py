@@ -4,7 +4,7 @@ import logging
 import wcps_core.constants
 import wcps_core.packets
 
-from game.game_server import GameServer
+from game.game_server import GameServer, User
 from handlers.handler_list import get_handler_for_packet
 from packets.internals import GameServerStatus
 
@@ -129,3 +129,21 @@ class AuthenticationClient:
                 await self.send(ping_packet)
             await asyncio.sleep(30)
 
+
+## Start TCP and UDP listeners here
+async def start_listeners(this_server: GameServer):
+    try:
+        tcp_server = await asyncio.start_server(User, this_server.ip, this_server.port)
+        logging.info("TCP listener started.")
+    except OSError:
+        logging.error(f"Failed to bind to port {wcps_core.constants.Ports.AUTH_CLIENT}")
+        return
+
+    # try:
+    #     server_listener = await asyncio.start_server(GameServer, "127.0.0.1", wcps_core.constants.Ports.INTERNAL)
+    #     logging.info("Server listener started.")
+    # except OSError:
+    #     logging.error(f"Failed to bind to port {wcps_core.constants.Ports.INTERNAL}")
+    #     return
+
+    await asyncio.gather(tcp_server.serve_forever())

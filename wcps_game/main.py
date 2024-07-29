@@ -2,7 +2,7 @@ import asyncio
 import datetime
 import logging
 
-from clients import AuthenticationClient
+from clients import AuthenticationClient, start_listeners
 from game.game_server import GameServer
 
 # ASCII LOGO
@@ -62,6 +62,9 @@ async def main():
     asyncio.create_task(status_reporter(game_server))
     asyncio.create_task(task_monitor())
 
+    # Start TCP listener
+    asyncio.create_task(start_listeners(game_server))
+    
     try:
         while True:
             logging.info("Server is running. Awaiting connections...")
