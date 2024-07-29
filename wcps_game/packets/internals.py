@@ -45,9 +45,9 @@ class InternalPlayerAuthorization(OutPacket):
         )
 
         self.append(error_code)
-        if error_code == ErrorCodes.UPDATE or error_code.END_CONNECTION:
+        if error_code == ErrorCodes.UPDATE or error_code == ErrorCodes.END_CONNECTION:
             self.append(u.session_id)
         else:
             self.append(u.session_id)
-            self.Append(u.username)
+            self.append(u.username)
             self.append(u.rights)
