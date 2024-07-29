@@ -63,7 +63,7 @@ async def main():
     asyncio.create_task(task_monitor())
 
     # Start TCP listener
-    asyncio.create_task(start_listeners(game_server))
+    asyncio.create_task(start_listeners(game_server, auth_client))
     
     try:
         while True:

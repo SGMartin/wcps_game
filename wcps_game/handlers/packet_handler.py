@@ -9,9 +9,10 @@ if TYPE_CHECKING:
 import wcps_core.packets
 
 class PacketHandler(abc.ABC):
-    def __init__(self, this_server: "GameServer"):
+    def __init__(self, this_server: "GameServer", this_auth: "AuthenticationClient"):
         self.in_packet = None
         self.this_server = this_server
+        self.this_auth = this_auth
 
     async def handle(self, packet_to_handle: wcps_core.packets.InPacket) -> None:
         self.in_packet = packet_to_handle

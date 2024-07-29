@@ -79,7 +79,7 @@ class AuthenticationClient:
                     )
                     if incoming_packet.decoded_buffer:
                         print(f"IN:: {incoming_packet.decoded_buffer}")
-                        handler = get_handler_for_packet(incoming_packet.packet_id, self.game_server)
+                        handler = get_handler_for_packet(incoming_packet.packet_id, self.game_server, self)
                         if handler is not None:
                             asyncio.create_task(handler.handle(incoming_packet))
                         else:
@@ -139,10 +139,10 @@ class AuthenticationClient:
 
 
 ## Start TCP and UDP listeners here
-async def start_listeners(this_server: 'GameServer'):
+async def start_listeners(this_server: 'GameServer', this_auth: AuthenticationClient):
     try:
         tcp_server = await asyncio.start_server(
-            lambda reader,writer: User(reader, writer, this_server), this_server.ip, this_server.port)
+            lambda reader,writer: User(reader, writer, this_server, this_auth), this_server.ip, this_server.port)
         logging.info("TCP listener started.")
     except OSError:
         logging.error(f"Failed to bind to port {wcps_core.constants.Ports.AUTH_CLIENT}")

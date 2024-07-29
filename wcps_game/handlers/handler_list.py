@@ -8,10 +8,11 @@ from packets.server import PacketList as sp
 
 if TYPE_CHECKING:
     from game.game_server import GameServer
+    from clients import AuthenticationClient
     import handlers.internals
     import handlers.server
 
-def get_handler_for_packet(packet_id: int, game_server: 'GameServer') -> 'PacketHandler':
+def get_handler_for_packet(packet_id: int, game_server: 'GameServer', auth_client: "AuthenticationClient") -> 'PacketHandler':
 
     ## Ugly anticircular imports
     import handlers.internals
@@ -31,7 +32,7 @@ def get_handler_for_packet(packet_id: int, game_server: 'GameServer') -> 'Packet
 
     if packet_id in handlers:
         ## return a new initialized instance of the handler
-        return handlers[packet_id](game_server)
+        return handlers[packet_id](game_server, auth_client)
     else:
         logging.info(f"Unknown packet ID {packet_id}")
         return None

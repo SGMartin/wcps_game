@@ -41,6 +41,7 @@ class GameServer:
         async with self.lock:
             if session_id in self.online_users:
                 del self.online_users[session_id]
+                logging.info(f"Removed player {session_id}")
             else:
                 raise Exception(f"User with session ID {session_id} does not exist")
 
@@ -58,17 +59,18 @@ class GameServer:
                 raise Exception(f"User with session ID {session_id} not found")
             return user
 class User:
-    def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, this_server:GameServer):
+    def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, this_server:GameServer, this_auth):
         ## network related tasks
         self.reader = reader
         self.writer = writer
+        self.this_auth = this_auth
 
         ## game related tasks
         self.this_server = this_server
         self.authorized = False
         self.session_id = None
         self.rights = -1
-
+        self.username = None
         
 
         ## Send a connection packet to the client
@@ -89,7 +91,7 @@ class User:
                 incoming_packet = InPacket(buffer=data, receptor=self, xor_key=ClientXorKeys.RECEIVE)
                 if incoming_packet.decoded_buffer:
                     logging.info(f"IN:: {incoming_packet.decoded_buffer}")
-                    handler = get_handler_for_packet(incoming_packet.packet_id, self.this_server)
+                    handler = get_handler_for_packet(incoming_packet.packet_id, self.this_server, self.this_auth)
                     if handler:
                         asyncio.create_task(handler.handle(incoming_packet))
                     else:
@@ -118,8 +120,12 @@ class User:
         self.reader = None
         self.writer = None
 
+        self.authorized = False
+        await self.this_server.remove_player(self.session_id)
 
-    async def authorize(self, session_id:int, rights: int):
+
+    async def authorize(self, username:str, session_id:int, rights: int):
+        self.username = username
         self.session_id = session_id
         self.rights = rights
         self.authorized = True

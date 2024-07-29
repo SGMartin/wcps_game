@@ -51,21 +51,44 @@ class ClientAuthentication(PacketHandler):
         self._displayname = self.get_block(3)
         ##TODO: Make sure these do not crash the server
         self._reported_client_session = int(self.get_block(4))
-        self._reported_access_level = int(self.get_block(5))
+        self._reported_access_level = int(self.get_block(7))
 
         if self._reported_client_session not in range(-32767, 32768):
             await u.send(PlayerAuthorization(PlayerAuthorization.ErrorCodes.InvalidPacket).build())
             await u.disconnect()
             return
         
-        if all(is_valid_length(name) for name in [self._username, self._displayname]):
-            await u.send(
-                InternalPlayerAuthorization(
-                    ErrorCodes.SUCCESS,
-                    u
-                ).build()
-            )
+        ## Banned player?
+        if self._reported_access_level <= 0:
+            await u.send(PlayerAuthorization(PlayerAuthorization.ErrorCodes.NotAccessible).build())
+            await u.disconnect()
             return
+
+        ## Session exists already
+        if await self.this_server.is_online(self._reported_client_session):
+            await u.send(PlayerAuthorization(PlayerAuthorization.ErrorCodes.IdInUse).build())
+            await u.disconnect()
+            return
+
+        if all(is_valid_length(name) for name in [self._username, self._displayname]):
+            await self.this_auth.send(InternalPlayerAuthorization(ErrorCodes.SUCCESS, u).build())
+            #await auth_client.send(InternalPlayerAuthorization(ErrorCodes.SUCCESS, u).build())
+            ## 
+            # ## Add to the server session dict
+            # await u.authorize(
+            #     username=self._username,
+            #     session_id=self._reported_client_session,
+            #     rights=self._reported_access_level
+            #     )
+
+            # await self.this_server.add_player(u)
+            # await u.send(
+            #     InternalPlayerAuthorization(
+            #         ErrorCodes.SUCCESS,
+            #         u
+            #     ).build()
+            # )
+            # return
         else:
             await u.send(PlayerAuthorization(PlayerAuthorization.ErrorCodes.NicknameToShort).build())
             await u.disconnect()
