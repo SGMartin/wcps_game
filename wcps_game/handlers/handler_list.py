@@ -24,7 +24,8 @@ def get_handler_for_packet(packet_id: int, game_server: 'GameServer') -> 'Packet
 
     ## Lobby / main packets ##
     sp.ServerTime: handlers.server.RequestServerTimeHandler,
-    sp.LeaveServer: handlers.server.LeaveServer
+    sp.LeaveServer: handlers.server.LeaveServer,
+    sp.Authorization: handlers.server.ClientAuthentication
 }
 
 
