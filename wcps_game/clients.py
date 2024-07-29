@@ -9,12 +9,16 @@ import wcps_core.packets
 from packets.internals import GameServerStatus
 
 if TYPE_CHECKING:
-    from game.game_server import GameServer, User
+    from game.game_server import GameServer
     from handlers.handler_list import get_handler_for_packet
+
+from game.game_server import User
+
+# Import get_handler_for_packet for runtime use
+from handlers.handler_list import get_handler_for_packet
 
 class AuthenticationClient:
     def __init__(self, this_server: 'GameServer'):
-
         ## network (internal)
         self._stop_event = asyncio.Event()  # Event to signal stop
         self.ip = "127.0.0.1"
@@ -34,7 +38,6 @@ class AuthenticationClient:
         attempt = 0
         while attempt < self.max_retries:
             try:
-                # TODO: make this configurable and separate from GameServer stuff
                 self.reader, self.writer = await asyncio.open_connection(self.ip, self.port)
                 logging.info(f'Connected to auth server at {self.ip}:{self.port}')
                 return
@@ -55,7 +58,7 @@ class AuthenticationClient:
         except Exception as e:
             logging.error(f"Error sending packet: {e}")
             await self.disconnect()
-            # await self.reconnect()
+            #await self.reconnect()
 
     async def listen(self):
         if self.reader is None:
@@ -66,11 +69,11 @@ class AuthenticationClient:
                 data = await self.reader.read(1024)
                 if not data:
                     await self.disconnect()
-                    # await self.reconnect()
+                    #await self.reconnect()
                     continue
                 else:
                     incoming_packet = wcps_core.packets.InPacket(
-                        buffer=data,
+                        buffer=data, 
                         receptor=self,
                         xor_key=wcps_core.constants.InternalKeys.XOR_AUTH_SEND
                     )
@@ -120,12 +123,12 @@ class AuthenticationClient:
         # Start listening in the background
         listening_task = asyncio.create_task(self.start_listening())
         await listening_task
-
+    
     def authorize(self, session_id: int):
         self.session_id = session_id
         self.authorized = True
         self.is_first_authorized = False
-
+    
     async def ping_authentication_server(self):
         while True:
             if self.authorized:
@@ -137,7 +140,8 @@ class AuthenticationClient:
 ## Start TCP and UDP listeners here
 async def start_listeners(this_server: 'GameServer'):
     try:
-        tcp_server = await asyncio.start_server(User, this_server.ip, this_server.port)
+        tcp_server = await asyncio.start_server(
+            lambda reader,writer: User(reader, writer, this_server), this_server.ip, this_server.port)
         logging.info("TCP listener started.")
     except OSError:
         logging.error(f"Failed to bind to port {wcps_core.constants.Ports.AUTH_CLIENT}")

@@ -18,9 +18,10 @@ class PacketHandler(abc.ABC):
         receptor = packet_to_handle.receptor
 
         # Local import to avoid circular dependency
-        from clients import AuthenticationClient  
+        from clients import AuthenticationClient
+        from game.game_server import User
         
-        if isinstance(receptor, AuthenticationClient):
+        if isinstance(receptor, AuthenticationClient) or isinstance(receptor, User):
             await self.process(receptor)
         else:
             logging.error("No receptor for this packet!")

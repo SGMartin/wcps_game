@@ -7,7 +7,6 @@ from wcps_core.constants import Ports, ServerTypes
 from wcps_core.packets import InPacket, Connection
 
 if TYPE_CHECKING:
-    from handlers.handler_list import get_handler_for_packet
     from packets.internals import GameServerDetails
 
 class ClientXorKeys:
@@ -26,10 +25,13 @@ class GameServer:
         self.server_type = ServerTypes.ENTIRE
 
 class User:
-    def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+    def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, this_server:GameServer):
         ## network related tasks
         self.reader = reader
         self.writer = writer
+
+        ## game related tasks
+        self.this_server = this_server
 
         ## Send a connection packet to the client
         asyncio.create_task(self.send(Connection(xor_key=ClientXorKeys.SEND).build()))
@@ -38,6 +40,7 @@ class User:
         asyncio.create_task(self.listen())
 
     async def listen(self):
+        from handlers.handler_list import get_handler_for_packet
         while True:
             data = await self.reader.read(1024)
             if not data:
@@ -48,7 +51,7 @@ class User:
                 incoming_packet = InPacket(buffer=data, receptor=self, xor_key=ClientXorKeys.RECEIVE)
                 if incoming_packet.decoded_buffer:
                     logging.info(f"IN:: {incoming_packet.decoded_buffer}")
-                    handler = get_handler_for_packet(incoming_packet.packet_id)
+                    handler = get_handler_for_packet(incoming_packet.packet_id, self.this_server)
                     if handler:
                         asyncio.create_task(handler.handle(incoming_packet))
                     else:

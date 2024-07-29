@@ -14,9 +14,9 @@ class ServerTime(OutPacket):
         DifferentClientVersion = 90020  #Client version is different. Please download the patch
         ReInstallWindowsPrank = 90030  #Reinstalling Windows.?
 
-    def __init__(self, this_server:GameServer, error_code:ErrorCodes):
+    def __init__(self, error_code:ErrorCodes):
         super().__init__(
-        packet_id=corepackets.GameServerAuthentication,
+        packet_id=PacketList.ServerTime,
         xor_key=ClientXorKeys.SEND
         )
         if error_code != er.SUCCESS:
