@@ -120,8 +120,9 @@ class User:
         self.reader = None
         self.writer = None
 
-        self.authorized = False
-        await self.this_server.remove_player(self.session_id)
+        if self.authorized:
+            self.authorized = False
+            await self.this_server.remove_player(self.session_id)
 
 
     async def authorize(self, username:str, session_id:int, rights: int):

@@ -71,7 +71,13 @@ class ClientAuthentication(PacketHandler):
             return
 
         if all(is_valid_length(name) for name in [self._username, self._displayname]):
-            await self.this_auth.send(InternalPlayerAuthorization(ErrorCodes.SUCCESS, u).build())
+            await self.this_auth.send(InternalPlayerAuthorization(
+                error_code=ErrorCodes.SUCCESS, 
+                session_id=self._reported_client_session,
+                username=self._username,
+                rights=self._reported_access_level
+                ).build())
+                
             #await auth_client.send(InternalPlayerAuthorization(ErrorCodes.SUCCESS, u).build())
             ## 
             # ## Add to the server session dict
