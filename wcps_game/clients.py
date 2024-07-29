@@ -124,6 +124,7 @@ class AuthenticationClient:
         listening_task = asyncio.create_task(self.start_listening())
         await listening_task
     
+    ##TODO: Improve this right here
     def authorize(self, session_id: int):
         self.session_id = session_id
         self.authorized = True
