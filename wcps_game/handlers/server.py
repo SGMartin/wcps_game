@@ -1,7 +1,7 @@
 import logging
 
 from handlers.packet_handler import PacketHandler
-from packets.server import ServerTime
+from packets.server import ServerTime, LeaveServer
 
 from wcps_core.constants import ErrorCodes
 
@@ -27,4 +27,12 @@ class RequestServerTimeHandler(PacketHandler):
         ## 24576 0
         await u.send(ServerTime(ErrorCodes.SUCCESS).build())
 
-            
+
+class LeaveServerHandler(PacketHandler):
+    async def process(self, u) -> None:
+
+        if u.authorized:
+            ##TODO: Graceful disconnect tasks here? Maybe they are
+            ## beter on the disconnect() call of the socket/servers
+            await u.send(LeaveServer().build())
+            log.info("Player left the server")

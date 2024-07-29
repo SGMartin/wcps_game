@@ -41,5 +41,11 @@ class ServerTime(OutPacket):
             self.append(self._date_string)
 
 
-
+class LeaveServer(OutPacket):
+    def __init(self):
+        super().__init__(
+            packet_id=PacketList.LeaveServer,
+            xor_key=ClientXorKeys.SEND
+        )
+        self.append(er.SUCCESS)
 

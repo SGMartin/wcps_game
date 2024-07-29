@@ -23,7 +23,8 @@ def get_handler_for_packet(packet_id: int, game_server: 'GameServer') -> 'Packet
    wcps_core.packets.PacketList.GameServerAuthentication: handlers.internals.AuthorizeServerHandler,
 
     ## Lobby / main packets ##
-    sp.ServerTime: handlers.server.RequestServerTimeHandler
+    sp.ServerTime: handlers.server.RequestServerTimeHandler,
+    sp.LeaveServer: handlers.server.LeaveServer
 }
 
 
