@@ -15,14 +15,18 @@ class ClientXorKeys:
 
 class GameServer:
     def __init__(self):
+
+        ## Network data
         self.name = "WCPS"
         self.ip = "127.0.0.1"
         self.port = Ports.GAME_CLIENT
+        ## Game properties
         self.current_players = 0
         self.max_players = 0
         self.current_rooms = 0
         self.id = 0
         self.server_type = ServerTypes.ENTIRE
+        self.premium_only = True
 
 class User:
     def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, this_server:GameServer):
