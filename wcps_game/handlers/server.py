@@ -1,7 +1,8 @@
 import logging
 
 from handlers.packet_handler import PacketHandler
-from packets.server import ServerTime, LeaveServer
+from packets.internals import InternalPlayerAuthorization
+from packets.server import ServerTime, LeaveServer, PlayerAuthorization
 
 from wcps_core.constants import ErrorCodes
 
@@ -36,3 +37,39 @@ class LeaveServerHandler(PacketHandler):
             ## beter on the disconnect() call of the socket/servers
             await u.send(LeaveServer().build())
             log.info("Player left the server")
+
+
+## Instead of authorizing and moving on to the equipment packet,
+## we will instead send an internal authentication packet to the auth
+## and in that handler we will send the equipment packet if everything is ok
+class ClientAuthentication(PacketHandler):
+    async def process(self, u) -> None:
+        #14167454 25088 1 -1 darkraptor DarkRaptor 0 0 910 1 -1 -1 -1 -1 0 1 1 dnjfhr^ 
+
+        self._internal_id = self.get_block(0)
+        self._username = self.get_block(2)
+        self._displayname = self.get_block(3)
+        ##TODO: Make sure these do not crash the server
+        self._reported_client_session = int(self.get_block(4))
+        self._reported_access_level = int(self.get_block(5))
+
+        if self._reported_client_session not in range(-32767, 32768):
+            await u.send(PlayerAuthorization(PlayerAuthorization.ErrorCodes.InvalidPacket).build())
+            await u.disconnect()
+            return
+        
+        if all(is_valid_length(name) for name in [self._username, self._displayname]):
+            await u.send(
+                InternalPlayerAuthorization(
+                    ErrorCodes.SUCCESS,
+                    u
+                ).build()
+            )
+            return
+        else:
+            await u.send(PlayerAuthorization(PlayerAuthorization.ErrorCodes.NicknameToShort).build())
+            await u.disconnect()
+
+def is_valid_length(value, min_length=3, max_length=12):
+    return min_length <= len(value) <= max_length
+
