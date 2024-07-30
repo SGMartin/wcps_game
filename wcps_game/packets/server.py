@@ -42,7 +42,7 @@ class ServerTime(OutPacket):
 
 
 class LeaveServer(OutPacket):
-    def __init(self):
+    def __init__(self):
         super().__init__(
             packet_id=PacketList.LeaveServer,
             xor_key=ClientXorKeys.SEND

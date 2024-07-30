@@ -38,7 +38,7 @@ class LeaveServerHandler(PacketHandler):
             ## beter on the disconnect() call of the socket/servers
             await u.send(LeaveServer().build())
             await u.disconnect()
-            log.info("Player left the server")
+            logging.info("Player left the server")
 
 
 ## Instead of authorizing and moving on to the equipment packet,
