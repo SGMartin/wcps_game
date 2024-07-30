@@ -2,8 +2,11 @@ import asyncio
 import datetime
 import logging
 
-from clients import AuthenticationClient, start_listeners
+import wcps_core.constants
+
+from clients import AuthenticationClient, UDPListener, start_listeners
 from game.game_server import GameServer
+
 
 # ASCII LOGO
 WCPS_IMAGE = r"""
@@ -64,11 +67,26 @@ async def main():
 
     # Start TCP listener
     asyncio.create_task(start_listeners(game_server, auth_client))
+
+    ## Start UDP listeners
+    udp_listener_1 = UDPListener(wcps_core.constants.Ports.UDP1)
+    udp_listener_2 = UDPListener(wcps_core.constants.Ports.UDP2)
+
+    await asyncio.gather(
+        udp_listener_1.start(),
+        udp_listener_2.start()
+    )
     
     try:
         while True:
             logging.info("Server is running. Awaiting connections...")
-            await asyncio.sleep(10)  # Adjust sleep duration as needed
+            # ## test
+            # from packets.server import Ping
+            
+            # for u in game_server.online_users.values():
+            #     await u.send(Ping(1,u).build())
+            await asyncio.sleep(5)  # Adjust sleep duration as needed
+
     except KeyboardInterrupt:
         logging.info("Shutting down server...")
     except Exception as e:
