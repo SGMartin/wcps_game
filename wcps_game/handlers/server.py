@@ -22,11 +22,14 @@ class RequestServerTimeHandler(PacketHandler):
         
         ##TODO: mac ban?
         if len(self._mac_address) !=12 or not self._mac_address.isalnum():
-            ##TODO: auth normal procedure here
+            await u.send(PlayerAuthorization(PlayerAuthorization.ErrorCodes.NotAccessible).build())
+            await u.disconnect()
             return
         
         ## 24576 0
         await u.send(ServerTime(ErrorCodes.SUCCESS).build())
+        ## Even unauthorized players are added
+        self.this_server.add_player(u)
 
 
 class LeaveServerHandler(PacketHandler):
