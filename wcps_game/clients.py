@@ -1,10 +1,10 @@
 import asyncio
 import struct
 import logging
+from typing import Tuple, Optional
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 
 from typing import TYPE_CHECKING
@@ -143,142 +143,89 @@ class AuthenticationClient:
                 await self.send(ping_packet)
             await asyncio.sleep(30)
 
-# XOR keys for encryption/decryption
-# Opposite of the usual client keys
 
-class UDP_XORKEYS():
-    XOR_SEND_KEY = 0xC3
-    XOR_RECEIVE_KEY = 0x96
+# Define the XOR keys
+XOR_SEND_KEY = 0xc3
+XOR_RECEIVE_KEY = 0x96
+
+def xor_data(data: bytearray, key: int) -> bytearray:
+    """Apply XOR to bytearray data with the given key."""
+    return bytearray(b ^ key for b in data)
 
 class UDPListener:
-    def __init__(self, port):
+    def __init__(self, port: int):
         self.port = port
-        self.transport = None
-        self.protocol = None
+        self.transport: Optional[asyncio.DatagramTransport] = None
+        self.loop = asyncio.get_event_loop()
 
     async def start(self):
-        loop = asyncio.get_running_loop()
-        self.transport, self.protocol = await loop.create_datagram_endpoint(
-            lambda: UDPProtocol(self), local_addr=('0.0.0.0', self.port))
-        logger.info(f"UDP listener started on port {self.port}")
+        """Start the UDP listener on the specified port."""
+        loop = asyncio.get_event_loop()
+        self.transport, _ = await loop.create_datagram_endpoint(
+            lambda: UDPProtocol(self),
+            local_addr=('0.0.0.0', self.port)
+        )
+        logging.info(f"Listening on port {self.port}")
 
-    def reverse_port(self, port):
-        """Reverses the byte order of the port number."""
-        return struct.unpack(">H", struct.pack("<H", port))[0]
+    def handle_packet(self, packet: bytes, addr: Tuple[str, int]):
+        """Handle incoming packets."""
+        packet = bytearray(packet)  # Convert to bytearray for mutable operations
+        type_ = self.to_ushort(packet, 0)
+        session_id = self.to_ushort(packet, 4)
+        
+        # Skip user manager code, handle logic with type and session_id here
+        logging.info(f"Received packet of type {type_} with session ID {session_id}")
 
-    def handle(self, packet, addr):
-        """Handles incoming UDP packets and logs decrypted content."""
-        decrypted_packet = self.decrypt_packet(packet)
-        packet_type = self.to_ushort(decrypted_packet, 0)
-        session_id = self.to_ushort(decrypted_packet, 4)
-
-        # Log decrypted packet
-        logger.info(f"Received packet from {addr} with type {hex(packet_type)} and session ID {session_id}")
-
-        # Simulate user retrieval (replace with your user matching logic)
-        user = self.match_user(session_id)
-
-        if user is None:
-            return
-
-        if packet_type == 0x1001:  # Initial packet
-            decrypted_packet = self.write_ushort(self.port + 1, decrypted_packet, 4)
-            self.protocol.send_to(decrypted_packet, addr)
-
-        elif packet_type == 0x1010:  # UDP Ping packet
-            if decrypted_packet[14] == 0x21:
-                user.local_end_point = self.to_ip_endpoint(decrypted_packet, 32)
-                user.remote_end_point = addr
-                user.remote_port = self.reverse_port(addr[1])
-                user.local_port = self.reverse_port(user.local_end_point[1])
-
+        if type_ == 0x1001:  # Initial packet
+            self.write_ushort(self.port + 1, packet, 4)
+            self.transport.sendto(packet, addr)
+        elif type_ == 0x1010:  # UDP Ping packet
+            if packet[14] == 0x21:
+                # Example for UDP Ping packet handling
                 response = bytearray(65)
                 response[17] = 0x41
                 response[-1] = 0x11
-                self.write_ushort(user.session_id, response, 4)
-                self.write_ip_endpoint(user.remote_end_point, response, 32)
-                self.write_ip_endpoint(user.local_end_point, response, 50)
-                self.protocol.send_to(response, addr)
-
-        elif decrypted_packet[14] in (0x10, 0x30, 0x31, 0x32, 0x34):
-            if user.room is None:
-                return
-            
-            session_id_bytes = decrypted_packet[4:6]
-            target_id = self.to_ushort(decrypted_packet, 22)
-            room = self.to_ushort(decrypted_packet, 6)
-            session_id = struct.unpack("<H", session_id_bytes)[0]
-            
-            user1 = self.match_user(session_id)
-            user2 = self.match_user(target_id)
-
-            if (user1 and user2 and user1.room.id == room and user2.room.id == room and
-                user1.room.state == 'Playing'):
-                self.protocol.send_to(decrypted_packet, user2.remote_end_point)
+                self.write_ushort(session_id, response, 4)
+                # Write endpoints to response
+                # Example: self.write_ip_endpoint(remote_endp, response, 32)
+                # Example: self.write_ip_endpoint(local_endp, response, 50)
+                self.transport.sendto(response, addr)
+            elif packet[14] in {0x10, 0x30, 0x31, 0x32, 0x34}:
+                # Handle additional sub-packet types
+                pass
             else:
-                logger.error(f"UDP TUNNEL PACKET FAULTY - ROOM DID NOT MATCH SENDER {user1.displayname}/{user2.displayname}/"
-                             f"{user1.room.id}/{user2.room.id}/{room}")
-
+                logging.error(f"Unhandled UDP sub-packet {packet[14]:02x}")
         else:
-            logger.error(f"UNHANDLED UDP SUB PACKET {decrypted_packet[14]}")
+            logging.error(f"Unhandled UDP packet type {type_}")
 
-    def decrypt_packet(self, packet):
-        """Decrypts the packet using the XOR key."""
-        decrypted_packet = bytearray(packet)
-        for i in range(len(decrypted_packet)):
-            decrypted_packet[i] ^= UDP_XORKEYS.XOR_RECEIVE_KEY
-        return decrypted_packet
+    def to_ushort(self, data: bytes, offset: int) -> int:
+        """Convert bytes to ushort with big-endian."""
+        return struct.unpack('>H', data[offset:offset + 2])[0]
 
-    def to_ushort(self, data, offset):
-        """Converts bytes to a ushort (2 bytes)."""
-        return struct.unpack(">H", data[offset:offset + 2])[0]
+    def write_ushort(self, value: int, data: bytearray, offset: int):
+        """Write ushort value to bytearray at specified offset."""
+        struct.pack_into('>H', data, offset, value)
 
-    def to_uint(self, data, offset):
-        """Converts bytes to a uint (4 bytes)."""
-        return struct.unpack(">I", data[offset:offset + 4])[0]
-
-    def to_ip_endpoint(self, data, offset):
-        """Converts bytes to an IP endpoint (IP address and port)."""
-        for i in range(offset, offset + 6):
-            data[i] ^= UDP_XORKEYS.XOR_SEND_KEY
+    def to_ip_endpoint(self, data: bytes, offset: int) -> Tuple[str, int]:
+        """Convert bytes to IPEndPoint."""
         port = self.to_ushort(data, offset)
-        ip = self.to_uint(data, offset + 2)
-        return (ip, port)
-
-    def write_ushort(self, value, data, offset):
-        """Writes a ushort (2 bytes) to the data at the specified offset."""
-        struct.pack_into(">H", data, offset, value)
-
-    def write_uint(self, value, data, offset):
-        """Writes a uint (4 bytes) to the data at the specified offset."""
-        struct.pack_into(">I", data, offset, value)
-
-    def write_ip_endpoint(self, endpoint, data, offset):
-        """Writes an IP endpoint (IP address and port) to the data at the specified offset."""
-        ip, port = endpoint
-        value = bytearray(6)
-        self.write_ushort(port, value, 0)
-        struct.pack_into(">I", value, 2, ip)
-        for i in range(6):
-            data[offset + i] = value[i] ^ UDP_XORKEYS.XOR_RECEIVE_KEY
-
-    def match_user(self, session_id):
-        """Simulate user retrieval by session ID (replace with your logic)."""
-        # Implement user retrieval logic here
-        return None
+        ip = struct.unpack('>I', data[offset + 2:offset + 6])[0]
+        ip_address = f"{(ip >> 24) & 0xFF}.{(ip >> 16) & 0xFF}.{(ip >> 8) & 0xFF}.{ip & 0xFF}"
+        return ip_address, port
 
 class UDPProtocol(asyncio.DatagramProtocol):
-    def __init__(self, listener):
+    def __init__(self, listener: UDPListener):
         self.listener = listener
 
-    def connection_made(self, transport):
-        self.transport = transport
+    def datagram_received(self, data: bytes, addr: Tuple[str, int]):
+        """Called when a datagram is received."""
+        self.listener.handle_packet(data, addr)
 
-    def datagram_received(self, data, addr):
-        self.listener.handle(data, addr)
-
-    def send_to(self, data, addr):
-        self.transport.sendto(data, addr)
+    def error_received(self, exc: Exception):
+        """Handle any errors."""
+        logging.error(f"Error received: {exc}")
+        if self.listener.transport:
+            self.listener.transport.close()
 
 ## Start TCP listeners here
 async def start_listeners(this_server: 'GameServer', this_auth: AuthenticationClient):

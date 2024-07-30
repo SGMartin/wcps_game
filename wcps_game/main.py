@@ -68,7 +68,7 @@ async def main():
     # Start TCP listener
     asyncio.create_task(start_listeners(game_server, auth_client))
 
-    ## Start UDP listeners
+    # ## Start UDP listeners
     udp_listener_1 = UDPListener(wcps_core.constants.Ports.UDP1)
     udp_listener_2 = UDPListener(wcps_core.constants.Ports.UDP2)
 
@@ -76,7 +76,7 @@ async def main():
         udp_listener_1.start(),
         udp_listener_2.start()
     )
-    
+
     try:
         while True:
             logging.info("Server is running. Awaiting connections...")
