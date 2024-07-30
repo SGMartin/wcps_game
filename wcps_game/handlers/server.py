@@ -28,8 +28,6 @@ class RequestServerTimeHandler(PacketHandler):
         
         ## 24576 0
         await u.send(ServerTime(ErrorCodes.SUCCESS).build())
-        ## Even unauthorized players are added
-        await self.this_server.add_player(u)
 
 
 class LeaveServerHandler(PacketHandler):
@@ -75,6 +73,13 @@ class ClientAuthentication(PacketHandler):
             return
 
         if all(is_valid_length(name) for name in [self._username, self._displayname]):
+
+            ## temporary set their username for keying, it will be checked again later
+            u.username = self._username
+            ## temporarily add users even if their data is incomplete, it will be
+            ## reset on correct authorization
+            await self.this_server.add_player(u)
+
             await self.this_auth.send(InternalPlayerAuthorization(
                 error_code=ErrorCodes.SUCCESS, 
                 session_id=self._reported_client_session,

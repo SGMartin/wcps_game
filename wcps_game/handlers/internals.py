@@ -63,7 +63,7 @@ class AuthorizePlayerHandler(PacketHandler):
                 await this_user.authorize(
                     username=reported_user,
                     session_id=reported_session_id,
-                    reported_rights=reported_rights
+                    rights=reported_rights
                     )
             else:
                 await this_user.send(PlayerAuthorization(error_code).build())
