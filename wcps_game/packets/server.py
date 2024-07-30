@@ -75,7 +75,7 @@ class PlayerAuthorization(OutPacket):
             xor_key=ClientXorKeys.SEND
         )
         if error_code != er.SUCCESS or not u:
-            self.append(error_code)
+            self.append(error_code.value)
         else:
             ## basic user data
             self.append(er.SUCCESS)
