@@ -1,10 +1,12 @@
 import asyncio
 import logging
+import time
 
 from typing import TYPE_CHECKING, Dict
 
 from wcps_core.constants import Ports, ServerTypes
 from wcps_core.packets import InPacket, Connection
+
 
 if TYPE_CHECKING:
     from packets.internals import GameServerDetails
@@ -66,13 +68,18 @@ class User:
         self.writer = writer
         self.this_auth = this_auth
 
-        ## game related tasks
+        ## auth related tasks
         self.this_server = this_server
         self.authorized = False
         self.session_id = None
         self.rights = -1
         self.username = None
         
+        ## game related tasks
+        self.last_ping = time.time() * 1000 ## milliseconds
+        self.ping = 0
+        self.is_updated_ping = True
+
 
         ## Send a connection packet to the client
         asyncio.create_task(self.send(Connection(xor_key=ClientXorKeys.SEND).build()))
@@ -132,9 +139,24 @@ class User:
         self.rights = rights
         self.authorized = True
 
-        ## send loadout packet
+        ##TODO: In the future, verify premium status for premium only servers
         from packets.server import PlayerAuthorization, Ping
 
-        ##TODO: In the future, verify premium status for premium only servers
         await self.send(PlayerAuthorization(1, self).build())
-        await self.send(Ping(1, self).build())
+        await self.send_ping()
+    
+    async def answer_ping(self):
+        self.is_updated_ping = True
+        self.ping = round(time.time() * 1000 - self.last_ping)
+    
+    async def send_ping(self):
+        from packets.server import Ping
+        if not self.is_updated_ping:
+            logging.info(f"Disconnected {self.username} because of bad ping")
+            await self.disconnect()
+        else:
+            #TODO: update premium time here
+            self.is_updated_ping = False
+            await self.send(Ping(self).build())
+
+

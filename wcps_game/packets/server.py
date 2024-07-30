@@ -125,7 +125,7 @@ class PlayerAuthorization(OutPacket):
             self.fill(0, 2) ## ???
 
 class Ping(OutPacket):
-    def __init__(self, error_code, u: User):
+    def __init__(self, u: User):
         super().__init__(
             packet_id=PacketList.Ping,
             xor_key=ClientXorKeys.SEND

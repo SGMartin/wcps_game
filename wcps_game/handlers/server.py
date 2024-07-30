@@ -2,7 +2,7 @@ import logging
 
 from handlers.packet_handler import PacketHandler
 from packets.internals import InternalPlayerAuthorization
-from packets.server import ServerTime, LeaveServer, PlayerAuthorization
+from packets.server import ServerTime, LeaveServer, PlayerAuthorization, Ping
 
 from wcps_core.constants import ErrorCodes
 
@@ -89,6 +89,14 @@ class ClientAuthentication(PacketHandler):
         else:
             await u.send(PlayerAuthorization(PlayerAuthorization.ErrorCodes.NicknameToShort).build())
             await u.disconnect()
+
+class Ping(PacketHandler):
+    async def process(self, u) -> None:
+        if u.authorized:
+            await u.answer_ping()
+        else:
+            u.disconnect()
+
 
 def is_valid_length(value, min_length=3, max_length=12):
     return min_length <= len(value) <= max_length
