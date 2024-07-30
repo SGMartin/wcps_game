@@ -37,6 +37,7 @@ class GameServer:
                 raise Exception("User already exists")
             self.online_users[u.username] = u
 
+    #TODO: send internal packet to auth
     async def remove_player(self, username):
         async with self.lock:
             if username in self.online_users:
@@ -130,3 +131,8 @@ class User:
         self.session_id = session_id
         self.rights = rights
         self.authorized = True
+
+        ## send loadout packet
+        from packets.server import PlayerAuthorization, Ping
+        await self.send(PlayerAuthorization(1, self).build())
+        await self.send(Ping(1, self).build())

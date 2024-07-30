@@ -69,9 +69,72 @@ class PlayerAuthorization(OutPacket):
         IdInUse = 92040             # That ID is currently being used.
         PremiumOnly = 98010         # Available to Premium users only.
         
-    def __init__(self, error_code:ErrorCodes):
+    def __init__(self, error_code:ErrorCodes, u: User):
         super().__init__(
             packet_id=PacketList.Authorization,
             xor_key=ClientXorKeys.SEND
         )
-        self.append(error_code.value)
+        if error_code != er.SUCCESS or not u:
+            self.append(error_code)
+        else:
+            ## basic user data
+            self.append(er.SUCCESS)
+            self.append("Gameserver1")
+            self.append(u.session_id) ## session id
+            self.append(1) ## user id?
+            self.append(u.session_id) ## session.id
+            self.append("Dark") ##displayname
+            ## clan blocks
+            self.fill(-1, 4)
+
+            ## user stats
+            self.append(0) ## premium state
+            self.append(0) # ?
+            self.append(0) # ?
+            self.append(1) ## player level
+            self.append(0) # exp
+            self.append(0) #?
+            self.append(0) #?
+            self.append(50000) # money
+            self.append(20) #kills
+            self.append(10) # deaths
+            self.fill(0, 5) #????
+
+            ## SLOT STATE and loadouts
+            ## Append(u.Inventory.SlotState); // T = Slot Enabled, F = Slot disabled.
+            self.append("F,F,F,F") ## slots
+            ## engineer, medic, sniper, assault and heavy loadout
+            # DA02,DB01,DF01,DR01,^,^,^,^
+            # DA02,DB01,DF01,DQ01,^,^,^,^
+            self.append("DA02,DB01,DF01,DR01,^,^,^,^")
+            self.append("DA02,DB01,DF01,DQ01,^,^,^,^")
+            self.append("DA02,DB01,DG05,DN01,^,^,^,^")
+            self.append("DA02,DB01,DC02,DN01,^,^,^,^")
+            self.append("DA02,DB01,DJ01,DL01,^,^,^,^")
+
+            ## Inventory (max 31)
+            item_list = ""
+            for i in range(32):
+                if i == 0:
+                    item_list = "^"
+                else:
+                    item_list += ",^"
+
+            item_list_2 = "^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^"
+            self.append(item_list_2)
+            self.fill(0, 2) ## ???
+
+class Ping(OutPacket):
+    def __init__(self, error_code, u: User):
+        super().__init__(
+            packet_id=PacketList.Ping,
+            xor_key=ClientXorKeys.SEND
+        )
+        self.append(5000) # ping frequency
+        self.append(0) # ping
+        self.append(-1) # -1 = no event, 175 = winter holidays
+        self.append(-1) # event duration
+        self.append(0) # 3 exp weekend, 4 exp event, 0 = none
+        self.append(1) # exp rate
+        self.append(1) # dinar rate
+        self.append(-1) # premium time in seconds -1 = no premium, 
