@@ -134,5 +134,7 @@ class User:
 
         ## send loadout packet
         from packets.server import PlayerAuthorization, Ping
+
+        ##TODO: In the future, verify premium status for premium only servers
         await self.send(PlayerAuthorization(1, self).build())
         await self.send(Ping(1, self).build())
