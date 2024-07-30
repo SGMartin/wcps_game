@@ -59,13 +59,13 @@ class AuthorizePlayerHandler(PacketHandler):
             logging.error("Unknown player to authorize {reported_user}")
         else:
             ## TODO: implement update in the future if needed
-            if error_code == ErrorCodes.SUCCESS or ErrorCodes.UPDATE:
+            if error_code == ErrorCodes.SUCCESS or error_code == ErrorCodes.UPDATE:
                 await this_user.authorize(
                     username=reported_user,
                     session_id=reported_session_id,
                     rights=reported_rights
                     )
             else:
-                await this_user.send(PlayerAuthorization(error_code).build())
+                await this_user.send(PlayerAuthorization(PlayerAuthorization.ErrorCodes.NormalProcedure).build())
                 await this_user.disconnect()
  
