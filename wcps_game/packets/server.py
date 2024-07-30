@@ -83,16 +83,16 @@ class PlayerAuthorization(OutPacket):
             self.append(u.session_id) ## session id
             self.append(1) ## user id?
             self.append(u.session_id) ## session.id
-            self.append("Dark") ##displayname
+            self.append("DarkRaptor") ##displayname
             ## clan blocks
             self.fill(-1, 4)
 
             ## user stats
-            self.append(0) ## premium state
+            self.append(3) ## premium state
             self.append(0) # ?
             self.append(0) # ?
-            self.append(1) ## player level
-            self.append(0) # exp
+            self.append(28) ## player level
+            self.append(441500) # exp
             self.append(0) #?
             self.append(0) #?
             self.append(50000) # money
@@ -109,7 +109,7 @@ class PlayerAuthorization(OutPacket):
             self.append("DA02,DB01,DF01,DR01,^,^,^,^")
             self.append("DA02,DB01,DF01,DQ01,^,^,^,^")
             self.append("DA02,DB01,DG05,DN01,^,^,^,^")
-            self.append("DA02,DB01,DC02,DN01,^,^,^,^")
+            self.append("DA02,DB01,DC04,DN01,^,^,^,^")
             self.append("DA02,DB01,DJ01,DL01,^,^,^,^")
 
             ## Inventory (max 31)
@@ -132,9 +132,9 @@ class Ping(OutPacket):
         )
         self.append(5000) # ping frequency
         self.append(0) # ping
-        self.append(-1) # -1 = no event, 175 = winter holidays
-        self.append(-1) # event duration
+        self.append(175) # -1 = no event, 175 = winter holidays
+        self.append(100) # event duration
         self.append(0) # 3 exp weekend, 4 exp event, 0 = none
         self.append(1) # exp rate
         self.append(1) # dinar rate
-        self.append(-1) # premium time in seconds -1 = no premium, 
+        self.append(10000) # premium time in seconds -1 = no premium, 
