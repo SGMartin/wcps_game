@@ -31,32 +31,32 @@ class GameServer:
 
     async def add_player(self, u):
         async with self.lock:
-            if not u.authorized:
-                raise Exception(f"Attempt to add an unauthorized user {u.username}")
-            if u.session_id in self.online_users:
+            if not u.username:
+                raise Exception(f"Attempt to add an unnamed user")
+            if u.username in self.online_users:
                 raise Exception("User already exists")
-            self.online_users[u.session_id] = u
+            self.online_users[u.username] = u
 
-    async def remove_player(self, session_id):
+    async def remove_player(self, username):
         async with self.lock:
-            if session_id in self.online_users:
-                del self.online_users[session_id]
-                logging.info(f"Removed player {session_id}")
+            if username in self.online_users:
+                del self.online_users[username]
+                logging.info(f"Removed player {username}")
             else:
-                raise Exception(f"User with session ID {session_id} does not exist")
+                raise Exception(f"User {username} does not exist")
 
-    async def is_online(self, session_id) -> bool:
+    async def is_online(self, username) -> bool:
         async with self.lock:
-            return session_id in self.online_users
+            return username in self.online_users
 
     def get_player_count(self) -> int:
         return len(self.online_users)
 
-    async def get_player(self, session_id) -> 'User':
+    async def get_player(self, username) -> 'User':
         async with self.lock:
-            user = self.online_users.get(session_id)
+            user = self.online_users.get(username)
             if user is None:
-                raise Exception(f"User with session ID {session_id} not found")
+                raise Exception(f"User {username} not found")
             return user
 class User:
     def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, this_server:GameServer, this_auth):
@@ -122,7 +122,7 @@ class User:
 
         if self.authorized:
             self.authorized = False
-            await self.this_server.remove_player(self.session_id)
+            await self.this_server.remove_player(self.username)
 
 
     async def authorize(self, username:str, session_id:int, rights: int):

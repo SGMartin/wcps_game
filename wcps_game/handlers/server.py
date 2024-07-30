@@ -29,7 +29,7 @@ class RequestServerTimeHandler(PacketHandler):
         ## 24576 0
         await u.send(ServerTime(ErrorCodes.SUCCESS).build())
         ## Even unauthorized players are added
-        self.this_server.add_player(u)
+        await self.this_server.add_player(u)
 
 
 class LeaveServerHandler(PacketHandler):
@@ -39,6 +39,7 @@ class LeaveServerHandler(PacketHandler):
             ##TODO: Graceful disconnect tasks here? Maybe they are
             ## beter on the disconnect() call of the socket/servers
             await u.send(LeaveServer().build())
+            await u.disconnect()
             log.info("Player left the server")
 
 
