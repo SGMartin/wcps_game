@@ -144,15 +144,11 @@ class AuthenticationClient:
             await asyncio.sleep(30)
 
 
-# Define the XOR keys
-XOR_SEND_KEY = 0xc3
-XOR_RECEIVE_KEY = 0x96
-
-def xor_data(data: bytearray, key: int) -> bytearray:
-    """Apply XOR to bytearray data with the given key."""
-    return bytearray(b ^ key for b in data)
-
 class UDPListener:
+    # Define the XOR keys
+    XOR_SEND_KEY = 0xc3
+    XOR_RECEIVE_KEY = 0x96
+
     def __init__(self, port: int):
         self.port = port
         self.transport: Optional[asyncio.DatagramTransport] = None
@@ -174,7 +170,7 @@ class UDPListener:
         session_id = self.to_ushort(packet, 4)
         
         # Skip user manager code, handle logic with type and session_id here
-        logging.info(f"Received packet of type {type_} with session ID {session_id}")
+        logging.info(f"IN:: UDP packet of type {type_} with session ID {session_id}")
 
         if type_ == 0x1001:  # Initial packet
             self.write_ushort(self.port + 1, packet, 4)
@@ -208,10 +204,38 @@ class UDPListener:
 
     def to_ip_endpoint(self, data: bytes, offset: int) -> Tuple[str, int]:
         """Convert bytes to IPEndPoint."""
+        # XOR the bytes with the XOR key
+        for i in range(offset, offset + 6):
+            data[i] ^= XOR_SEND_KEY
         port = self.to_ushort(data, offset)
         ip = struct.unpack('>I', data[offset + 2:offset + 6])[0]
         ip_address = f"{(ip >> 24) & 0xFF}.{(ip >> 16) & 0xFF}.{(ip >> 8) & 0xFF}.{ip & 0xFF}"
         return ip_address, port
+
+    def write_ip_endpoint(self, endpoint: Tuple[str, int], data: bytearray, offset: int) -> bytearray:
+        """Write IPEndPoint to bytearray at specified offset with big-endian and XOR."""
+        ip_address, port = endpoint
+        # Convert IP address and port to byte arrays
+        port_bytes = struct.pack('>H', port)
+        ip_bytes = struct.pack('>I', int(ip_address.split('.')[0]) << 24 |
+                                       int(ip_address.split('.')[1]) << 16 |
+                                       int(ip_address.split('.')[2]) << 8 |
+                                       int(ip_address.split('.')[3]))
+
+        # Combine port and IP address
+        value = port_bytes + ip_bytes
+
+        # XOR with the XOR key
+        value = bytearray(b ^ XOR_RECEIVE_KEY for b in value)
+
+        # Write to data array
+        data[offset:offset + 6] = value
+        return data
+
+    def ip_to_int(self, ip_address: str) -> int:
+        """Convert IP address to an integer."""
+        parts = map(int, ip_address.split('.'))
+        return (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]
 
 class UDPProtocol(asyncio.DatagramProtocol):
     def __init__(self, listener: UDPListener):
