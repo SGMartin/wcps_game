@@ -77,24 +77,6 @@ class ClientAuthentication(PacketHandler):
                 username=self._username,
                 rights=self._reported_access_level
                 ).build())
-                
-            #await auth_client.send(InternalPlayerAuthorization(ErrorCodes.SUCCESS, u).build())
-            ## 
-            # ## Add to the server session dict
-            # await u.authorize(
-            #     username=self._username,
-            #     session_id=self._reported_client_session,
-            #     rights=self._reported_access_level
-            #     )
-
-            # await self.this_server.add_player(u)
-            # await u.send(
-            #     InternalPlayerAuthorization(
-            #         ErrorCodes.SUCCESS,
-            #         u
-            #     ).build()
-            # )
-            # return
         else:
             await u.send(PlayerAuthorization(PlayerAuthorization.ErrorCodes.NicknameToShort).build())
             await u.disconnect()
