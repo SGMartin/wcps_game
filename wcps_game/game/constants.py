@@ -98,3 +98,9 @@ class ClanRank:
     LIUTENANT = 2
     CHAIRMAN = 3
     MASTER = 4
+
+class RoundLimits:
+    ROUNDLIMITS = [1,3,5,7,9]
+
+class TeamDeathMatchTickers:
+    TDMLIMITS = [30,50,100,150,200,300]
