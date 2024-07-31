@@ -84,7 +84,7 @@ class AuthenticationClient:
                         xor_key=wcps_core.constants.InternalKeys.XOR_AUTH_SEND
                     )
                     if incoming_packet.decoded_buffer:
-                        print(f"IN:: {incoming_packet.decoded_buffer}")
+                        print(f"IN:: Server {incoming_packet.decoded_buffer}")
                         handler = get_handler_for_packet(incoming_packet.packet_id, self.game_server, self)
                         if handler is not None:
                             asyncio.create_task(handler.handle(incoming_packet))

@@ -98,7 +98,7 @@ class User:
             try:
                 incoming_packet = InPacket(buffer=data, receptor=self, xor_key=ClientXorKeys.RECEIVE)
                 if incoming_packet.decoded_buffer:
-                    logging.info(f"IN:: {incoming_packet.decoded_buffer}")
+                    logging.info(f"IN:: GAME {incoming_packet.decoded_buffer}")
                     handler = get_handler_for_packet(incoming_packet.packet_id, self.this_server, self.this_auth)
                     if handler:
                         asyncio.create_task(handler.handle(incoming_packet))
