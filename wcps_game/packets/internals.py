@@ -43,11 +43,7 @@ class InternalPlayerAuthorization(OutPacket):
             packet_id=corepackets.ClientAuthentication,
             xor_key=InternalKeys.XOR_GAME_SEND
         )
-
         self.append(error_code)
-        if error_code == ErrorCodes.UPDATE or error_code == ErrorCodes.END_CONNECTION:
-            self.append(session_id)
-        else:
-            self.append(session_id)
-            self.append(username)
-            self.append(rights)
+        self.append(session_id)
+        self.append(username)
+        self.append(rights)

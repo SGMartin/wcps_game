@@ -4,7 +4,7 @@ import time
 
 from typing import TYPE_CHECKING, Dict
 
-from wcps_core.constants import Ports, ServerTypes
+from wcps_core.constants import Ports, ServerTypes, ErrorCodes
 from wcps_core.packets import InPacket, Connection
 
 
@@ -121,7 +121,7 @@ class User:
             await self.disconnect()
     
     async def disconnect(self):
-        logging.info("Closing connection to client")
+        logging.info("Called disconnect to client")
         if self.writer:
             self.writer.close()
             await self.writer.wait_closed()
@@ -132,6 +132,12 @@ class User:
             self.authorized = False
             await self.this_server.remove_player(self.username)
 
+
+    async def leave_server(self):
+        #TODO: here for graceful leaving
+        from packets.internals import InternalPlayerAuthorization
+        await self.this_auth.send(InternalPlayerAuthorization(ErrorCodes.END_CONNECTION, self.session_id, self.username, self.rights).build())
+        #await self.disconnect()
 
     async def authorize(self, username:str, session_id:int, rights: int):
         self.username = username

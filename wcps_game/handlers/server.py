@@ -32,14 +32,8 @@ class RequestServerTimeHandler(PacketHandler):
 
 class LeaveServerHandler(PacketHandler):
     async def process(self, u) -> None:
-
         if u.authorized:
-            ##TODO: Graceful disconnect tasks here? Maybe they are
-            ## beter on the disconnect() call of the socket/servers
-            await u.send(LeaveServer().build())
-            await u.disconnect()
-            logging.info("Player left the server")
-
+            await u.leave_server()
 
 ## Instead of authorizing and moving on to the equipment packet,
 ## we will instead send an internal authentication packet to the auth
