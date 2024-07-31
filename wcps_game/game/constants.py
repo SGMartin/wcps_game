@@ -90,3 +90,11 @@ class VehicleClass:
 class VehicleWeapon:
     MAIN = 0
     SUB = 1
+
+##TODO check this against ops.warrock.net somehow
+class ClanRank:
+    ROOKIE = 0
+    SUB = 1
+    LIUTENANT = 2
+    CHAIRMAN = 3
+    MASTER = 4
