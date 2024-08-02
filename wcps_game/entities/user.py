@@ -13,9 +13,10 @@ class User(BaseNetworkEntity):
         # authorization properties
         self.authorized = False
         self.session_id = None
+        self.internal_id = -1  # probably legacy but maybe the client uses it for some stuff?
         self.rights = -1
         self.username = None
-        
+
         # game properties
         self.displayname = ""
         self.last_ping = time.time() * 1000  # milliseconds

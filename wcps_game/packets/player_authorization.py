@@ -6,7 +6,7 @@ from wcps_game.packets.error_codes import ErrorCodes
 from wcps_game.packets.packet_list import ClientXorKeys, PacketList
 
 
-class PlayerAuthorization(OutPacket):    
+class PlayerAuthorization(OutPacket):
     def __init__(self, error_code: ErrorCodes, u: User):
         super().__init__(
             packet_id=PacketList.PLAYER_AUTHORIZATION,

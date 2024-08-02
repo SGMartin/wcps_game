@@ -10,6 +10,7 @@ class PacketList:
     # Internal
     INTERNAL_GAME_AUTHENTICATION = cp.GameServerAuthentication
     INTERNAL_GAME_STATUS = cp.GameServerStatus
+    INTERNAL_CLIENT_CONNECTION = cp.ClientConnection
     INTERNAL_PLAYER_AUTHENTICATION = cp.ClientAuthentication
     # Lobby
     LEAVE_SERVER = 0x6000
