@@ -4,10 +4,10 @@ from wcps_core.packets import OutPacket
 from wcps_auth.packets.packet_list import PacketList
 
 
-class GameServerDetails(OutPacket):
+class GameServerAuthentication(OutPacket):
     def __init__(self, server: None):
         super().__init__(
-            packet_id=PacketList.GameServerAuthentication,
+            packet_id=PacketList.INTERNAL_GAME_AUTHENTICATION,
             xor_key=InternalKeys.XOR_GAME_SEND
         )
 

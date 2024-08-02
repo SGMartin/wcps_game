@@ -9,7 +9,7 @@ from wcps_auth.packets.packet_list import PacketList
 class GameServerStatus(OutPacket):
     def __init__(self, server: None):
         super().__init__(
-            packet_id=PacketList.GameServerStatus,
+            packet_id=PacketList.INTERNAL_GAME_AUTHENTICATION,
             xor_key=InternalKeys.XOR_GAME_SEND
         )
 
