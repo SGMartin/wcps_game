@@ -13,6 +13,6 @@ class PacketList:
     INTERNAL_PLAYER_AUTHENTICATION = cp.ClientAuthentication
     # Lobby
     LEAVE_SERVER = 0x6000
-    SERVER_TIME = 0x6100
+    REQUEST_SERVER_TIME = 0x6100
     PLAYER_AUTHORIZATION = 0x6200
     PING = 0x6400

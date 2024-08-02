@@ -1,17 +1,27 @@
 from wcps_game.packets.packet_list import PacketList
 
-from wcps_auth.packets.launcher import Launcher
-from wcps_auth.packets.server_list import ServerList
-from wcps_auth.packets.internal_game_auth import InternalGameAuthentication
-from wcps_auth.packets.internal_user_auth import InternalClientAuthentication
+from wcps_game.packets.internal_gameserver_details import GameServerAuthentication
+from wcps_game.packets.internal_gameserver_status import GameServerStatus
+from wcps_game.packets.internal_player_auth import InternalPlayerAuthorization
+
+from wcps_game.packets.request_server_time import ServerTime
+from wcps_game.packets.player_authorization import PlayerAuthorization
+from wcps_game.packets.leave_server import LeaveServer
+from wcps_game.packets.ping import Ping
 
 
 class PacketFactory:
     packet_classes = {
-        PacketList.LAUNCHER: Launcher,
-        PacketList.SERVER_LIST: ServerList,
-        PacketList.INTERNALGAMEAUTHENTICATION: InternalGameAuthentication,
-        PacketList.INTERNALPLAYERAUTHENTICATION: InternalClientAuthentication,
+        # Internal
+        PacketList.INTERNAL_GAME_AUTHENTICATION: GameServerAuthentication,
+        PacketList.INTERNAL_GAME_STATUS: GameServerStatus,
+        PacketList.INTERNAL_PLAYER_AUTHENTICATION: InternalPlayerAuthorization,
+        # Lobby
+        PacketList.REQUEST_SERVER_TIME: ServerTime,
+        PacketList.PLAYER_AUTHORIZATION: PlayerAuthorization,
+        PacketList.PING: Ping,
+        PacketList.LEAVE_SERVER: LeaveServer
+
     }
 
     @staticmethod

@@ -1,11 +1,12 @@
 from wcps_core.constants import ErrorCodes, InternalKeys
 from wcps_core.packets import OutPacket
 
-from wcps_auth.packets.packet_list import PacketList
+from wcps_game.entities.game_server import GameServer
+from wcps_game.packets.packet_list import PacketList
 
 
 class GameServerAuthentication(OutPacket):
-    def __init__(self, server: None):
+    def __init__(self, server: GameServer = None):
         super().__init__(
             packet_id=PacketList.INTERNAL_GAME_AUTHENTICATION,
             xor_key=InternalKeys.XOR_GAME_SEND

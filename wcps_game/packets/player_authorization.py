@@ -1,6 +1,7 @@
 from wcps_core.constants import ErrorCodes as er
 from wcps_core.packets import OutPacket
 
+from wcps_game.entities import User
 from wcps_game.packets.error_codes import ErrorCodes
 from wcps_game.packets.packet_list import ClientXorKeys, PacketList
 

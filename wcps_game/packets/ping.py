@@ -1,5 +1,6 @@
 from wcps_core.packets import OutPacket
 
+from wcps_game.entities import User
 from wcps_game.packets.packet_list import PacketList, ClientXorKeys
 
 
