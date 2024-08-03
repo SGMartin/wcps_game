@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=62", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wcps_game"
+version = "0.0.1"
+description = "Python based Game Server server for WarRock Chapter 1"
+readme = "README.md"
+authors = [
+    {name = "SGMartin"}
+]
+license = {text = "MIT"}
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "aiomysql",
+    "pydantic",
+    "pydantic-settings",
+    "wcps_core",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/SGMartin/wcps_game"
+Issues = "https://github.com/SGMartin/wcps_game/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["wcps_game"]
+
+[project.scripts]
+wcps-game = "wcps_game.cli:run"
