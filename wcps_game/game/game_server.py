@@ -38,18 +38,18 @@ class User(NetworkEntity):
 
     def get_handler_for_packet(self, packet_id):
         return get_handler_for_packet(packet_id)
-    
+
     async def authorize(self, username: str, session_id: int, rights: int):
         self.username = username
         self.session_id = session_id
         self.rights = rights
         self.authorized = True
 
-        ##TODO: In the future, verify premium status for premium only servers
-        #from packets.server import PlayerAuthorization, Ping
+        # TODO: In the future, verify premium status for premium only servers
+        # from packets.server import PlayerAuthorization, Ping
 
-        #await self.send(PlayerAuthorization(1, self).build())
-        #await self.send_ping()
+        # await self.send(PlayerAuthorization(1, self).build())
+        # await self.send_ping()
 
 
 class GameServer(NetworkEntity):
@@ -116,7 +116,7 @@ class GameServer(NetworkEntity):
             user = self.online_users.get(username)
             if user is None:
                 raise Exception(f"User {username} not found")
-            return user 
+            return user
 
     def authorize(self, session_id: int):
         self.session_id = session_id
