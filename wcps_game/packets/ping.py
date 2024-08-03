@@ -14,11 +14,11 @@ class Ping(OutPacket):
             packet_id=PacketList.PING,
             xor_key=ClientXorKeys.SEND
         )
-        self.append(5000)    # ping frequency
+        self.append(5000)    # ping frequency in milliseconds
         self.append(u.ping)  # ping
         self.append(-1)      # -1 = no event, 175 = winter holidays
         self.append(100)     # event duration
         self.append(3)       # 3 exp weekend, 4 exp event, 0 = none
         self.append(1)       # exp rate
         self.append(1)       # dinar rate
-        self.append(10000)   # premium time in seconds -1 = no premium
+        self.append(u.premium_time)   # premium time in seconds -1 = no premium
