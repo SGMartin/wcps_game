@@ -1,3 +1,4 @@
+import asyncio
 from wcps_game.database import get_user_stats
 
 
@@ -5,6 +6,8 @@ class UserStats:
     def __init__(self, username: str):
         self.owner = username
         self.set_defaults()
+
+        self._update_lock = asyncio.Lock()
 
     def set_defaults(self):
         self.kills = 0
@@ -30,3 +33,11 @@ class UserStats:
             return True
         else:
             return False
+
+    async def update_kills(self, kills: int):
+        async with self._update_lock:
+            self.kills += kills
+
+    async def update_deaths(self, deaths: int):
+        async with self._update_lock:
+            self.deaths += deaths
