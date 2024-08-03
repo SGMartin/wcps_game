@@ -22,10 +22,10 @@ class PlayerAuthorization(OutPacket):
             # basic user data
             self.append(er.SUCCESS)
             self.append("Gameserver1")
-            self.append(u.session_id)  # session id
-            self.append(1)             # user id?
-            self.append(u.session_id)  # session.id
-            self.append("DarkRaptor")  # displayname
+            self.append(u.session_id)   # session id
+            self.append(u.internal_id)  # user id?
+            self.append(u.session_id)   # session.id
+            self.append(u.displayname)  # displayname
             # clan blocks
             self.fill(-1, 4)
 
