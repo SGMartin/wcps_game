@@ -1,10 +1,13 @@
 import asyncio
 import struct
 import logging
-from typing import Tuple, Optional
+from typing import Tuple, Optional, TYPE_CHECKING
 import sys
 
 from wcps_core.constants import Ports
+
+if TYPE_CHECKING:
+    from wcps_game.game.game_server import GameServer
 
 
 class ClientXorKeys:
@@ -25,14 +28,18 @@ class AuthenticationClient:
         attempt = 0
         while attempt < self.max_retries:
             try:
-                self.reader, self.writer = await asyncio.open_connection(self.ip, self.port)
-                logging.info(f'Connection to authentication server at {self.ip}:{self.port}')
+                self.reader, self.writer = await asyncio.open_connection(
+                    self.ip, self.port
+                )
+                logging.info(
+                    f"Connection to authentication server at {self.ip}:{self.port}"
+                )
                 return self.reader, self.writer
             except Exception as e:
                 attempt += 1
                 logging.error(
                     f"Error connecting to Auth server (attempt {attempt}/{self.max_retries}): {e}"
-                    )
+                )
                 # TODO: configure this...
                 await asyncio.sleep(2)
         logging.error("Failed to connect after several attempts.")
@@ -53,26 +60,23 @@ class AuthenticationClient:
 
 
 class UDPListener:
-    # Define the XOR keys for UDP
     XOR_SEND_KEY = 0xC3
     XOR_RECEIVE_KEY = 0x96
 
-    def __init__(self, port: int):
+    def __init__(self, port: int, server: "GameServer"):
         self.port = port
+        self.game_server = server
         self.transport: Optional[asyncio.DatagramTransport] = None
-        self.loop = asyncio.get_event_loop()
         self.stop_event = asyncio.Event()
 
     async def start(self):
         """Start the UDP listener on the specified port."""
-        loop = asyncio.get_event_loop()
         try:
+            loop = asyncio.get_event_loop()
             self.transport, _ = await loop.create_datagram_endpoint(
                 lambda: UDPProtocol(self), local_addr=("0.0.0.0", self.port)
             )
             logging.info(f"UDP server listening on port {self.port}")
-
-            # Wait until the stop_event is set
             await self.stop_event.wait()
         except Exception as e:
             logging.error(f"Failed to start UDP listener on port {self.port}: {e}")
@@ -86,12 +90,17 @@ class UDPListener:
             await self.transport.wait_closed()
         self.stop_event.set()
 
-    def handle_packet(self, packet: bytes, addr: Tuple[str, int]):
+    async def handle_packet(self, packet: bytes, addr: Tuple[str, int]):
         """Handle incoming packets."""
         packet = bytearray(packet)
         type_ = self.to_ushort(packet, 0)
         session_id = self.to_ushort(packet, 4)
-        # Skip user manager code, handle logic with type and session_id here
+
+        this_user = self.game_server.get_player_by_session(session_id)
+
+        if this_user is None:
+            return
+
         logging.info(f"IN:: UDP packet of type {type_} with session ID {session_id}")
 
         if type_ == 0x1001:  # Initial packet
@@ -99,14 +108,19 @@ class UDPListener:
             self.transport.sendto(packet, addr)
         elif type_ == 0x1010:  # UDP Ping packet
             if packet[14] == 0x21:
-                response = bytearray(65)
+                this_user.local_end_point = self.to_ip_endpoint(packet, 32)
+                this_user.remote_end_point = addr
+                this_user.remote_port = self.reverse_port(addr)
+                this_user.local_port = self.reverse_port(this_user.local_end_point)
+
+                response = self.extend(packet, 65)
                 response[17] = 0x41
                 response[-1] = 0x11
-                self.write_ushort(session_id, response, 4)
-                # Write endpoints to response
-                # Example: self.write_ip_endpoint(remote_endp, response, 32)
-                # Example: self.write_ip_endpoint(local_endp, response, 50)
+                self.write_ushort(this_user.session_id, response, 4)
+                self.write_ip_endpoint(this_user.remote_end_point, response, 32)
+                self.write_ip_endpoint(this_user.local_end_point, response, 50)
                 self.transport.sendto(response, addr)
+
             elif packet[14] in {0x10, 0x30, 0x31, 0x32, 0x34}:
                 # Handle additional sub-packet types
                 pass
@@ -152,10 +166,15 @@ class UDPListener:
         data[offset: offset + 6] = value
         return data
 
-    def ip_to_int(self, ip_address: str) -> int:
-        """Convert IP address to an integer."""
-        parts = map(int, ip_address.split("."))
-        return (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]
+    def reverse_port(self, addr: Tuple[str, int]) -> int:
+        """Reverse port to match the C# implementation."""
+        return struct.unpack(">H", struct.pack("<H", addr[1]))[0]
+
+    def extend(self, packet: bytes, length: int) -> bytearray:
+        """Extend packet to a new length."""
+        new_packet = bytearray(length)
+        new_packet[: len(packet)] = packet
+        return new_packet
 
 
 class UDPProtocol(asyncio.DatagramProtocol):
@@ -164,7 +183,7 @@ class UDPProtocol(asyncio.DatagramProtocol):
 
     def datagram_received(self, data: bytes, addr: Tuple[str, int]):
         """Called when a datagram is received."""
-        self.listener.handle_packet(data, addr)
+        asyncio.ensure_future(self.listener.handle_packet(data, addr))
 
     def error_received(self, exc: Exception):
         """Handle any errors."""
@@ -173,10 +192,10 @@ class UDPProtocol(asyncio.DatagramProtocol):
             self.listener.transport.close()
 
 
-async def start_udp_listeners():
+async def start_udp_listeners(server: "GameServer"):
     # Initialize UDP listeners
-    udp_listener_1 = UDPListener(Ports.UDP1)
-    udp_listener_2 = UDPListener(Ports.UDP2)
+    udp_listener_1 = UDPListener(Ports.UDP1, server=server)
+    udp_listener_2 = UDPListener(Ports.UDP2, server=server)
 
     try:
         # Start both UDP listeners as separate tasks
@@ -198,7 +217,7 @@ async def start_tcp_listeners(this_server):
         tcp_server = await asyncio.start_server(
             lambda reader, writer: User(reader, writer, this_server),
             host=this_server.ip,
-            port=this_server.port
+            port=this_server.port,
         )
         logging.info("TCP listener started.")
     except OSError:
