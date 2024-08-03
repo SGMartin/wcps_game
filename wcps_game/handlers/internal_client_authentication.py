@@ -33,6 +33,13 @@ class AuthorizeClientHandler(PacketHandler):
                     session_id=reported_session_id,
                     rights=reported_rights
                     )
+            
+                packet = PacketFactory.create_packet(
+                    packet_id=PacketList.PLAYER_AUTHORIZATION,
+                    error_code=ErrorCodes.SUCCESS,
+                    u=this_user
+                )
+                await this_user.send(packet.build())
             else:
                 packet = PacketFactory.create_packet(
                     packet_id=PacketList.PLAYER_AUTHORIZATION,

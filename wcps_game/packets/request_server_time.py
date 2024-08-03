@@ -1,5 +1,5 @@
-import datetime
 import locale
+from datetime import datetime
 
 from wcps_core.constants import ErrorCodes as corerr
 from wcps_core.packets import OutPacket

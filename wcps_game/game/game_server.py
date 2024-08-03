@@ -10,13 +10,18 @@ from wcps_game.networking import ClientXorKeys
 
 
 class User(NetworkEntity):
-    def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+    def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, game_server):
+        super().__init__(
+            reader=reader,
+            writer=writer,
+            xor_key_send=ClientXorKeys.SEND,
+            xor_key_receive=ClientXorKeys.RECEIVE
+            )
 
         # network properties
         self.reader = reader
         self.writer = writer
-        self.xor_key_send = ClientXorKeys.SEND
-        self.xor_key_receive = ClientXorKeys.RECEIVE
+        self.this_server = game_server
 
         # authorization properties
         self.authorized = False
@@ -33,6 +38,18 @@ class User(NetworkEntity):
 
     def get_handler_for_packet(self, packet_id):
         return get_handler_for_packet(packet_id)
+    
+    async def authorize(self, username: str, session_id: int, rights: int):
+        self.username = username
+        self.session_id = session_id
+        self.rights = rights
+        self.authorized = True
+
+        ##TODO: In the future, verify premium status for premium only servers
+        #from packets.server import PlayerAuthorization, Ping
+
+        #await self.send(PlayerAuthorization(1, self).build())
+        #await self.send_ping()
 
 
 class GameServer(NetworkEntity):

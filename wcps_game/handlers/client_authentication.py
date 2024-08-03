@@ -24,19 +24,31 @@ class ClientAuthenticationHandler(PacketHandler):
         reported_access_level = int(self.get_block(7))
 
         if reported_client_session not in range(-32767, 32768):
-            await u.send(PlayerAuthorization(PlayerAuthorization.ErrorCodes.InvalidPacket).build())
+            error_packet = PacketFactory.create_packet(
+                PacketList.INTERNAL_PLAYER_AUTHENTICATION,
+                PlayerAuthorizationError.INVALID_PACKET
+                )
+            await u.send(error_packet.build())
             await u.disconnect()
             return
-        
+
         # Banned player?
         if reported_access_level <= 0:
-            await u.send(PlayerAuthorization(PlayerAuthorization.ErrorCodes.NotAccessible).build())
+            error_packet = PacketFactory.create_packet(
+                PacketList.INTERNAL_PLAYER_AUTHENTICATION,
+                PlayerAuthorizationError.NOT_ACCESIBLE
+                )
+            await u.send(error_packet.build())
             await u.disconnect()
             return
 
         # Session exists already
-        if await self.this_server.is_online(reported_client_session):
-            await u.send(PlayerAuthorization(PlayerAuthorization.ErrorCodes.IdInUse).build())
+        if await u.this_server.is_online(reported_client_session):
+            error_packet = PacketFactory.create_packet(
+                PacketList.INTERNAL_PLAYER_AUTHENTICATION,
+                PlayerAuthorizationError.IDIN_USE
+                )
+            await u.send(error_packet.build())
             await u.disconnect()
             return
 
@@ -46,16 +58,19 @@ class ClientAuthenticationHandler(PacketHandler):
             u.username = username
             # temporarily add users even if their data is incomplete, it will be
             # reset on correct authorization
-            await self.this_server.add_player(u)
+            await u.this_server.add_player(u)
 
-            await self.this_auth.send(InternalPlayerAuthorization(
-                error_code=ErrorCodes.SUCCESS,
+            internal_auth_packet = PacketFactory.create_packet(
+                PacketList.INTERNAL_PLAYER_AUTHENTICATION,
+                error_code=1,
                 session_id=reported_client_session,
                 username=username,
                 rights=reported_access_level
-                ).build())
+            )
+            await u.this_server.send(internal_auth_packet.build())
         else:
-            await u.send(PlayerAuthorization(PlayerAuthorization.ErrorCodes.NicknameToShort).build())
+            error_packet = PacketFactory.create_packet(PlayerAuthorizationError.NICKNAME_TOO_SHORT)
+            await u.send(error_packet.build())
             await u.disconnect()
 
 

@@ -23,7 +23,7 @@ class RequestServerTimeHandler(PacketHandler):
 
         if not client_version.isdigit() or not int(client_version) == 3:
             packet = PacketFactory.create_packet(
-                packet_id=PacketList.ServerTime,
+                packet_id=PacketList.REQUEST_SERVER_TIME,
                 error_code=ServerTimeError.CLIENT_VERSION_MISSMATCH
                 )
             await u.send(packet.buils())
@@ -33,7 +33,7 @@ class RequestServerTimeHandler(PacketHandler):
         # TODO: mac ban?
         if len(mac_address) != 12 or not mac_address.isalnum():
             packet = PacketFactory.create_packet(
-                packet_id=PacketList.PlayerAuthorization,
+                packet_id=PacketList.PLAYER_AUTHORIZATION,
                 error_code=PlayerAuthorizationError.NOT_ACCESIBLE
                 )
             await u.send(packet.build())
@@ -41,7 +41,7 @@ class RequestServerTimeHandler(PacketHandler):
             return
 
         success_packet = PacketFactory.create_packet(
-            packet_id=PacketList.ServerTime,
+            packet_id=PacketList.REQUEST_SERVER_TIME,
             error_code=corerr.SUCCESS
         )
 

@@ -190,15 +190,19 @@ async def start_udp_listeners():
         sys.exit(1)  # Use sys.exit() to exit if an exception occurs
 
 
-async def start_tcp_listeners(ip: str, port: int):
+async def start_tcp_listeners(this_server):
     # Lazy way to avoid a circular import in an otherwise nice project structure
     from wcps_game.game.game_server import User
 
     try:
-        tcp_server = await asyncio.start_server(User, ip, port)
+        tcp_server = await asyncio.start_server(
+            lambda reader, writer: User(reader, writer, this_server),
+            host=this_server.ip,
+            port=this_server.port
+        )
         logging.info("TCP listener started.")
     except OSError:
-        logging.error(f"Failed to bind to port {ip}:{port}")
+        logging.error(f"Failed to bind to port {this_server.ip}:{this_server.port}")
         raise SystemExit("TCP listener failed. Server stopped.")
 
     await asyncio.gather(tcp_server.serve_forever())

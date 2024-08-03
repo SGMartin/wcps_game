@@ -61,7 +61,7 @@ async def main():
         sys.exit(1)
 
     # Start TCP servers
-    asyncio.create_task(start_tcp_listeners(game_server.ip, game_server.port))
+    asyncio.create_task(start_tcp_listeners(this_server=game_server))
 
     # Get the current date
     now = datetime.datetime.now()
