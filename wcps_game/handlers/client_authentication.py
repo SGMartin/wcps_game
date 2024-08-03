@@ -1,4 +1,8 @@
-from wcps_game.entities.user import User
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from wcps_game.game.game_server import User
+
 from wcps_game.handlers.packet_handler import PacketHandler
 
 # Instead of authorizing and moving on to the equipment packet,
@@ -7,7 +11,7 @@ from wcps_game.handlers.packet_handler import PacketHandler
 
 
 class ClientAuthenticationHandler(PacketHandler):
-    async def process(self, u: User) -> None:
+    async def process(self, u: "User") -> None:
 
         internal_id = self.get_block(0)
         username = self.get_block(2)

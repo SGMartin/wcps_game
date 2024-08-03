@@ -4,12 +4,12 @@ import locale
 from wcps_core.constants import ErrorCodes as corerr
 from wcps_core.packets import OutPacket
 
-from wcps_game.packets.error_codes import ErrorCodes
+from wcps_game.packets.error_codes import ServerTimeError
 from wcps_game.packets.packet_list import PacketList, ClientXorKeys
 
 
 class ServerTime(OutPacket):
-    def __init__(self, error_code: ErrorCodes):
+    def __init__(self, error_code: ServerTimeError):
         super().__init__(packet_id=PacketList.REQUEST_SERVER_TIME, xor_key=ClientXorKeys.SEND)
         if error_code != corerr.SUCCESS:
             self.append(error_code)

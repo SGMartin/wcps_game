@@ -1,17 +1,19 @@
 import logging
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from wcps_game.game.game_server import GameServer
 
 from wcps_core.constants import ErrorCodes
 
-from wcps_game.entities.game_server import GameServer
 from wcps_game.handlers.packet_handler import PacketHandler
-
 from wcps_game.packets.packet_list import PacketList
 from wcps_game.packets.packet_factory import PacketFactory
 from wcps_game.packets.error_codes import PlayerAuthorizationError
 
 
 class AuthorizeClientHandler(PacketHandler):
-    async def process(self, server: GameServer) -> None:
+    async def process(self, server: "GameServer") -> None:
 
         error_code = int(self.get_block(0))
         reported_user = self.get_block(1)

@@ -3,7 +3,7 @@ import logging
 
 from wcps_core.packets import InPacket
 
-from wcps_game.entities import BaseNetworkEntity
+from wcps_game.entities.network_entities import NetworkEntity
 
 
 class PacketHandler(abc.ABC):
@@ -14,7 +14,7 @@ class PacketHandler(abc.ABC):
         self.in_packet = packet_to_handle
         receptor = packet_to_handle.receptor
 
-        if isinstance(receptor, BaseNetworkEntity):
+        if isinstance(receptor, NetworkEntity):
             await self.process(receptor)
         else:
             logging.error("No receptor for this packet!")

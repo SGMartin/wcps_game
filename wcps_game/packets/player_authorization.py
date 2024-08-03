@@ -1,13 +1,17 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from wcps_game.game.game_server import User
+
 from wcps_core.constants import ErrorCodes as er
 from wcps_core.packets import OutPacket
 
-from wcps_game.entities import User
-from wcps_game.packets.error_codes import ErrorCodes
+from wcps_game.packets.error_codes import PlayerAuthorizationError
 from wcps_game.packets.packet_list import ClientXorKeys, PacketList
 
 
 class PlayerAuthorization(OutPacket):
-    def __init__(self, error_code: ErrorCodes, u: User):
+    def __init__(self, error_code: PlayerAuthorizationError, u: "User"):
         super().__init__(
             packet_id=PacketList.PLAYER_AUTHORIZATION,
             xor_key=ClientXorKeys.SEND

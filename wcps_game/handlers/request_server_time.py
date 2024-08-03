@@ -1,6 +1,11 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from wcps_game.game.game_server import User
+
+
 from wcps_core.constants import ErrorCodes as corerr
 
-from wcps_game.entities.user import User
 from wcps_game.handlers.packet_handler import PacketHandler
 
 from wcps_game.packets.error_codes import ServerTimeError, PlayerAuthorizationError
@@ -9,7 +14,7 @@ from wcps_game.packets.packet_list import PacketList
 
 
 class RequestServerTimeHandler(PacketHandler):
-    async def process(self, u: User) -> None:
+    async def process(self, u: "User") -> None:
         # this client version is reported as 3
         # TODO: can this be used for anything?
 

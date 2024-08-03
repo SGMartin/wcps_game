@@ -1,11 +1,15 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from wcps_game.game.game_server import User
+
 from wcps_core.packets import OutPacket
 
-from wcps_game.entities import User
 from wcps_game.packets.packet_list import PacketList, ClientXorKeys
 
 
 class Ping(OutPacket):
-    def __init__(self, u: User):
+    def __init__(self, u: "User"):
         super().__init__(
             packet_id=PacketList.PING,
             xor_key=ClientXorKeys.SEND
