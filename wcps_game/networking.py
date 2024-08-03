@@ -58,18 +58,34 @@ class UDPListener:
         self.port = port
         self.transport: Optional[asyncio.DatagramTransport] = None
         self.loop = asyncio.get_event_loop()
+        self.stop_event = asyncio.Event()
 
     async def start(self):
         """Start the UDP listener on the specified port."""
         loop = asyncio.get_event_loop()
-        self.transport, _ = await loop.create_datagram_endpoint(
-            lambda: UDPProtocol(self), local_addr=("0.0.0.0", self.port)
-        )
-        logging.info(f"UDP server listening on port {self.port}")
+        try:
+            self.transport, _ = await loop.create_datagram_endpoint(
+                lambda: UDPProtocol(self), local_addr=("0.0.0.0", self.port)
+            )
+            logging.info(f"UDP server listening on port {self.port}")
+
+            # Wait until the stop_event is set
+            await self.stop_event.wait()
+        except Exception as e:
+            logging.error(f"Failed to start UDP listener on port {self.port}: {e}")
+            raise SystemExit("Aborting due to UDP listener failure.")
+
+    async def stop(self):
+        """Stop the UDP listener gracefully."""
+        logging.info(f"Stopping UDP server on port {self.port}")
+        if self.transport:
+            self.transport.close()
+            await self.transport.wait_closed()
+        self.stop_event.set()
 
     def handle_packet(self, packet: bytes, addr: Tuple[str, int]):
         """Handle incoming packets."""
-        packet = bytearray(packet)  # Convert to bytearray for mutable operations
+        packet = bytearray(packet)
         type_ = self.to_ushort(packet, 0)
         session_id = self.to_ushort(packet, 4)
         # Skip user manager code, handle logic with type and session_id here
@@ -80,7 +96,6 @@ class UDPListener:
             self.transport.sendto(packet, addr)
         elif type_ == 0x1010:  # UDP Ping packet
             if packet[14] == 0x21:
-                # Example for UDP Ping packet handling
                 response = bytearray(65)
                 response[17] = 0x41
                 response[-1] = 0x11
@@ -107,9 +122,8 @@ class UDPListener:
 
     def to_ip_endpoint(self, data: bytes, offset: int) -> Tuple[str, int]:
         """Convert bytes to IPEndPoint."""
-        # XOR the bytes with the XOR key
         for i in range(offset, offset + 6):
-            data[i] ^= XOR_SEND_KEY
+            data[i] ^= self.XOR_SEND_KEY
         port = self.to_ushort(data, offset)
         ip = struct.unpack(">I", data[offset + 2: offset + 6])[0]
         ip_address = (
@@ -122,7 +136,6 @@ class UDPListener:
     ) -> bytearray:
         """Write IPEndPoint to bytearray at specified offset with big-endian and XOR."""
         ip_address, port = endpoint
-        # Convert IP address and port to byte arrays
         port_bytes = struct.pack(">H", port)
         ip_bytes = struct.pack(
             ">I",
@@ -131,14 +144,8 @@ class UDPListener:
             | int(ip_address.split(".")[2]) << 8
             | int(ip_address.split(".")[3]),
         )
-
-        # Combine port and IP address
         value = port_bytes + ip_bytes
-
-        # XOR with the XOR key
-        value = bytearray(b ^ XOR_RECEIVE_KEY for b in value)
-
-        # Write to data array
+        value = bytearray(b ^ self.XOR_RECEIVE_KEY for b in value)
         data[offset: offset + 6] = value
         return data
 
