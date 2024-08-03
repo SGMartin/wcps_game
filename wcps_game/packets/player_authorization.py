@@ -6,6 +6,7 @@ if TYPE_CHECKING:
 from wcps_core.constants import ErrorCodes as er
 from wcps_core.packets import OutPacket
 
+from wcps_game.game.constants import get_level_for_exp
 from wcps_game.packets.error_codes import PlayerAuthorizationError
 from wcps_game.packets.packet_list import ClientXorKeys, PacketList
 
@@ -30,16 +31,16 @@ class PlayerAuthorization(OutPacket):
             self.fill(-1, 4)
 
             # user stats
-            self.append(3)       # premium state
+            self.append(u.premium)       # premium state
             self.append(0)       # ?
             self.append(0)       # ?
-            self.append(28)      # player level
-            self.append(441500)  # exp
+            self.append(get_level_for_exp(u.xp))      # player level
+            self.append(u.xp)  # exp
             self.append(0)       # ?
             self.append(0)       # ?
-            self.append(50000)   # money
-            self.append(20)      # kills
-            self.append(10)      # deaths
+            self.append(u.money)   # money
+            self.append(u.stats.kills)      # kills
+            self.append(u.stats.deaths)      # deaths
             self.fill(0, 5)      # ????
 
             # SLOT STATE and loadouts
