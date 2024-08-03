@@ -1,32 +1,23 @@
 import abc
 import logging
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from clients import AuthenticationClient
-    from game.game_server import GameServer
+from wcps_core.packets import InPacket
 
-import wcps_core.packets
+from wcps_game.entities.network_entities import NetworkEntity
+
 
 class PacketHandler(abc.ABC):
-    def __init__(self, this_server: "GameServer", this_auth: "AuthenticationClient"):
+    def __init__(self):
         self.in_packet = None
-        self.this_server = this_server
-        self.this_auth = this_auth
 
-    async def handle(self, packet_to_handle: wcps_core.packets.InPacket) -> None:
+    async def handle(self, packet_to_handle: InPacket) -> None:
         self.in_packet = packet_to_handle
         receptor = packet_to_handle.receptor
 
-        # Local import to avoid circular dependency
-        from clients import AuthenticationClient
-        from game.game_server import User
-        
-        if isinstance(receptor, AuthenticationClient) or isinstance(receptor, User):
+        if isinstance(receptor, NetworkEntity):
             await self.process(receptor)
         else:
             logging.error("No receptor for this packet!")
-
 
     @abc.abstractmethod
     async def process(self, user_or_server):
