@@ -48,6 +48,8 @@ class AuthorizeClientHandler(PacketHandler):
                         u=this_user
                     )
                     await this_user.send(packet.build())
+                    # Ping player ASAP so that they log with the right premium status
+                    await this_user.send_ping()
                 else:
                     await this_user.send(error_packet.build())
                     await this_user.disconnect()

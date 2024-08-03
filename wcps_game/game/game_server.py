@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from datetime import datetime
+import time
 
 from wcps_core.constants import Ports, ServerTypes, InternalKeys
 
@@ -47,8 +48,10 @@ class User(NetworkEntity):
         self.displayname = ""
         self.xp = 0
         self.money = 0
+        # Premium data
         self.premium = Premium.F2P
-        self.premium_time = -1
+        self.premium_seconds_left = -1
+        self.premium_expire_date = 0
 
         self.last_ping = datetime.now()
         self.ping = 0
@@ -79,8 +82,7 @@ class User(NetworkEntity):
             self.money = database_details["money"]
             self.xp = database_details["xp"]
             self.premium = database_details["premium"]
-            self.premium_time = database_details["premium_expiredate"]
-
+            self.premium_expire_date = database_details["premium_expiredate"]
             await self.stats.update_kills(kills=int(database_details["kills"]))
             await self.stats.update_deaths(deaths=int(database_details["deaths"]))
 
@@ -107,6 +109,7 @@ class User(NetworkEntity):
             logging.error(f"Could not send ping to {self.username}")
         else:
             self.is_updated_ping = False
+            await self.update_premium_status()
             user_ping_packet = PacketFactory.create_packet(
                 packet_id=PacketList.PING,
                 u=self
@@ -117,6 +120,18 @@ class User(NetworkEntity):
         self.is_updated_ping = True
         ping_diff = datetime.now() - self.last_ping
         self.ping = int(ping_diff.total_seconds() * 1000)  # Convert to milliseconds
+
+    async def update_premium_status(self):
+        if self.premium_expire_date > 0 or self.premium != Premium.F2P:
+            current_time_epoch = int(time.time())
+            premium_time_left = int(self.premium_expire_date - current_time_epoch)
+
+            if premium_time_left <= 0:
+                self.premium_expire_date = 0
+                self.premium_seconds_left = -1
+                self.premium = Premium.F2P
+            else:
+                self.premium_seconds_left = premium_time_left
 
 
 class GameServer(NetworkEntity):

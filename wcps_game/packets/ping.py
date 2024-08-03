@@ -18,7 +18,7 @@ class Ping(OutPacket):
         self.append(u.ping)  # ping
         self.append(-1)      # -1 = no event, 175 = winter holidays
         self.append(100)     # event duration
-        self.append(3)       # 3 exp weekend, 4 exp event, 0 = none
+        self.append(0)       # 3 exp weekend, 4 exp event, 0 = none
         self.append(1)       # exp rate
         self.append(1)       # dinar rate
-        self.append(u.premium_time)   # premium time in seconds -1 = no premium
+        self.append(u.premium_seconds_left)   # premium time in seconds -1 = no premium
