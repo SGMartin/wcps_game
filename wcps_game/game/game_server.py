@@ -4,7 +4,7 @@ import time
 
 from wcps_core.constants import Ports, ServerTypes, InternalKeys
 
-from wcps_game.database import get_user_details
+from wcps_game.database import get_user_details_and_stats
 from wcps_game.game.constants import Premium
 from wcps_game.game.user_stats import UserStats
 from wcps_game.entities.network_entities import NetworkEntity
@@ -59,20 +59,21 @@ class User(NetworkEntity):
         self.stats = UserStats(username=self.username)
 
         details_load_successful = await self.load_user_details_from_database()
-        stats_load_successful = await self.stats.load_stats_from_database()
 
-        database_data_loaded = details_load_successful and stats_load_successful
-
-        return database_data_loaded
+        return details_load_successful
 
     async def load_user_details_from_database(self) -> bool:
-        database_details = await get_user_details(username=self.username)
+        database_details = await get_user_details_and_stats(username=self.username)
         success = False
         if database_details:
             self.money = database_details["money"]
             self.xp = database_details["xp"]
             self.premium = database_details["premium"]
             self.premium_time = database_details["premium_expiredate"]
+
+            await self.stats.update_kills(kills=int(database_details["kills"]))
+            await self.stats.update_deaths(deaths=int(database_details["deaths"]))
+
             success = True
 
         return success
