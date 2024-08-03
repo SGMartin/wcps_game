@@ -46,6 +46,12 @@ class GameServer(NetworkEntity):
         self.authentication_client = AuthenticationClient(ip="127.0.0.1", port=Ports.INTERNAL)
         self.xor_key_send = InternalKeys.XOR_GAME_SEND
         self.xor_key_receive = InternalKeys.XOR_AUTH_SEND
+
+        # Authorization properties
+        self.is_first_authorized = True
+        self.authorized = False
+        self.session_id = None
+
         # Game properties
         self.max_players = 3600
         self.current_rooms = 0
@@ -94,4 +100,9 @@ class GameServer(NetworkEntity):
             user = self.online_users.get(username)
             if user is None:
                 raise Exception(f"User {username} not found")
-            return user
+            return user 
+
+    def authorize(self, session_id: int):
+        self.session_id = session_id
+        self.authorized = True
+        self.is_first_authorized = False
