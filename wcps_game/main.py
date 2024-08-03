@@ -3,6 +3,7 @@ import datetime
 import logging
 import sys
 
+from wcps_game.database import run_pool
 from wcps_game.game.game_server import GameServer
 from wcps_game.networking import start_udp_listeners, start_tcp_listeners, AuthenticationClient
 
@@ -43,9 +44,12 @@ async def task_monitor():
 
 
 async def main():
+
     print(WCPS_IMAGE)
     logging.info("Starting WCPS Game Server...")
 
+    # Start the database
+    await run_pool()
     # Start UDP listeners and handle binding failures
     logging.info("Starting UDP listeners...")
     asyncio.create_task(start_udp_listeners())
