@@ -1,6 +1,7 @@
 import asyncio
 import logging
-import time
+
+from datetime import datetime
 
 from wcps_core.constants import Ports, ServerTypes, InternalKeys
 
@@ -10,6 +11,8 @@ from wcps_game.game.user_stats import UserStats
 from wcps_game.entities.network_entities import NetworkEntity
 from wcps_game.handlers import get_handler_for_packet
 from wcps_game.networking import ClientXorKeys
+from wcps_game.packets.packet_list import PacketList
+from wcps_game.packets.packet_factory import PacketFactory
 
 
 class User(NetworkEntity):
@@ -40,7 +43,7 @@ class User(NetworkEntity):
         self.premium = Premium.F2P
         self.premium_time = -1
 
-        self.last_ping = time.time() * 1000  # milliseconds
+        self.last_ping = datetime.now()
         self.ping = 0
         self.is_updated_ping = True
 
@@ -89,6 +92,24 @@ class User(NetworkEntity):
         if self.authorized:
             self.authorized = False
             await self.this_server.remove_player(self.username)
+
+    # TODO: Do we need a lock here?
+    async def send_ping(self):
+        if not self.is_updated_ping:
+            self.disconnect()
+            logging.error(f"Could not send ping to {self.username}")
+        else:
+            self.is_updated_ping = False
+            user_ping_packet = PacketFactory.create_packet(
+                packet_id=PacketList.PING,
+                u=self
+            )
+            await self.send(user_ping_packet.build())
+
+    async def answer_ping(self):
+        self.is_updated_ping = True
+        ping_diff = datetime.now() - self.last_ping
+        self.ping = int(ping_diff.total_seconds() * 1000)  # Convert to milliseconds
 
 
 class GameServer(NetworkEntity):

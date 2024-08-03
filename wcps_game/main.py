@@ -91,6 +91,11 @@ async def main():
             if server_loops % 5 == 0:
                 await ping_authentication_server(game_server=game_server)
 
+                # get all authorized users
+                all_authorized = [u for u in game_server.online_users.values() if u.authorized]
+                ping_task = [user.send_ping() for user in all_authorized]
+                await asyncio.gather(*ping_task)
+
             await asyncio.sleep(1)
 
     except KeyboardInterrupt:
