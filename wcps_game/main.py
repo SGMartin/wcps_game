@@ -3,6 +3,9 @@ import datetime
 import logging
 import sys
 
+from wcps_core.constants import Ports
+
+from wcps_game.config import settings
 from wcps_game.database import run_pool
 from wcps_game.game.game_server import GameServer
 from wcps_game.networking import start_udp_listeners, start_tcp_listeners, AuthenticationClient
@@ -62,7 +65,11 @@ async def main():
     await run_pool()
 
     # Attempt to connect to authentication server
-    authentication_client = AuthenticationClient("127.0.0.1", 5012)
+    authentication_client = AuthenticationClient(
+        ip=settings().authentication_server_ip,
+        port=Ports.INTERNAL,
+        max_retries=5
+        )
 
     try:
         connection_reader, connection_writer = await authentication_client.connect()

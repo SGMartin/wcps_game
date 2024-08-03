@@ -5,6 +5,7 @@ from datetime import datetime
 
 from wcps_core.constants import Ports, ServerTypes, InternalKeys
 
+from wcps_game.config import settings
 from wcps_game.database import get_user_details_and_stats
 from wcps_game.game.constants import Premium
 from wcps_game.game.user_stats import UserStats
@@ -129,8 +130,8 @@ class GameServer(NetworkEntity):
 
         # Network data
         # TODO: configs here
-        self.name = "WCPS"
-        self.ip = "127.0.0.1"
+        self.name = settings().server_name
+        self.ip = settings().server_ip
         self.port = Ports.GAME_CLIENT
 
         # Authorization properties
