@@ -60,9 +60,6 @@ async def main():
 
     # Start the database
     await run_pool()
-    # Start UDP listeners and handle binding failures
-    logging.info("Starting UDP listeners...")
-    asyncio.create_task(start_udp_listeners())
 
     # Attempt to connect to authentication server
     authentication_client = AuthenticationClient("127.0.0.1", 5012)
@@ -76,6 +73,10 @@ async def main():
 
     # Start TCP servers
     asyncio.create_task(start_tcp_listeners(this_server=game_server))
+
+    # Start UDP listeners and handle binding failures
+    logging.info("Starting UDP listeners...")
+    asyncio.create_task(start_udp_listeners(server=game_server))
 
     # Get the current date
     now = datetime.datetime.now()

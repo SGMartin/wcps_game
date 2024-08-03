@@ -29,6 +29,12 @@ class User(NetworkEntity):
         self.writer = writer
         self.this_server = game_server
 
+        # UDP properties
+        self.remote_end_point = None
+        self.remote_port = None
+        self.local_end_point = None
+        self.local_port = None
+
         # authorization properties
         self.authorized = False
         self.session_id = None
@@ -96,7 +102,7 @@ class User(NetworkEntity):
     # TODO: Do we need a lock here?
     async def send_ping(self):
         if not self.is_updated_ping:
-            self.disconnect()
+            await self.disconnect()
             logging.error(f"Could not send ping to {self.username}")
         else:
             self.is_updated_ping = False
@@ -177,6 +183,12 @@ class GameServer(NetworkEntity):
             if user is None:
                 raise Exception(f"User {username} not found")
             return user
+
+    def get_player_by_session(self, session_id: int):
+        for user in self.online_users.values():
+            if user.authorized and user.session_id == session_id:
+                return user
+        return None
 
     def authorize(self, session_id: int):
         self.session_id = session_id
