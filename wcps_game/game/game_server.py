@@ -51,6 +51,18 @@ class User(NetworkEntity):
         # await self.send(PlayerAuthorization(1, self).build())
         # await self.send_ping()
 
+    async def disconnect(self):
+        logging.info("Called disconnect to client")
+        if self.writer:
+            self.writer.close()
+            await self.writer.wait_closed()
+        self.reader = None
+        self.writer = None
+
+        if self.authorized:
+            self.authorized = False
+            await self.this_server.remove_player(self.username)
+
 
 class GameServer(NetworkEntity):
     def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
