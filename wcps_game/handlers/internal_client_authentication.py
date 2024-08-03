@@ -20,6 +20,11 @@ class AuthorizeClientHandler(PacketHandler):
         reported_session_id = int(self.get_block(2))
         reported_rights = int(self.get_block(3))
 
+        error_packet = PacketFactory.create_packet(
+            packet_id=PacketList.PLAYER_AUTHORIZATION,
+            error_code=PlayerAuthorizationError.NORMAL_PROCEDURE
+            )
+
         # get user
         this_user = await server.get_player(reported_user)
 
@@ -29,22 +34,24 @@ class AuthorizeClientHandler(PacketHandler):
         else:
             # TODO: implement update in the future if needed
             if error_code == ErrorCodes.SUCCESS or error_code == ErrorCodes.UPDATE:
-                await this_user.authorize(
+                # Check if inventory, stats and other database data loaded
+                can_authorize = await this_user.authorize(
                     username=reported_user,
                     session_id=reported_session_id,
                     rights=reported_rights
                     )
-            
-                packet = PacketFactory.create_packet(
-                    packet_id=PacketList.PLAYER_AUTHORIZATION,
-                    error_code=ErrorCodes.SUCCESS,
-                    u=this_user
-                )
-                await this_user.send(packet.build())
-            else:
-                packet = PacketFactory.create_packet(
-                    packet_id=PacketList.PLAYER_AUTHORIZATION,
-                    error_code=PlayerAuthorizationError.NORMAL_PROCEDURE
+
+                if can_authorize:
+                    packet = PacketFactory.create_packet(
+                        packet_id=PacketList.PLAYER_AUTHORIZATION,
+                        error_code=ErrorCodes.SUCCESS,
+                        u=this_user
                     )
-                await this_user.send(packet.build())
+                    await this_user.send(packet.build())
+                else:
+                    await this_user.send(error_packet.build())
+                    await this_user.disconnect()
+
+            else:
+                await this_user.send(error_packet.build())
                 await this_user.disconnect()

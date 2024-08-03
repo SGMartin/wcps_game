@@ -1,7 +1,7 @@
 from wcps_game.database import get_user_stats
 
 
-class UserStats():
+class UserStats:
     def __init__(self, username: str):
         self.owner = username
         self.set_defaults()

@@ -4,6 +4,9 @@ import time
 
 from wcps_core.constants import Ports, ServerTypes, InternalKeys
 
+from wcps_game.database import get_user_details
+from wcps_game.game.constants import Premium
+from wcps_game.game.user_stats import UserStats
 from wcps_game.entities.network_entities import NetworkEntity
 from wcps_game.handlers import get_handler_for_packet
 from wcps_game.networking import ClientXorKeys
@@ -32,24 +35,47 @@ class User(NetworkEntity):
 
         # game properties
         self.displayname = ""
+        self.xp = 0
+        self.money = 0
+        self.premium = Premium.F2P
+        self.premium_time = -1
+
         self.last_ping = time.time() * 1000  # milliseconds
         self.ping = 0
         self.is_updated_ping = True
 
+        # stats
+        self.stats = None
+
     def get_handler_for_packet(self, packet_id):
         return get_handler_for_packet(packet_id)
 
-    async def authorize(self, username: str, session_id: int, rights: int):
+    async def authorize(self, username: str, session_id: int, rights: int) -> bool:
         self.username = username
         self.session_id = session_id
         self.rights = rights
         self.authorized = True
 
-        # TODO: In the future, verify premium status for premium only servers
-        # from packets.server import PlayerAuthorization, Ping
+        self.stats = UserStats(username=self.username)
 
-        # await self.send(PlayerAuthorization(1, self).build())
-        # await self.send_ping()
+        details_load_successful = await self.load_user_details_from_database()
+        stats_load_successful = await self.stats.load_stats_from_database()
+
+        database_data_loaded = details_load_successful and stats_load_successful
+
+        return database_data_loaded
+
+    async def load_user_details_from_database(self) -> bool:
+        database_details = await get_user_details(username=self.username)
+        success = False
+        if database_details:
+            self.money = database_details["money"]
+            self.xp = database_details["xp"]
+            self.premium = database_details["premium"]
+            self.premium_time = database_details["premium_expiredate"]
+            success = True
+
+        return success
 
     async def disconnect(self):
         logging.info("Called disconnect to client")
