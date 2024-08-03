@@ -8,6 +8,7 @@ class ClientXorKeys:
     SEND = 0x96
     RECEIVE = 0xC3
 
+
 class AuthenticationClient:
     def __init__(self, ip: str, port: int, max_retries: int = 5):
         self.ip = ip
