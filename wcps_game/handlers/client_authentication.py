@@ -16,7 +16,7 @@ from wcps_game.packets.error_codes import PlayerAuthorizationError
 class ClientAuthenticationHandler(PacketHandler):
     async def process(self, u: "User") -> None:
 
-        # internal_id = self.get_block(0)
+        internal_id = self.get_block(0)
         username = self.get_block(2)
         displayname = self.get_block(3)
         # TODO: Make sure these do not crash the server
@@ -55,7 +55,9 @@ class ClientAuthenticationHandler(PacketHandler):
         if all(is_valid_length(name) for name in [username, displayname]):
 
             # temporary set their username for keying, it will be checked again later
+            u.internal_id = int(internal_id)  # legacy, but included for now for testing
             u.username = username
+            u.displayname = displayname
             # temporarily add users even if their data is incomplete, it will be
             # reset on correct authorization
             await u.this_server.add_player(u)
