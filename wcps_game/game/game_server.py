@@ -6,7 +6,7 @@ from wcps_core.constants import Ports, ServerTypes, InternalKeys
 
 from wcps_game.entities.network_entities import NetworkEntity
 from wcps_game.handlers import get_handler_for_packet
-from wcps_game.networking import AuthenticationClient, ClientXorKeys
+from wcps_game.networking import ClientXorKeys
 
 
 class User(NetworkEntity):
@@ -36,16 +36,19 @@ class User(NetworkEntity):
 
 
 class GameServer(NetworkEntity):
-    def __init__(self):
+    def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+        super().__init__(
+            reader=reader,
+            writer=writer,
+            xor_key_send=InternalKeys.XOR_GAME_SEND,
+            xor_key_receive=InternalKeys.XOR_AUTH_SEND
+            )
 
         # Network data
         # TODO: configs here
         self.name = "WCPS"
         self.ip = "127.0.0.1"
         self.port = Ports.GAME_CLIENT
-        self.authentication_client = AuthenticationClient(ip="127.0.0.1", port=Ports.INTERNAL)
-        self.xor_key_send = InternalKeys.XOR_GAME_SEND
-        self.xor_key_receive = InternalKeys.XOR_AUTH_SEND
 
         # Authorization properties
         self.is_first_authorized = True
@@ -63,10 +66,6 @@ class GameServer(NetworkEntity):
 
         # Lock to ensure thread safety and asyncio safety
         self.lock = asyncio.Lock()
-
-    async def start(self):
-        self.reader, self.writer = await self.authentication_client.connect()
-        await self.listen()
 
     def get_handler_for_packet(self, packet_id):
         return get_handler_for_packet(packet_id)

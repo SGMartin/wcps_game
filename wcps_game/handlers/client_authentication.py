@@ -5,6 +5,9 @@ if TYPE_CHECKING:
 
 from wcps_game.handlers.packet_handler import PacketHandler
 
+from wcps_game.packets.packet_list import PacketList
+from wcps_game.packets.packet_factory import PacketFactory
+from wcps_game.packets.error_codes import PlayerAuthorizationError
 # Instead of authorizing and moving on to the equipment packet,
 # we will instead send an internal authentication packet to the auth
 # and in that handler we will send the equipment packet if everything is ok
@@ -13,7 +16,7 @@ from wcps_game.handlers.packet_handler import PacketHandler
 class ClientAuthenticationHandler(PacketHandler):
     async def process(self, u: "User") -> None:
 
-        internal_id = self.get_block(0)
+        # internal_id = self.get_block(0)
         username = self.get_block(2)
         displayname = self.get_block(3)
         # TODO: Make sure these do not crash the server

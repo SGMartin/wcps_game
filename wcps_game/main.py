@@ -1,11 +1,10 @@
 import asyncio
 import datetime
 import logging
+import sys
 
-from wcps_core.constants import Ports
-
-from wcps_game.game.game_server import GameServer, User
-from wcps_game.networking import UDPListener
+from wcps_game.game.game_server import GameServer
+from wcps_game.networking import start_udp_listeners, start_tcp_listeners, AuthenticationClient
 
 # ASCII LOGO
 WCPS_IMAGE = r"""
@@ -47,51 +46,22 @@ async def main():
     print(WCPS_IMAGE)
     logging.info("Starting WCPS Game Server...")
 
-    # # Initialize and configure GameServer
-    # game_server = GameServer()
-
-    # logging.info("Connecting to authentication server")
-    # auth_client = AuthenticationClient(game_server)
-
-    # # Start tasks for authentication client and pinging
-    # asyncio.create_task(auth_client.run())
-    # asyncio.create_task(auth_client.ping_authentication_server())
-
-    # # Start tasks for status reporting and task monitoring
-    # asyncio.create_task(status_reporter(game_server))
-    # asyncio.create_task(task_monitor())
-
-    # # Start TCP listener
-    # asyncio.create_task(start_listeners(game_server, auth_client))
-
-    # # ## Start UDP listeners
-    # udp_listener_1 = UDPListener(wcps_core.constants.Ports.UDP1)
-    # udp_listener_2 = UDPListener(wcps_core.constants.Ports.UDP2)
-
-    # await asyncio.gather(
-    #     udp_listener_1.start(),
-    #     udp_listener_2.start()
-    # )
-
-    # Start UDP listeners on both ports
-    udp_listener_1 = UDPListener(Ports.UDP1)
-    udp_listener_2 = UDPListener(Ports.UDP2)
-
-    await asyncio.gather(
-        udp_listener_1.start(),
-        udp_listener_2.start()
-    )
-
-    # Initialize an configure Game Server
-    this_server = GameServer()
+    # Start UDP listeners and handle binding failures
+    logging.info("Starting UDP listeners...")
+    asyncio.create_task(start_udp_listeners())
 
     # Attempt to connect to authentication server
-    await this_server.start()
+    authentication_client = AuthenticationClient("127.0.0.1", 5012)
 
-    # TODO: check if we are connected?
+    try:
+        connection_reader, connection_writer = await authentication_client.connect()
+        game_server = GameServer(connection_reader, connection_writer)
+    except Exception as e:
+        logging.error(f"Failed to start the game server: {e}")
+        sys.exit(1)
 
-    # Initialize the TCP server
-    await asyncio.start_server(User, this_server.ip, this_server.port)
+    # Start TCP servers
+    asyncio.create_task(start_tcp_listeners(game_server.ip, game_server.port))
 
     # Get the current date
     now = datetime.datetime.now()
@@ -101,10 +71,6 @@ async def main():
     try:
         while True:
             logging.info("Server is running. Awaiting connections...")
-            # ## test
-            # from packets.server import Ping           
-            # for u in game_server.online_users.values():
-            #     await u.send(Ping(1,u).build())
             await asyncio.sleep(5)  # Adjust sleep duration as needed
 
     except KeyboardInterrupt:

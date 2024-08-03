@@ -2,6 +2,9 @@ import asyncio
 import struct
 import logging
 from typing import Tuple, Optional
+import sys
+
+from wcps_core.constants import Ports
 
 
 class ClientXorKeys:
@@ -23,7 +26,7 @@ class AuthenticationClient:
         while attempt < self.max_retries:
             try:
                 self.reader, self.writer = await asyncio.open_connection(self.ip, self.port)
-                logging.info(f'Connected to authentication server at {self.ip}:{self.port}')
+                logging.info(f'Connection to authentication server at {self.ip}:{self.port}')
                 return self.reader, self.writer
             except Exception as e:
                 attempt += 1
@@ -168,3 +171,34 @@ class UDPProtocol(asyncio.DatagramProtocol):
         logging.error(f"Error received: {exc}")
         if self.listener.transport:
             self.listener.transport.close()
+
+
+async def start_udp_listeners():
+    # Initialize UDP listeners
+    udp_listener_1 = UDPListener(Ports.UDP1)
+    udp_listener_2 = UDPListener(Ports.UDP2)
+
+    try:
+        # Start both UDP listeners as separate tasks
+        udp_task1 = asyncio.create_task(udp_listener_1.start())
+        udp_task2 = asyncio.create_task(udp_listener_2.start())
+
+        # Gather both tasks, so the function will await indefinitely
+        await asyncio.gather(udp_task1, udp_task2)
+    except Exception as e:
+        logging.error(f"Failed to start UDP listeners: {e}")
+        sys.exit(1)  # Use sys.exit() to exit if an exception occurs
+
+
+async def start_tcp_listeners(ip: str, port: int):
+    # Lazy way to avoid a circular import in an otherwise nice project structure
+    from wcps_game.game.game_server import User
+
+    try:
+        tcp_server = await asyncio.start_server(User, ip, port)
+        logging.info("TCP listener started.")
+    except OSError:
+        logging.error(f"Failed to bind to port {ip}:{port}")
+        raise SystemExit("TCP listener failed. Server stopped.")
+
+    await asyncio.gather(tcp_server.serve_forever())
