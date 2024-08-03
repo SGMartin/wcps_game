@@ -6,6 +6,8 @@ import sys
 from wcps_game.database import run_pool
 from wcps_game.game.game_server import GameServer
 from wcps_game.networking import start_udp_listeners, start_tcp_listeners, AuthenticationClient
+from wcps_game.packets.packet_factory import PacketFactory
+from wcps_game.packets.packet_list import PacketList
 
 # ASCII LOGO
 WCPS_IMAGE = r"""
@@ -43,6 +45,14 @@ async def task_monitor():
         await asyncio.sleep(30)  # Monitor tasks every 30 seconds
 
 
+async def ping_authentication_server(game_server: GameServer):
+    server_status_packet = PacketFactory.create_packet(
+        packet_id=PacketList.INTERNAL_GAME_STATUS,
+        server=game_server
+    )
+    await game_server.send(server_status_packet.build())
+
+
 async def main():
 
     print(WCPS_IMAGE)
@@ -70,12 +80,18 @@ async def main():
     # Get the current date
     now = datetime.datetime.now()
     start_time = now.strftime("%d/%m/%Y")
+    server_loops = 0
     logging.info(f"Game server successfully started on {start_time}")
 
     try:
         while True:
-            logging.info("Server is running. Awaiting connections...")
-            await asyncio.sleep(5)  # Adjust sleep duration as needed
+            server_loops += 1
+
+            # each 5 loops, start the ping routines
+            if server_loops % 5 == 0:
+                await ping_authentication_server(game_server=game_server)
+
+            await asyncio.sleep(1)
 
     except KeyboardInterrupt:
         logging.info("Shutting down server...")
