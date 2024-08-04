@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 from wcps_core.constants import ErrorCodes as er
 from wcps_core.packets import OutPacket
 
-from wcps_game.game.constants import get_level_for_exp
+from wcps_game.game.constants import get_level_for_exp, Classes
 from wcps_game.packets.error_codes import PlayerAuthorizationError
 from wcps_game.packets.packet_list import ClientXorKeys, PacketList
 
@@ -45,13 +45,13 @@ class PlayerAuthorization(OutPacket):
 
             # SLOT STATE and loadouts
             self.append(u.equipment.get_slot_string())  # T/F = Slot enabled/disabled: slots: 5 -8
-            self.append("DA02,DB01,DF01,DR01,^,^,^,^")  # engineer current loadout
-            self.append("DA02,DB01,DF01,DQ01,^,^,^,^")  # medic current loadout
-            self.append("DA02,DB01,DG05,DN01,^,^,^,^")  # sniper current loadout
-            self.append("DA02,DB01,DC04,DN01,DH02,^,^,^")  # assault current loadout
-            self.append("DA02,DB01,DJ01,DL01,^,^,^,^")  # heavy trooper current loadout
+            self.append(u.equipment.loadout[Classes.ENGINEER])  # engineer current loadout
+            self.append(u.equipment.loadout[Classes.MEDIC])  # medic current loadout
+            self.append(u.equipment.loadout[Classes.SNIPER])  # sniper current loadout
+            self.append(u.equipment.loadout[Classes.ASSAULT])  # assault current loadout
+            self.append(u.equipment.loadout[Classes.HEAVY])  # heavy current loadout
 
-            # nventory (max 31)
+            # inventory (max 31)
             item_list = ""
             for i in range(32):
                 if i == 0:

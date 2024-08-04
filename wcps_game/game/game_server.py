@@ -96,9 +96,8 @@ class User(NetworkEntity):
 
     async def load_equipment(self) -> bool:
         self.equipment = Equipment(self)
-
-        success = True
-        return success
+        can_load = await self.equipment.get_loadout_from_database()
+        return can_load
 
     async def disconnect(self):
         logging.info("Called disconnect to client")

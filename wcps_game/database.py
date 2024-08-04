@@ -81,8 +81,7 @@ async def get_user_details_and_stats(username: str) -> dict:
             query = """
             SELECT 
                 u.id, u.xp, u.money, u.premium, u.premium_expiredate,
-                s.kills, s.deaths, s.headshots, s.bombs_planted, s.bombs_defused, 
-                s.rounds_played, s.flags_taken, s.victories, s.defeats, s.vehicles_destroyed
+                s.kills, s.deaths
             FROM 
                 users u
             JOIN 
@@ -105,3 +104,34 @@ async def get_user_details_and_stats(username: str) -> dict:
                 return this_user
             else:
                 return None
+
+
+async def get_user_inventory_and_equipment(username: str) -> dict:
+    async with pool.acquire()as connection:
+        await connection.select_db(settings().database_name)
+        async with connection.cursor() as cur:
+            query = """
+            SELECT 
+                l.engineer, l.medic, l.sniper, l.assault, l.heavy_trooper
+            FROM
+                users u
+            JOIN
+                user_loadout l ON u.id = l.id
+            WHERE
+                u.username = %s
+            """
+            await cur.execute(query, (username, ))
+            user_loadout = await cur.fetchone()
+            if user_loadout:
+                this_loadout = {
+                    "engineer": user_loadout[0],
+                    "medic": user_loadout[1],
+                    "sniper": user_loadout[2],
+                    "assault": user_loadout[3],
+                    "heavy_trooper": user_loadout[4]
+                }
+                return this_loadout
+            else:
+                return None
+
+
