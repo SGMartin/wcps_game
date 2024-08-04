@@ -176,6 +176,10 @@ class Inventory:
         if len(self.expired_items) > 0:
             await db.set_inventory_items_expired(self.expired_items)
 
+    def has_item(self, code_to_check: str) -> bool:
+        all_codes = [item.item_code for item in self.item_list]
+        return code_to_check in all_codes
+
     def format_inventory_from_items(self):
         new_item_string = ""
 
