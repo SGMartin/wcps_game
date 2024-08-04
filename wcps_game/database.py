@@ -220,3 +220,20 @@ async def get_user_inventory_and_equipment(username: str) -> dict:
                 }
             else:
                 return None
+
+
+async def set_inventory_items_expired(items: list) -> bool:
+    async with pool.acquire() as connection:
+        await connection.select_db(settings().database_name)
+        async with connection.cursor() as cur:
+            query = """
+            UPDATE user_inventory
+            SET expired = 1
+            WHERE (id, code) IN (%s)
+            """
+            item_pairs = ', '.join(['(%s, %s)'] * len(items))
+            query = query % item_pairs
+            params = [item for item in items for item in (item.database_id, item.item_code)]
+            await cur.execute(query, params)
+            await connection.commit()
+            return cur.rowcount > 0

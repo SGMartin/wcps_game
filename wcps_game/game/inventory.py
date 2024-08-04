@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class Item:
     def __init__(self, slot, db_id: int, item_code: str, expire_date_seconds: int):
         self.slot = slot
-        self.database_id = db_id  # TODO: haven't yet decided If I'm using this one
+        self.database_id = db_id
         self.item_code = item_code.upper()
         self.expire_date = datetime(1970, 1, 1, tzinfo=timezone.utc) + timedelta(seconds=expire_date_seconds)
         self.amount = 0
@@ -107,8 +107,12 @@ class Inventory:
         # load loadout data from here
         self.equipment = Equipment(self.owner)
 
+        # keep a list of expired items for packets
+        self.expired_items = []
+
     def reset(self):
-        self.item_list = []
+        self.item_list.clear()
+        self.expired_items.clear()
         self.inventory_string = self.default_inventory_string
         self.equipment.reset_loadout()
 
@@ -120,7 +124,7 @@ class Inventory:
                 username=self.owner.username
                 )
 
-            self.load_inventory_equipment_from_db(db_results=database_results)
+            await self.load_inventory_equipment_from_db(db_results=database_results)
             success = True
 
         except pymysql.err.OperationalError as e:
@@ -131,37 +135,46 @@ class Inventory:
             success = False
         return success
 
-    def load_inventory_equipment_from_db(self, db_results: dict):
+    async def load_inventory_equipment_from_db(self, db_results: dict):
 
         if db_results:
             # Attempt to parse loadout
             self.equipment.extract_loadout_from_db_result(db_result=db_results["loadout"])
-            self.extract_inventory_from_db_result(db_results=db_results["inventory"])
+            await self.extract_inventory_from_db_result(db_results=db_results["inventory"])
         else:
             logging.error(f"Cannot load inventory for {self.owner.username}. Setting defaults")
             self.reset()
 
         self.format_inventory_from_items()
 
-    def extract_inventory_from_db_result(self, db_results: list):
+    async def extract_inventory_from_db_result(self, db_results: list):
 
         added_items = []
 
         for item in db_results:
             # TODO: check expiration here
             if len(added_items) <= game_constants.MAX_ITEMS:
+
                 current_epoch_time = int(time.time())
                 item_start_date = item["startdate"]
                 expire_date = item_start_date + item["leasing_seconds"]
+
                 new_item = Item(
                     slot=0,
                     db_id=item["inventory_id"],
                     item_code=item["inventory_code"],
                     expire_date_seconds=expire_date
                 )
-                added_items.append(new_item)
+                if current_epoch_time >= expire_date:
+                    self.expired_items.append(new_item)
+                else:
+                    added_items.append(new_item)
 
         self.item_list = added_items
+
+        # call routine on expired items
+        if len(self.expired_items) > 0:
+            await db.set_inventory_items_expired(self.expired_items)
 
     def format_inventory_from_items(self):
         new_item_string = ""
@@ -180,5 +193,5 @@ class Inventory:
 
         for i in range(0, missing_item_slots):
             new_item_string = f"{new_item_string},^"
-
+        print(new_item_string)
         self.inventory_string = new_item_string
