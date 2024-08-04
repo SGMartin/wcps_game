@@ -152,10 +152,7 @@ class Inventory:
             if len(added_items) <= game_constants.MAX_ITEMS:
                 current_epoch_time = int(time.time())
                 item_start_date = item["startdate"]
-                print(item_start_date)
-                print(item["leasing_seconds"])
                 expire_date = item_start_date + item["leasing_seconds"]
-                print(expire_date)
                 new_item = Item(
                     slot=0,
                     db_id=item["inventory_id"],
@@ -184,5 +181,4 @@ class Inventory:
         for i in range(0, missing_item_slots):
             new_item_string = f"{new_item_string},^"
 
-        print(f"FINAL ITEM STRING {new_item_string}")
         self.inventory_string = new_item_string
