@@ -2,6 +2,8 @@
 ROUND_LIMITS = [1, 3, 5, 7, 9]
 TDM_LIMITS = [30, 50, 100, 150, 200, 300]
 MAX_CHANNELS = 3
+MAX_CLASSES = 5
+MAX_WEAPONS_SLOTS = 8
 
 EXPTABLE = [
     # 1 - 10
@@ -78,7 +80,7 @@ class Classes:
     ENGINEER = 0
     MEDIC = 1
     SNIPER = 2
-    SOLDIER = 3
+    ASSAULT = 3
     HEAVY = 4
 
 

@@ -10,6 +10,7 @@ from wcps_game.config import settings
 from wcps_game.database import get_user_details_and_stats
 from wcps_game.game.constants import Premium
 from wcps_game.game.user_stats import UserStats
+from wcps_game.game.inventory import Equipment
 from wcps_game.entities.network_entities import NetworkEntity
 from wcps_game.handlers import get_handler_for_packet
 from wcps_game.networking import ClientXorKeys
@@ -25,7 +26,6 @@ class User(NetworkEntity):
             xor_key_send=ClientXorKeys.SEND,
             xor_key_receive=ClientXorKeys.RECEIVE
             )
-
         # network properties
         self.reader = reader
         self.writer = writer
@@ -60,6 +60,9 @@ class User(NetworkEntity):
         # stats
         self.stats = None
 
+        # inventory and equipment
+        self.equipment = None
+
     def get_handler_for_packet(self, packet_id):
         return get_handler_for_packet(packet_id)
 
@@ -72,8 +75,9 @@ class User(NetworkEntity):
         self.stats = UserStats(username=self.username)
 
         details_load_successful = await self.load_user_details_from_database()
+        inventory_load_successful = await self.load_equipment()
 
-        return details_load_successful
+        return details_load_successful and inventory_load_successful
 
     async def load_user_details_from_database(self) -> bool:
         database_details = await get_user_details_and_stats(username=self.username)
@@ -88,6 +92,12 @@ class User(NetworkEntity):
 
             success = True
 
+        return success
+
+    async def load_equipment(self) -> bool:
+        self.equipment = Equipment(self)
+
+        success = True
         return success
 
     async def disconnect(self):

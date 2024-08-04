@@ -44,7 +44,7 @@ class PlayerAuthorization(OutPacket):
             self.fill(0, 5)      # ????
 
             # SLOT STATE and loadouts
-            self.append("T,F,F,F")  # T = Slot enabled. F = disabled. Slots: 5 -8
+            self.append(u.equipment.get_slot_string())  # T/F = Slot enabled/disabled: slots: 5 -8
             self.append("DA02,DB01,DF01,DR01,^,^,^,^")  # engineer current loadout
             self.append("DA02,DB01,DF01,DQ01,^,^,^,^")  # medic current loadout
             self.append("DA02,DB01,DG05,DN01,^,^,^,^")  # sniper current loadout
@@ -59,6 +59,6 @@ class PlayerAuthorization(OutPacket):
                 else:
                     item_list += ",^"
 
-            item_list_2 = "^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^"
+            item_list_2 = "DE01-3-0-24080408-0-0-0-0-0-0-0,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^"
             self.append(item_list_2)
             self.fill(0, 2)  # ?
