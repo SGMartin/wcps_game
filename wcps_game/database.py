@@ -81,8 +81,7 @@ async def get_user_details_and_stats(username: str) -> dict:
             query = """
             SELECT 
                 u.id, u.xp, u.money, u.premium, u.premium_expiredate,
-                s.kills, s.deaths, s.headshots, s.bombs_planted, s.bombs_defused, 
-                s.rounds_played, s.flags_taken, s.victories, s.defeats, s.vehicles_destroyed
+                s.kills, s.deaths
             FROM 
                 users u
             JOIN 
@@ -105,3 +104,136 @@ async def get_user_details_and_stats(username: str) -> dict:
                 return this_user
             else:
                 return None
+
+
+async def get_user_equipment(username: str) -> dict:
+    async with pool.acquire()as connection:
+        await connection.select_db(settings().database_name)
+        async with connection.cursor() as cur:
+            query = """
+            SELECT 
+                l.engineer, l.medic, l.sniper, l.assault, l.heavy_trooper
+            FROM
+                users u
+            JOIN
+                user_loadout l ON u.id = l.id
+            WHERE
+                u.username = %s
+            """
+            await cur.execute(query, (username, ))
+            user_loadout = await cur.fetchone()
+            if user_loadout:
+                this_loadout = {
+                    "engineer": user_loadout[0],
+                    "medic": user_loadout[1],
+                    "sniper": user_loadout[2],
+                    "assault": user_loadout[3],
+                    "heavy_trooper": user_loadout[4]
+                }
+                return this_loadout
+            else:
+                return None
+
+
+async def get_user_inventory(username: str) -> dict:
+    async with pool.acquire()as connection:
+        await connection.select_db(settings().database_name)
+        async with connection.cursor() as cur:
+            query = """
+            SELECT 
+                i.id AS inventory_id, i.code AS inventory_code, i.retail, 
+                i.startdate, i.leasing_seconds, i.price, i.price_cash
+            FROM
+                users u
+            JOIN
+                user_inventory i ON u.id = i.owner
+            WHERE
+                u.username = %s AND i.expired != 0 AND i.deleted != 0
+            """
+            await cur.execute(query, (username, ))
+            results = await cur.fetchone()
+            if results:
+                inventory_items = []
+                for row in results:
+                    inventory_item = {
+                        "inventory_id": int(row[5]),
+                        "inventory_code": row[6],
+                        "retail": bool(row[7]),
+                        "startdate": int(row[8]),
+                        "leasing_seconds": int(row[9]),
+                        "price": int(row[10]),  # TODO: used?
+                        "price_cash": int(row[11])  # TODO: used?
+                    }
+                    inventory_items.append(inventory_item)
+                return results
+            else:
+                return None
+
+
+async def get_user_inventory_and_equipment(username: str) -> dict:
+    async with pool.acquire() as connection:
+        await connection.select_db(settings().database_name)
+        async with connection.cursor() as cur:
+            # Query to fetch user loadout and inventory
+            query = """
+            SELECT 
+                l.engineer, l.medic, l.sniper, l.assault, l.heavy_trooper,
+                i.id AS inventory_id, i.code AS inventory_code, i.retail, 
+                i.startdate, i.leasing_seconds, i.price, i.price_cash
+            FROM
+                users u
+            JOIN
+                user_loadout l ON u.id = l.id
+            LEFT JOIN
+                user_inventory i ON u.id = i.owner
+            WHERE
+                u.username = %s AND i.expired = 0 AND i.deleted = 0
+            """
+            await cur.execute(query, (username,))
+            results = await cur.fetchall()
+            if results:
+                # Process the results
+                loadout = {
+                    "engineer": results[0][0],
+                    "medic": results[0][1],
+                    "sniper": results[0][2],
+                    "assault": results[0][3],
+                    "heavy_trooper": results[0][4]
+                }
+
+                inventory_items = []
+                for row in results:
+                    inventory_item = {
+                        "inventory_id": int(row[5]),
+                        "inventory_code": row[6],
+                        "retail": bool(row[7]),
+                        "startdate": int(row[8]),
+                        "leasing_seconds": int(row[9]),
+                        "price": int(row[10]),  # TODO: used?
+                        "price_cash": int(row[11])  # TODO: used?
+                    }
+                    inventory_items.append(inventory_item)
+
+                return {
+                    "loadout": loadout,
+                    "inventory": inventory_items
+                }
+            else:
+                return None
+
+
+async def set_inventory_items_expired(items: list) -> bool:
+    async with pool.acquire() as connection:
+        await connection.select_db(settings().database_name)
+        async with connection.cursor() as cur:
+            query = """
+            UPDATE user_inventory
+            SET expired = 1
+            WHERE (id, code) IN (%s)
+            """
+            item_pairs = ', '.join(['(%s, %s)'] * len(items))
+            query = query % item_pairs
+            params = [item for item in items for item in (item.database_id, item.item_code)]
+            await cur.execute(query, params)
+            await connection.commit()
+            return cur.rowcount > 0
