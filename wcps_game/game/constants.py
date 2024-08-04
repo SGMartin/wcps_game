@@ -4,6 +4,7 @@ TDM_LIMITS = [30, 50, 100, 150, 200, 300]
 MAX_CHANNELS = 3
 MAX_CLASSES = 5
 MAX_WEAPONS_SLOTS = 8
+MAX_ITEMS = 31
 
 EXPTABLE = [
     # 1 - 10
@@ -167,3 +168,8 @@ class ClanRank:
     LIUTENANT = 2
     CHAIRMAN = 3
     MASTER = 4
+
+
+class ItemType:
+    WEAPON = 1
+    OTHER = 2

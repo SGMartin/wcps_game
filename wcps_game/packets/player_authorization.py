@@ -44,21 +44,13 @@ class PlayerAuthorization(OutPacket):
             self.fill(0, 5)      # ????
 
             # SLOT STATE and loadouts
-            self.append(u.equipment.get_slot_string())  # T/F = Slot enabled/disabled: slots: 5 -8
-            self.append(u.equipment.loadout[Classes.ENGINEER])  # engineer current loadout
-            self.append(u.equipment.loadout[Classes.MEDIC])  # medic current loadout
-            self.append(u.equipment.loadout[Classes.SNIPER])  # sniper current loadout
-            self.append(u.equipment.loadout[Classes.ASSAULT])  # assault current loadout
-            self.append(u.equipment.loadout[Classes.HEAVY])  # heavy current loadout
+            self.append(u.inventory.equipment.get_slot_string())  # T/F = Slots 5-8 enabled/disabled
+            self.append(u.inventory.equipment.loadout[Classes.ENGINEER])  # engineer current loadout
+            self.append(u.inventory.equipment.loadout[Classes.MEDIC])  # medic current loadout
+            self.append(u.inventory.equipment.loadout[Classes.SNIPER])  # sniper current loadout
+            self.append(u.inventory.equipment.loadout[Classes.ASSAULT])  # assault current loadout
+            self.append(u.inventory.equipment.loadout[Classes.HEAVY])  # heavy current loadout
 
             # inventory (max 31)
-            item_list = ""
-            for i in range(32):
-                if i == 0:
-                    item_list = "^"
-                else:
-                    item_list += ",^"
-
-            item_list_2 = "DE01-3-0-24080408-0-0-0-0-0-0-0,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^,^"
-            self.append(item_list_2)
+            self.append(u.inventory.inventory_string)
             self.fill(0, 2)  # ?
