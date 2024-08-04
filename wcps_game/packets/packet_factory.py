@@ -8,6 +8,7 @@ from wcps_game.packets.request_server_time import ServerTime
 from wcps_game.packets.player_authorization import PlayerAuthorization
 from wcps_game.packets.leave_server import LeaveServer
 from wcps_game.packets.ping import Ping
+from wcps_game.packets.userlist import UserList
 
 
 class PacketFactory:
@@ -20,7 +21,8 @@ class PacketFactory:
         PacketList.REQUEST_SERVER_TIME: ServerTime,
         PacketList.PLAYER_AUTHORIZATION: PlayerAuthorization,
         PacketList.PING: Ping,
-        PacketList.LEAVE_SERVER: LeaveServer
+        PacketList.LEAVE_SERVER: LeaveServer,
+        PacketList.USERLIST: UserList
 
     }
 

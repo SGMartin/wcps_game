@@ -50,6 +50,13 @@ class AuthorizeClientHandler(PacketHandler):
                     await this_user.send(packet.build())
                     # Ping player ASAP so that they log with the right premium status
                     await this_user.send_ping()
+                    # TODO: move to change channel when ready
+                    userlist_packet = PacketFactory.create_packet(
+                        packet_id=PacketList.USERLIST,
+                        lobby_user_list=list(server.online_users.values()),
+                        target_page=0
+                    )
+                    await this_user.send(userlist_packet.build())
                 else:
                     await this_user.send(error_packet.build())
                     await this_user.disconnect()
