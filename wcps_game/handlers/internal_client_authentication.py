@@ -57,6 +57,13 @@ class AuthorizeClientHandler(PacketHandler):
                         target_page=0
                     )
                     await this_user.send(userlist_packet.build())
+                    # Item has expired packet. Here or after channel selection with userlist?
+                    update_inventory_packet = PacketFactory.create_packet(
+                        packet_id=PacketList.UPDATE_INVENTORY,
+                        user=this_user
+                    )
+                    await this_user.send(update_inventory_packet.build())
+                    this_user.inventory.expired_items.clear()
                 else:
                     await this_user.send(error_packet.build())
                     await this_user.disconnect()

@@ -20,3 +20,4 @@ class PacketList:
     USERLIST = 0x7100
     # Shop
     EQUIPMENT = 0x7512
+    UPDATE_INVENTORY = 0x7900  # Also controls when items expire
