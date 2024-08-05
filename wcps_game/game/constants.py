@@ -173,3 +173,93 @@ class ClanRank:
 class ItemType:
     WEAPON = 1
     OTHER = 2
+
+
+class ResourceItem:  # unused in CP1
+    OIL = "A"
+    WOOD = "B"
+    STONE = "C"
+    MINERAL = "D"
+    FIBER = "E"
+
+
+class CharacterItem:  # unused in CP1
+    UNIFORM = "A"
+    SHIRT = "B"
+    PANTS = "C"
+    GOGGLE = "D"
+    EARRING = "E"
+    NECKLACE = "F"
+    MASK = "G"
+    BRACELET = "H"
+    RING = "I"
+    SHOES = "J"
+    GLOVES = "K"
+
+
+class PXItem:  # Introduced in late CP1
+    SLOT = "A"
+    DISPOSABLE = "B"
+    TIME = "C"
+    EXPSET = "D"
+    DINARSET = "E"
+
+
+class WeaponTypes:
+    DAGGER = "A"
+    PISTOL = "B"
+    RIFLE = "C"
+    RIFLE2 = "D"
+    RIFLE3 = "E"
+    SMG = "F"
+    SNIPER = "G"
+    MACHINE_GUN = "H"
+    SHOTGUN = "I"
+    ANTITANK_WEAPON = "J"
+    GROUND_TO_AIR_WEAPON = "K"
+    ANTITANK_MINE = "L"
+    GRENADE = "M"
+    GRENADE_COMBATANT = "N"
+    EXTRA_AMMO = "O"
+    BOMB = "P"
+    MEDIC_KIT = "Q"
+    SPANNER = "R"
+    ALLCLASS_PAID = "S"
+    MACHINE_GUN2 = "T"
+    ENGINEER_PAID = "U"
+    MEDIC_PAID = "V"
+    ALLCLASS = "W"
+    SCOUT_PAID = "X"
+    COMBATANT_PAID = "Y"
+    HEAVY_WEAPONS_PAID = "Z"
+
+
+class EquipmentTypes:
+    FIXED_GROUND_TO_GROUND_MISSILE = "A"
+    FIXED_GROUND_TO_AIR_MISSILE = "B"
+    MOTORCYCLE = "C"
+    CAR = "D"
+    TANK = "E"
+    LIGHT_TANK = "F"
+    ARMORED_VEHICLE = "G"
+    SELF_PROPELLED_ARTILLERY = "H"
+    SELF_PROPELLED_ANTI_AIR_GUN = "I"
+    HELICOPTER = "J"
+    AIRPLANE = "K"
+    NAVAL_TRANSPORT = "L"
+    NAVAL_ATTACK = "M"
+
+
+class EquipmentWeaponTypes:
+    SEAT = "A"
+    MACHINE_GUN = "B"
+    HEAVY_MACHINE_GUN = "C"
+    ANTIAIRCRAFT_GUN = "D"
+    MINI_GUN = "E"
+    TANK_GUN = "F"
+    SELF_PROPELLED_ARTILLERY = "G"
+    GRENADE_LAUNCHER = "H"
+    ANTI_AIRCRAFT_MISSILE = "I"
+    GROUND_MISSILE = "J"
+    ANTI_SHIP_MISSILE = "K"
+    BOMB = "L"
