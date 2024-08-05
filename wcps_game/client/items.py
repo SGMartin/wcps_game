@@ -1,6 +1,5 @@
 import logging
 from pathlib import Path
-
 import pandas as pd
 
 
@@ -27,7 +26,7 @@ class ItemDatabase:
         except FileNotFoundError as e:
             raise RuntimeError(
                 "CLIENT DATA ERROR: Cannot load client data tables"
-                ) from e
+            ) from e
 
     @property
     def item_data(self):
@@ -40,3 +39,13 @@ class ItemDatabase:
     @property
     def weapon_data(self):
         return self._weapons
+
+    def item_exists(self, code: str):
+        return self._items["code"].eq(code).any()
+
+    def is_active(self, code: str):
+        is_active = False
+        if self.item_exists(code=code):
+            return self._items.loc[self._items["code"] == code, "active"].values[0]
+        else:
+            return is_active
