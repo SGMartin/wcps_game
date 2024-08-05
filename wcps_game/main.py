@@ -6,6 +6,7 @@ import sys
 from wcps_core.constants import Ports
 
 from wcps_game.config import settings
+from wcps_game.client.items import ItemDatabase
 from wcps_game.database import run_pool
 from wcps_game.game.game_server import GameServer
 from wcps_game.networking import start_udp_listeners, start_tcp_listeners, AuthenticationClient
@@ -63,6 +64,9 @@ async def main():
 
     # Start the database
     await run_pool()
+
+    # load client related tables
+    ItemDatabase()
 
     # Attempt to connect to authentication server
     authentication_client = AuthenticationClient(

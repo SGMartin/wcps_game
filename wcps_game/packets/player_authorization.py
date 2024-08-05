@@ -44,7 +44,7 @@ class PlayerAuthorization(OutPacket):
             self.fill(0, 5)      # ????
 
             # SLOT STATE and loadouts
-            self.append(u.inventory.equipment.get_slot_string())  # T/F = Slots 5-8 enabled/disabled
+            self.append(u.inventory.get_slot_string())  # T/F = Slots 5-8 enabled/disabled
             self.append(u.inventory.equipment.loadout[Classes.ENGINEER])  # engineer current loadout
             self.append(u.inventory.equipment.loadout[Classes.MEDIC])  # medic current loadout
             self.append(u.inventory.equipment.loadout[Classes.SNIPER])  # sniper current loadout

@@ -18,3 +18,5 @@ class PacketList:
     PLAYER_AUTHORIZATION = 0x6200
     PING = 0x6400
     USERLIST = 0x7100
+    # Shop
+    EQUIPMENT = 0x7512

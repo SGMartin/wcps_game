@@ -11,6 +11,7 @@ from wcps_game.handlers.client_authentication import ClientAuthenticationHandler
 from wcps_game.handlers.leave_server import LeaveServerHandler
 from wcps_game.handlers.ping import PingHandler
 from wcps_game.handlers.userlist import UserListHandler
+from wcps_game.handlers.equipment import EquipmentHandler
 
 # Dictionary to map packet IDs to handler classes
 HANDLER_MAP = {
@@ -24,7 +25,10 @@ HANDLER_MAP = {
     PacketList.PLAYER_AUTHORIZATION: ClientAuthenticationHandler,
     PacketList.LEAVE_SERVER: LeaveServerHandler,
     PacketList.PING: PingHandler,
-    PacketList.USERLIST: UserListHandler
+    PacketList.USERLIST: UserListHandler,
+
+    # Shop
+    PacketList.EQUIPMENT: EquipmentHandler
 }
 
 

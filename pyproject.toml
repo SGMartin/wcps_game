@@ -22,6 +22,7 @@ dependencies = [
     "pydantic",
     "pydantic-settings",
     "wcps_core",
+    "pandas"
 ]
 
 [project.urls]

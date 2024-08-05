@@ -35,28 +35,9 @@ class Equipment:
 
         }
 
-    available_slots = {1: True, 2: True, 3: True, 4: True, 5: False, 6: False, 7: False, 8: False}
-
     def __init__(self, u: "User"):
         self.owner = u
-
-        # Set slots
-        self.update_slot_states()
-
-        # set loadout
-        self.loadout = self.default_loadout
-
-    def update_slot_states(self):
-        if self.owner.premium > game_constants.Premium.SILVER:
-            # Only GOLD premium users had 5th slot enabled by default
-            self.available_slots[5] = True
-            # TODO: check if user has items:
-            # CA01-4 (slots 5h to 8th) even if by default they were not in CP1
-
-    def get_slot_string(self):
-        slot_status = ["T" if self.available_slots[key] else "F" for key in range(5, 9)]
-        slot_string = ",".join(slot_status)
-        return slot_string
+        self.reset_loadout()
 
     async def get_loadout_from_database(self) -> bool:
         success = False
@@ -82,12 +63,83 @@ class Equipment:
                 game_constants.Classes.HEAVY: db_result["heavy_trooper"]
             }
             self.loadout = loadout
+            self.equipment_slots = self.get_equipment_slots_from_loadouts(self.loadout)
         else:
             logging.error(f"Failed to load equipment for {self.owner.username}. Going to default")
             self.reset_loadout()
 
     def reset_loadout(self):
         self.loadout = self.default_loadout
+        # set default equipment slots
+        self.equipment_slots = self.get_equipment_slots_from_loadouts(self.loadout)
+
+    def get_equipment_slots_from_loadouts(self, loadouts: dict):
+        new_equipment_slots = {
+            branch: self.parse_equipment_to_slots(loadout_string)
+            for branch, loadout_string in loadouts.items()
+            }
+        return new_equipment_slots
+
+    def parse_equipment_to_slots(self, class_loadout_string: str):
+        slot_list = class_loadout_string.split(",")
+        slot_list = [weapon if weapon != "^" else None for weapon in slot_list]
+
+        new_slot_dict = {i: None for i in range(len(slot_list))}
+
+        for i, slot_weapon in enumerate(slot_list):
+            if i < len(new_slot_dict):
+                new_slot_dict[i] = slot_weapon
+
+        return new_slot_dict
+
+    def add_item_to_slot(self, target_class: game_constants.Classes, target_slot: int, item_code: str):
+        if item_code is None or len(item_code) != 4:
+            logging.error(f"Attempt to add invalid code {item_code}")
+            return
+        if target_class >= game_constants.MAX_CLASSES:
+            logging.error(f"Invalid target class {target_class}")
+            return
+        if target_slot not in range(0, 8):
+            logging.error(f"Invalid target slot {target_slot}")
+            return
+
+        self.equipment_slots[target_class][target_slot] = item_code
+        self.update_loadout_from_slots(target_class=target_class)
+
+    def remove_item_from_slot(self, target_class: game_constants.Classes, target_slot: int):
+        if target_class >= game_constants.MAX_CLASSES:
+            logging.error(f"Invalid target class {target_class}")
+            return
+        if target_slot not in range(0, 8):
+            logging.error(f"Invalid target slot {target_slot}")
+            return
+
+        self.equipment_slots[target_class][target_slot] = None
+        self.update_loadout_from_slots(target_class=target_class)
+
+    def is_equipped_in_class(self, target_class: game_constants.Classes, weapon: str) -> int:
+        if target_class >= game_constants.MAX_CLASSES:
+            logging.error(f"Invalid target class {target_class}")
+            return None
+
+        if weapon is None or len(weapon) != 4:
+            logging.error(f"Invalid weapon {weapon}")
+            return None
+
+        this_class = self.equipment_slots[target_class]
+
+        for slot, equiped_weapon in this_class.items():
+            if weapon == equiped_weapon:
+                return slot
+
+        return -1
+
+    def update_loadout_from_slots(self, target_class: game_constants.Classes):
+        target_loadout = self.equipment_slots[target_class]
+        new_loadout = [weapon if weapon is not None else "^" for weapon in target_loadout.values()]
+        new_loadout = ",".join(new_loadout)
+
+        self.loadout[target_class] = new_loadout
 
 
 class Inventory:
@@ -110,11 +162,49 @@ class Inventory:
         # keep a list of expired items for packets
         self.expired_items = []
 
+        # slot data. Slots are available (or not) for all branches of service
+        self.available_slots = {
+            1: True,
+            2: True,
+            3: True,
+            4: True,
+            5: False,
+            6: False,
+            7: False,
+            8: False
+            }
+        self.update_slot_states()
+
+    def update_slot_states(self):
+        # Define the slot mappings for items CA01 to CA04
+        item_slot_mapping = {
+            "CA01": 5,  # CA01 unlocks slot 5
+            "CA02": 6,  # CA02 unlocks slot 6
+            "CA03": 7,  # CA03 unlocks slot 7
+            "CA04": 8   # CA04 unlocks slot 8
+            }
+
+        # Check if the user is a GOLD premium or higher or has item CA01 to unlock slot 5
+        if self.owner.premium > game_constants.Premium.SILVER or self.has_item("CA01"):
+            self.available_slots[5] = True
+
+        # Check and update slots based on the item presence
+        # TODO: Add logic to enable slots based on px items if needed
+        for item, slot in item_slot_mapping.items():
+            if self.has_item(item):
+                self.available_slots[slot] = True
+
+    def get_slot_string(self):
+        slot_status = ["T" if self.available_slots[key] else "F" for key in range(5, 9)]
+        slot_string = ",".join(slot_status)
+        return slot_string
+
     def reset(self):
         self.item_list.clear()
         self.expired_items.clear()
         self.inventory_string = self.default_inventory_string
         self.equipment.reset_loadout()
+        self.update_slot_states()
 
     async def get_inventory_and_equipment_from_db(self):
         success = False
@@ -197,5 +287,5 @@ class Inventory:
 
         for i in range(0, missing_item_slots):
             new_item_string = f"{new_item_string},^"
-        print(new_item_string)
+
         self.inventory_string = new_item_string

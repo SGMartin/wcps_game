@@ -9,6 +9,7 @@ from wcps_game.packets.player_authorization import PlayerAuthorization
 from wcps_game.packets.leave_server import LeaveServer
 from wcps_game.packets.ping import Ping
 from wcps_game.packets.userlist import UserList
+from wcps_game.packets.equipment import Equipment
 
 
 class PacketFactory:
@@ -22,7 +23,9 @@ class PacketFactory:
         PacketList.PLAYER_AUTHORIZATION: PlayerAuthorization,
         PacketList.PING: Ping,
         PacketList.LEAVE_SERVER: LeaveServer,
-        PacketList.USERLIST: UserList
+        PacketList.USERLIST: UserList,
+        # Shop
+        PacketList.EQUIPMENT: Equipment
 
     }
 
