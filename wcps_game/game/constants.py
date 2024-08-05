@@ -274,7 +274,7 @@ class DefaultWeapon:  # TODO Config this?
         "DQ01",  # Medic kit 1
         "DG05",  # M24
         "DN01",  # Default grenade
-        "DC01",  # K2
+        "DC02",  # K2
         "DJ01",  # PZF3
         "DL01"   # Anti tank mines
 
