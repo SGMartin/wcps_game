@@ -102,7 +102,9 @@ class Equipment:
         if target_slot not in range(0, 8):
             logging.error(f"Invalid target slot {target_slot}")
             return
+
         self.equipment_slots[target_class][target_slot] = item_code
+        self.update_loadout_from_slots(target_class=target_class)
 
     def remove_item_from_slot(self, target_class: game_constants.Classes, target_slot: int):
         if target_class >= game_constants.MAX_CLASSES:
@@ -113,6 +115,31 @@ class Equipment:
             return
 
         self.equipment_slots[target_class][target_slot] = None
+        self.update_loadout_from_slots(target_class=target_class)
+
+    def is_equipped_in_class(self, target_class: game_constants.Classes, weapon: str) -> int:
+        if target_class >= game_constants.MAX_CLASSES:
+            logging.error(f"Invalid target class {target_class}")
+            return None
+
+        if weapon is None or len(weapon) != 4:
+            logging.error(f"Invalid weapon {weapon}")
+            return None
+
+        this_class = self.equipment_slots[target_class]
+
+        for slot, equiped_weapon in enumerate(this_class):
+            if weapon == equiped_weapon:
+                return slot
+
+        return -1
+
+    def update_loadout_from_slots(self, target_class: game_constants.Classes):
+        target_loadout = self.equipment_slots[target_class]
+        new_loadout = [weapon if weapon is not None else "^" for weapon in target_loadout.values()]
+        new_loadout = ",".join(new_loadout)
+
+        self.loadout[target_class] = new_loadout
 
 
 class Inventory:

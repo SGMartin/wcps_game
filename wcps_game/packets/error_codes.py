@@ -21,3 +21,10 @@ class PlayerAuthorizationError:
     BAD_SYNCHRONIZATION = 91050          # User Info synchronization has failed.
     IDIN_USE = 92040                     # That ID is currently being used.
     PREMIUM_ONLY = 98010                 # Available to Premium users only.
+
+
+class EquipmentError:
+    CANNOTBEPLACED = 0x17AF2    # Item cannot be placed in this slot
+    INVALID_SLOT = 0x17AF3      # Can't be equipped at the slot.
+    INVALID_BRANCH = 0x17B38    # Item is unsuitable for this branch of the service
+    ALREADY_EQUIPPED = 0x17B42  # Item is already equipped
