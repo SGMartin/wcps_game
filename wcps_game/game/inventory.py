@@ -37,9 +37,7 @@ class Equipment:
 
     def __init__(self, u: "User"):
         self.owner = u
-
-        # set loadout
-        self.loadout = self.default_loadout
+        self.reset_loadout()
 
     async def get_loadout_from_database(self) -> bool:
         success = False
@@ -65,12 +63,56 @@ class Equipment:
                 game_constants.Classes.HEAVY: db_result["heavy_trooper"]
             }
             self.loadout = loadout
+            self.equipment_slots = self.get_equipment_slots_from_loadouts(self.loadout)
         else:
             logging.error(f"Failed to load equipment for {self.owner.username}. Going to default")
             self.reset_loadout()
 
     def reset_loadout(self):
         self.loadout = self.default_loadout
+        # set default equipment slots
+        self.equipment_slots = self.get_equipment_slots_from_loadouts(self.loadout)
+
+    def get_equipment_slots_from_loadouts(self, loadouts: dict):
+        new_equipment_slots = {
+            branch: self.parse_equipment_to_slots(loadout_string)
+            for branch, loadout_string in loadouts.items()
+            }
+        return new_equipment_slots
+
+    def parse_equipment_to_slots(self, class_loadout_string: str):
+        slot_list = class_loadout_string.split(",")
+        slot_list = [weapon if weapon != "^" else None for weapon in slot_list]
+
+        new_slot_dict = {i: None for i in range(len(slot_list))}
+
+        for i, slot_weapon in enumerate(slot_list):
+            if i < len(new_slot_dict):
+                new_slot_dict[i] = slot_weapon
+
+        return new_slot_dict
+
+    def add_item_to_slot(self, target_class: game_constants.Classes, target_slot: int, item_code: str):
+        if item_code is None or len(item_code) != 4:
+            logging.error(f"Attempt to add invalid code {item_code}")
+            return
+        if target_class >= game_constants.MAX_CLASSES:
+            logging.error(f"Invalid target class {target_class}")
+            return
+        if target_slot not in range(0, 8):
+            logging.error(f"Invalid target slot {target_slot}")
+            return
+        self.equipment_slots[target_class][target_slot] = item_code
+
+    def remove_item_from_slot(self, target_class: game_constants.Classes, target_slot: int):
+        if target_class >= game_constants.MAX_CLASSES:
+            logging.error(f"Invalid target class {target_class}")
+            return
+        if target_slot not in range(0, 8):
+            logging.error(f"Invalid target slot {target_slot}")
+            return
+
+        self.equipment_slots[target_class][target_slot] = None
 
 
 class Inventory:
