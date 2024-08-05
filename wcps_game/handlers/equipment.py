@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 from wcps_game.client.items import ItemDatabase
 from wcps_game.handlers.packet_handler import PacketHandler
-from wcps_game.game.constants import MAX_WEAPONS_SLOTS, MAX_CLASSES, DefaultWeapon
+from wcps_game.game.constants import MAX_WEAPONS_SLOTS, MAX_CLASSES, DefaultWeapon, BranchSlotCodes
 from wcps_game.packets.packet_factory import PacketFactory
 from wcps_game.packets.packet_list import PacketList
 from wcps_game.packets.error_codes import EquipmentError
@@ -45,37 +45,64 @@ class EquipmentHandler(PacketHandler):
         if not item_database.is_active(weapon_code) and u.rights <= 3:
             await u.disconnect()  # potential cheater. Log?
 
-        if not u.inventory.has_item(weapon_code) and weapon_code not in DefaultWeapon.DEFAULTS:
+        if (
+            not u.inventory.has_item(weapon_code)
+            and weapon_code not in DefaultWeapon.DEFAULTS
+        ):
             await u.disconnect()  # potential cheater/scripter. Log?
 
-        # can we actually equip the weapon for this branch?
-        # TODO
         # is equipped?
         equiped_in_slot = u.inventory.equipment.is_equipped_in_class(
-            target_class=target_branch,
-            weapon=weapon_code
-            )
+            target_class=target_branch, weapon=weapon_code
+        )
+
+        if not is_item_equip:  # in this case, the user is UNequipping
+            if equiped_in_slot >= 0:
+                u.inventory.equipment.remove_item_from_slot(
+                    target_class=target_branch,
+                    target_slot=alt_target_slot
+                    )
+
+                unequip_packet = PacketFactory.create_packet(
+                    packet_id=PacketList.EQUIPMENT,
+                    error_code=1,
+                    target_class=target_branch,
+                    new_loadout=u.inventory.equipment.loadout[target_branch]
+                )
+                await u.send(unequip_packet.build())
+                return
 
         if equiped_in_slot >= 0:
             already_equipped_packet = PacketFactory.create_packet(
                 packet_id=PacketList.EQUIPMENT,
                 error_code=EquipmentError.ALREADY_EQUIPPED
-            )
+                )
             await u.send(already_equipped_packet.build())
             return
         else:
-            # Perform the actual switch
-            u.inventory.equipment.add_item_to_slot(
-                target_class=target_branch,
-                target_slot=target_slot,
-                item_code=weapon_code
+            # Final check: can you really put a weapon here?
+            this_valid_codes = BranchSlotCodes[target_branch][target_slot]
+            weapon_subtype = weapon_code[1]
+
+            if weapon_subtype in this_valid_codes:
+
+                # Perform the actual switch
+                u.inventory.equipment.add_item_to_slot(
+                    target_class=target_branch,
+                    target_slot=target_slot,
+                    item_code=weapon_code
                 )
+                equip_packet = PacketFactory.create_packet(
+                    packet_id=PacketList.EQUIPMENT,
+                    error_code=1,
+                    target_class=target_branch,
+                    new_loadout=u.inventory.equipment.loadout[target_branch]
+                    )
 
-            equip_packet = PacketFactory.create_packet(
-                packet_id=PacketList.EQUIPMENT,
-                error_code=1,
-                target_class=target_branch,
-                new_loadout=u.inventory.equipment.loadout[target_branch]
-            )
-
-            await u.send(equip_packet.build())
+                await u.send(equip_packet.build())
+            else:
+                unsuitable_packet = PacketFactory.create_packet(
+                    packet_id=PacketList.EQUIPMENT,
+                    error_code=EquipmentError.INVALID_BRANCH
+                )
+                await u.send(unsuitable_packet.build())

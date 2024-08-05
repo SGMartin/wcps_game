@@ -128,7 +128,7 @@ class Equipment:
 
         this_class = self.equipment_slots[target_class]
 
-        for slot, equiped_weapon in enumerate(this_class):
+        for slot, equiped_weapon in this_class.items():
             if weapon == equiped_weapon:
                 return slot
 

@@ -279,3 +279,57 @@ class DefaultWeapon:  # TODO Config this?
         "DL01"   # Anti tank mines
 
     ]
+
+
+BranchSlotCodes = {
+        Classes.ENGINEER: {
+            0: [WeaponTypes.DAGGER],
+            1: [WeaponTypes.PISTOL],
+            2: [WeaponTypes.RIFLE2, WeaponTypes.SMG],
+            3: [WeaponTypes.SPANNER],
+            4: [WeaponTypes.RIFLE2, WeaponTypes.SHOTGUN, WeaponTypes.GRENADE, WeaponTypes.EXTRA_AMMO, WeaponTypes.SMG],
+            5: [WeaponTypes.ALLCLASS_PAID, WeaponTypes.ENGINEER_PAID, WeaponTypes.BOMB],
+            6: [],
+            7: []
+        },
+        Classes.MEDIC: {
+            0: [WeaponTypes.DAGGER],
+            1: [WeaponTypes.PISTOL],
+            2: [WeaponTypes.RIFLE2, WeaponTypes.SMG],
+            3: [WeaponTypes.MEDIC_KIT],
+            4: [WeaponTypes.RIFLE2, WeaponTypes.SHOTGUN, WeaponTypes.GRENADE, WeaponTypes.EXTRA_AMMO, WeaponTypes.SMG],
+            5: [WeaponTypes.ALLCLASS_PAID, WeaponTypes.MEDIC_PAID],
+            6: [],
+            7: []
+        },
+        Classes.SNIPER: {
+            0: [WeaponTypes.DAGGER],
+            1: [WeaponTypes.PISTOL],
+            2: [WeaponTypes.SNIPER],
+            3: [WeaponTypes.GRENADE_COMBATANT],
+            4: [WeaponTypes.EXTRA_AMMO],
+            5: [WeaponTypes.ALLCLASS_PAID, WeaponTypes.SCOUT_PAID],
+            6: [],
+            7: []
+        },
+        Classes.ASSAULT: {
+            0: [WeaponTypes.DAGGER],
+            1: [WeaponTypes.PISTOL],
+            2: [WeaponTypes.RIFLE, WeaponTypes.RIFLE2, WeaponTypes.RIFLE3],
+            3: [WeaponTypes.GRENADE_COMBATANT],
+            4: [WeaponTypes.RIFLE, WeaponTypes.RIFLE2, WeaponTypes.RIFLE3, WeaponTypes.MACHINE_GUN, WeaponTypes.SHOTGUN, WeaponTypes.EXTRA_AMMO],
+            5: [WeaponTypes.ALLCLASS_PAID, WeaponTypes.COMBATANT_PAID],
+            6: [],
+            7: []
+        },
+        Classes.HEAVY: {
+            0: [WeaponTypes.DAGGER],
+            1: [WeaponTypes.PISTOL],
+            2: [WeaponTypes.ANTITANK_WEAPON, WeaponTypes.GROUND_TO_AIR_WEAPON],
+            3: [WeaponTypes.ANTITANK_MINE],
+            4: [WeaponTypes.ANTITANK_WEAPON, WeaponTypes.GROUND_TO_AIR_WEAPON, WeaponTypes.GRENADE, WeaponTypes.EXTRA_AMMO, WeaponTypes.MACHINE_GUN2],
+            5: [WeaponTypes.ALLCLASS_PAID, WeaponTypes.HEAVY_WEAPONS_PAID],
+            6: [],
+            7: []
+        }
+}
