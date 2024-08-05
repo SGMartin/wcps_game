@@ -25,12 +25,12 @@ class NetworkEntity:
 
     async def listen(self):
         while True:
-            data = await self.reader.read(1024)
-            if not data:
-                await self.disconnect()
-                break
-
             try:
+                data = await self.reader.read(1024)
+                if not data:
+                    await self.disconnect()
+                    break
+
                 incoming_packet = InPacket(
                     buffer=data, receptor=self, xor_key=self.xor_key_receive
                 )
@@ -46,8 +46,17 @@ class NetworkEntity:
                 else:
                     logging.error(f"Cannot decrypt packet {incoming_packet}")
                     await self.disconnect()
+                    break
+
+            except ConnectionResetError as e:
+                logging.error(f"Connection reset by peer: {e}")
+                await self.disconnect()
+                break
+            except asyncio.CancelledError:
+                logging.info("Task was cancelled")
+                break
             except Exception as e:
-                logging.exception(f"Error processing packet: {e}")
+                logging.exception(f"Unexpected error while processing packet: {e}")
                 await self.disconnect()
                 break
 
@@ -60,7 +69,14 @@ class NetworkEntity:
             await self.disconnect()
 
     async def disconnect(self):
-        self.writer.close()
+        try:
+            self.writer.close()
+            await self.writer.wait_closed()  # Ensure the writer is closed properly
+        except ConnectionResetError:
+            # The connection has already been reset by the peer; no action needed
+            logging.warning("Attempted to close already reset connection.")
+        except Exception as e:
+            logging.exception(f"Error during disconnection: {e}")
 
     def get_handler_for_packet(self, packet_id: int):
         raise NotImplementedError("Subclasses must implement this method.")

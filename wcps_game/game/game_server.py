@@ -101,15 +101,19 @@ class User(NetworkEntity):
 
     async def disconnect(self):
         logging.info("Called disconnect to client")
-        if self.writer:
-            self.writer.close()
-            await self.writer.wait_closed()
+
+        # Call the base class's disconnect for network issues
+        await super().disconnect()
+
         self.reader = None
         self.writer = None
 
         if self.authorized:
             self.authorized = False
-            await self.this_server.remove_player(self.username)
+            try:
+                await self.this_server.remove_player(self.username)
+            except Exception as e:
+                logging.exception(f"Error removing player {self.username}: {e}")
 
     # TODO: Do we need a lock here?
     async def send_ping(self):
