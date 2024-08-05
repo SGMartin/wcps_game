@@ -10,6 +10,7 @@ from wcps_game.packets.leave_server import LeaveServer
 from wcps_game.packets.ping import Ping
 from wcps_game.packets.userlist import UserList
 from wcps_game.packets.equipment import Equipment
+from wcps_game.packets.update_inventory import UpdateInventory
 
 
 class PacketFactory:
@@ -25,7 +26,8 @@ class PacketFactory:
         PacketList.LEAVE_SERVER: LeaveServer,
         PacketList.USERLIST: UserList,
         # Shop
-        PacketList.EQUIPMENT: Equipment
+        PacketList.EQUIPMENT: Equipment,
+        PacketList.UPDATE_INVENTORY: UpdateInventory
 
     }
 
