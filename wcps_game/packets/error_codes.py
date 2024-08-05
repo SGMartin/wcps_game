@@ -1,4 +1,4 @@
-class ServerTimeError():
+class ServerTimeError:
     FORMAT_C_PRANK = 90010            # Format C Drive?
     CLIENT_VERSION_MISSMATCH = 90020  # Client version is different. Please download the patch
     REINSTALL_WINDOWS_PRANK = 90030   # Reinstalling Windows?
@@ -24,7 +24,7 @@ class PlayerAuthorizationError:
 
 
 class EquipmentError:
-    CANNOTBEPLACED = 0x17AF2    # Item cannot be placed in this slot
-    INVALID_SLOT = 0x17AF3      # Can't be equipped at the slot.
-    INVALID_BRANCH = 0x17B38    # Item is unsuitable for this branch of the service
-    ALREADY_EQUIPPED = 0x17B42  # Item is already equipped
+    CANNOTBEPLACED = 97010    # Item cannot be placed in this slot
+    INVALID_SLOT = 97011      # Can't be equipped at the slot.
+    INVALID_BRANCH = 97080    # Item is unsuitable for this branch of the service
+    ALREADY_EQUIPPED = 97090  # Item is already equipped

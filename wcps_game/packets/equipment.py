@@ -6,7 +6,7 @@ from wcps_game.packets.packet_list import ClientXorKeys, PacketList
 
 
 class Equipment(OutPacket):
-    def __init__(self, error_code: EquipmentError, target_class: int, new_loadout: str):
+    def __init__(self, error_code: EquipmentError, target_class: int = 0, new_loadout: str = None):
         super().__init__(
             packet_id=PacketList.EQUIPMENT,
             xor_key=ClientXorKeys.SEND
