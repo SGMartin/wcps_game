@@ -35,28 +35,11 @@ class Equipment:
 
         }
 
-    available_slots = {1: True, 2: True, 3: True, 4: True, 5: False, 6: False, 7: False, 8: False}
-
     def __init__(self, u: "User"):
         self.owner = u
 
-        # Set slots
-        self.update_slot_states()
-
         # set loadout
         self.loadout = self.default_loadout
-
-    def update_slot_states(self):
-        if self.owner.premium > game_constants.Premium.SILVER:
-            # Only GOLD premium users had 5th slot enabled by default
-            self.available_slots[5] = True
-            # TODO: check if user has items:
-            # CA01-4 (slots 5h to 8th) even if by default they were not in CP1
-
-    def get_slot_string(self):
-        slot_status = ["T" if self.available_slots[key] else "F" for key in range(5, 9)]
-        slot_string = ",".join(slot_status)
-        return slot_string
 
     async def get_loadout_from_database(self) -> bool:
         success = False
@@ -109,6 +92,42 @@ class Inventory:
 
         # keep a list of expired items for packets
         self.expired_items = []
+
+        # slot data. Slots are available (or not) for all branches of service
+        self.available_slots = {
+            1: True,
+            2: True,
+            3: True,
+            4: True,
+            5: False,
+            6: False,
+            7: False,
+            8: False
+            }
+
+    def update_slot_states(self):
+        # Define the slot mappings for items CA01 to CA04
+        item_slot_mapping = {
+            "CA01": 5,  # CA01 unlocks slot 5
+            "CA02": 6,  # CA02 unlocks slot 6
+            "CA03": 7,  # CA03 unlocks slot 7
+            "CA04": 8   # CA04 unlocks slot 8
+            }
+
+        # Check if the user is a GOLD premium or higher or has item CA01 to unlock slot 5
+        if self.owner.premium > game_constants.Premium.SILVER or self.has_item("CA01"):
+            self.available_slots[5] = True
+
+        # Check and update slots based on the item presence
+        # TODO: Add logic to enable slots based on px items if needed
+        for item, slot in item_slot_mapping.items():
+            if self.has_item(item):
+                self.available_slots[slot] = True
+
+    def get_slot_string(self):
+        slot_status = ["T" if self.available_slots[key] else "F" for key in range(5, 9)]
+        slot_string = ",".join(slot_status)
+        return slot_string
 
     def reset(self):
         self.item_list.clear()
@@ -197,5 +216,5 @@ class Inventory:
 
         for i in range(0, missing_item_slots):
             new_item_string = f"{new_item_string},^"
-        print(new_item_string)
+
         self.inventory_string = new_item_string
