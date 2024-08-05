@@ -263,3 +263,19 @@ class EquipmentWeaponTypes:
     GROUND_MISSILE = "J"
     ANTI_SHIP_MISSILE = "K"
     BOMB = "L"
+
+
+class DefaultWeapon:  # TODO Config this?
+    DEFAULTS = [
+        "DA02",  # Knuckles
+        "DB01",  # COLT45
+        "DF01",  # MP5
+        "DR01",  # WRENCH 01
+        "DQ01",  # Medic kit 1
+        "DG05",  # M24
+        "DN01",  # Default grenade
+        "DC01",  # K2
+        "DJ01",  # PZF3
+        "DL01"   # Anti tank mines
+
+    ]
