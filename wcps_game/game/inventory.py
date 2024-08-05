@@ -173,6 +173,7 @@ class Inventory:
             7: False,
             8: False
             }
+        self.update_slot_states()
 
     def update_slot_states(self):
         # Define the slot mappings for items CA01 to CA04
@@ -203,6 +204,7 @@ class Inventory:
         self.expired_items.clear()
         self.inventory_string = self.default_inventory_string
         self.equipment.reset_loadout()
+        self.update_slot_states()
 
     async def get_inventory_and_equipment_from_db(self):
         success = False
