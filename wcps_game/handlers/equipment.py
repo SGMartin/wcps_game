@@ -42,7 +42,7 @@ class EquipmentHandler(PacketHandler):
             return  # Item does not exist
 
         # Let admins use inactive items
-        if not item_database.is_active(weapon_code) and u.rights <= 3:
+        if not item_database.is_active(weapon_code) and u.rights < 3:
             await u.disconnect()  # Potential cheater. Log?
 
         if not u.inventory.has_item(weapon_code) and weapon_code not in DefaultWeapon.DEFAULTS:
