@@ -11,6 +11,7 @@ from wcps_game.packets.ping import Ping
 from wcps_game.packets.userlist import UserList
 from wcps_game.packets.equipment import Equipment
 from wcps_game.packets.update_inventory import UpdateInventory
+from wcps_game.packets.itemshop import ItemShop
 
 
 class PacketFactory:
@@ -27,7 +28,8 @@ class PacketFactory:
         PacketList.USERLIST: UserList,
         # Shop
         PacketList.EQUIPMENT: Equipment,
-        PacketList.UPDATE_INVENTORY: UpdateInventory
+        PacketList.UPDATE_INVENTORY: UpdateInventory,
+        PacketList.ITEMSHOP: ItemShop
 
     }
 
