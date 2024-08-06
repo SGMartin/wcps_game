@@ -32,7 +32,6 @@ class Equipment:
             game_constants.Classes.SNIPER:  "DA02,DB01,DG05,DN01,^,^,^,^",
             game_constants.Classes.ASSAULT: "DA02,DB01,DC02,DN01,^,^,^,^",
             game_constants.Classes.HEAVY: "DA02,DB01,DJ01,DL01,^,^,^,^"
-
         }
 
     def __init__(self, u: "User"):
@@ -44,16 +43,16 @@ class Equipment:
         try:
             database_loadout = await db.get_user_inventory_and_equipment(self.owner.username)
             success = True
-            self.extract_loadout_from_db_result(database_loadout)
+            await self.extract_loadout_from_db_result(database_loadout)
         except pymysql.err.OperationalError as e:
             raise RuntimeError(
                 f"DATABASE ERROR: Cannot complete loadout query for {self.owner.username}"
-                ) from e
+            ) from e
 
             success = False
         return success
 
-    def extract_loadout_from_db_result(self, db_result: dict, expired_list: list = []):
+    async def extract_loadout_from_db_result(self, db_result: dict, expired_list: list = []):
         if db_result:
             db_loadout = {
                 game_constants.Classes.ENGINEER: db_result["engineer"],
@@ -70,6 +69,9 @@ class Equipment:
                     old_slots = db_loadout[i].split(",")
                     new_slots = ["^" if item in expired_codes else item for item in old_slots]
                     db_loadout[i] = ",".join(new_slots)
+                    # Update loadout for each class if it was modified
+                    if old_slots != new_slots:
+                        await self.update_loadout_from_slots(target_class=i)
 
             self.loadout = db_loadout
             self.equipment_slots = self.get_equipment_slots_from_loadouts(self.loadout)
@@ -86,7 +88,7 @@ class Equipment:
         new_equipment_slots = {
             branch: self.parse_equipment_to_slots(loadout_string)
             for branch, loadout_string in loadouts.items()
-            }
+        }
         return new_equipment_slots
 
     def parse_equipment_to_slots(self, class_loadout_string: str):
@@ -151,7 +153,6 @@ class Equipment:
         self.loadout[target_class] = new_loadout
 
         # commit the changes to the database
-        # TODO: find a way to bundle these changes into a single query.
         class_to_branch = {
             0: "engineer",
             1: "medic",
@@ -160,14 +161,11 @@ class Equipment:
             4: "heavy_trooper"
         }
 
-        can_update = await db.update_user_equipment(
+        await db.update_user_equipment(
             username=self.owner.username,
             target_class=class_to_branch[target_class],
             new_loadout=new_loadout
-            )
-
-        if not can_update:
-            logging.warning(f"Could not update loadout for {self.owner.username}")
+        )
 
 
 class Inventory:
@@ -177,6 +175,12 @@ class Inventory:
             default_inventory_string = "^"
         else:
             default_inventory_string += ",^"
+
+    can_equip_in_sixth = set()
+
+    for i in range(game_constants.MAX_CLASSES):
+        this_class_sixth_slot = game_constants.BranchSlotCodes[i][5]
+        can_equip_in_sixth.update(this_class_sixth_slot)
 
     def __init__(self, user: "User"):
         self.owner = user
@@ -192,29 +196,29 @@ class Inventory:
 
         # slot data. Slots are available (or not) for all branches of service
         self.available_slots = {
+            0: True,
             1: True,
             2: True,
             3: True,
-            4: True,
+            4: False,
             5: False,
             6: False,
-            7: False,
-            8: False
-            }
+            7: False
+        }
         self.update_slot_states()
 
     def update_slot_states(self):
         # Define the slot mappings for items CA01 to CA04
         item_slot_mapping = {
-            "CA01": 5,  # CA01 unlocks slot 5
-            "CA02": 6,  # CA02 unlocks slot 6
-            "CA03": 7,  # CA03 unlocks slot 7
-            "CA04": 8   # CA04 unlocks slot 8
-            }
+            "CA01": 4,  # CA01 unlocks slot 5
+            "CA02": 5,  # CA02 unlocks slot 6
+            "CA03": 6,  # CA03 unlocks slot 7
+            "CA04": 7   # CA04 unlocks slot 8
+        }
 
         # Check if the user is a GOLD premium or higher or has item CA01 to unlock slot 5
         if self.owner.premium > game_constants.Premium.SILVER or self.has_item("CA01"):
-            self.available_slots[5] = True
+            self.available_slots[4] = True
 
         # Check and update slots based on the item presence
         # TODO: Add logic to enable slots based on px items if needed
@@ -222,8 +226,13 @@ class Inventory:
             if self.has_item(item):
                 self.available_slots[slot] = True
 
+        for item in self.item_list:
+            if item.item_code[1] in self.can_equip_in_sixth:  # get weapon subid
+                self.available_slots[5] = True
+                break
+
     def get_slot_string(self):
-        slot_status = ["T" if self.available_slots[key] else "F" for key in range(5, 9)]
+        slot_status = ["T" if self.available_slots[key] else "F" for key in range(4, 8)]
         slot_string = ",".join(slot_status)
         return slot_string
 
@@ -240,7 +249,7 @@ class Inventory:
         try:
             database_results = await db.get_user_inventory_and_equipment(
                 username=self.owner.username
-                )
+            )
 
             await self.load_inventory_equipment_from_db(db_results=database_results)
             success = True
@@ -248,20 +257,19 @@ class Inventory:
         except pymysql.err.OperationalError as e:
             raise RuntimeError(
                 f"DATABASE ERROR: Failed inventory and equipment query for {self.owner.username}"
-                ) from e
+            ) from e
 
             success = False
         return success
 
     async def load_inventory_equipment_from_db(self, db_results: dict):
-
         if db_results:
             # Attempt to parse equipment and loadout
             await self.extract_inventory_from_db_result(db_results=db_results["inventory"])
-            self.equipment.extract_loadout_from_db_result(
+            await self.equipment.extract_loadout_from_db_result(
                 db_result=db_results["loadout"],
                 expired_list=self.expired_items
-                )
+            )
         else:
             logging.error(f"Cannot load inventory for {self.owner.username}. Setting defaults")
             self.reset()
@@ -269,12 +277,10 @@ class Inventory:
         self.format_inventory_from_items()
 
     async def extract_inventory_from_db_result(self, db_results: list):
-
         added_items = []
 
         for item in db_results:
             if len(added_items) <= game_constants.MAX_ITEMS:
-
                 current_epoch_time = int(time.time())
                 item_start_date = item["startdate"]
                 expire_date = item_start_date + item["leasing_seconds"]
@@ -296,10 +302,12 @@ class Inventory:
         if len(self.expired_items) > 0:
             await db.set_inventory_items_expired(self.expired_items)
 
+        self.update_slot_states()
+
     def has_item(self, code_to_check: str) -> bool:
         all_codes = [item.item_code for item in self.item_list]
         return code_to_check in all_codes
-    
+
     def get_item(self, item_code: str) -> Item:
         if self.has_item(item_code):
             this_item = next((item for item in self.item_list if item.item_code == item_code), None)
@@ -316,6 +324,7 @@ class Inventory:
 
         self.item_list.append(new_item)
         self.format_inventory_from_items()
+        self.update_slot_states()
 
         can_update_db = await db.add_user_inventory(
             username=self.owner.username,
@@ -342,8 +351,8 @@ class Inventory:
             return self.default_inventory_string
 
         item_string_list = [
-            f"{item.item_code}-{item.type}-0-{item.expire_date.strftime("%y%m%d%H")}-{item.amount}" for item in self.item_list
-            ]
+            f"{item.item_code}-{item.type}-0-{item.expire_date.strftime('%y%m%d%H')}-{item.amount}" for item in self.item_list
+        ]
         new_item_string = ",".join(item_string_list)
 
         # Fill with ^ until completion
