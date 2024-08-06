@@ -101,7 +101,7 @@ class Equipment:
 
         return new_slot_dict
 
-    def add_item_to_slot(self, target_class: game_constants.Classes, target_slot: int, item_code: str):
+    async def add_item_to_slot(self, target_class: game_constants.Classes, target_slot: int, item_code: str):
         if item_code is None or len(item_code) != 4:
             logging.error(f"Attempt to add invalid code {item_code}")
             return
@@ -113,9 +113,9 @@ class Equipment:
             return
 
         self.equipment_slots[target_class][target_slot] = item_code
-        self.update_loadout_from_slots(target_class=target_class)
+        await self.update_loadout_from_slots(target_class=target_class)
 
-    def remove_item_from_slot(self, target_class: game_constants.Classes, target_slot: int):
+    async def remove_item_from_slot(self, target_class: game_constants.Classes, target_slot: int):
         if target_class >= game_constants.MAX_CLASSES:
             logging.error(f"Invalid target class {target_class}")
             return
@@ -124,7 +124,7 @@ class Equipment:
             return
 
         self.equipment_slots[target_class][target_slot] = None
-        self.update_loadout_from_slots(target_class=target_class)
+        await self.update_loadout_from_slots(target_class=target_class)
 
     def is_equipped_in_class(self, target_class: game_constants.Classes, weapon: str) -> int:
         if target_class >= game_constants.MAX_CLASSES:
@@ -143,12 +143,31 @@ class Equipment:
 
         return -1
 
-    def update_loadout_from_slots(self, target_class: game_constants.Classes):
+    async def update_loadout_from_slots(self, target_class: game_constants.Classes):
         target_loadout = self.equipment_slots[target_class]
         new_loadout = [weapon if weapon is not None else "^" for weapon in target_loadout.values()]
         new_loadout = ",".join(new_loadout)
 
         self.loadout[target_class] = new_loadout
+
+        # commit the changes to the database
+        # TODO: find a way to bundle these changes into a single query.
+        class_to_branch = {
+            0: "engineer",
+            1: "medic",
+            2: "sniper",
+            3: "assault",
+            4: "heavy_trooper"
+        }
+
+        can_update = await db.update_user_equipment(
+            username=self.owner.username,
+            target_class=class_to_branch[target_class],
+            new_loadout=new_loadout
+            )
+
+        if not can_update:
+            logging.warning(f"Could not update loadout for {self.owner.username}")
 
 
 class Inventory:
@@ -280,6 +299,18 @@ class Inventory:
     def has_item(self, code_to_check: str) -> bool:
         all_codes = [item.item_code for item in self.item_list]
         return code_to_check in all_codes
+    
+    def add_item(self, item_code: str, expire_date: int):
+        new_item = Item(
+            slot=0,
+            db_id=-1,  #TODO: is this actually used anywhere? Can be retrieved from db later
+            item_code=item_code,
+            expire_date_seconds=expire_date
+        )
+
+        self.item_list.append(new_item)
+        self.format_inventory_from_items()
+        print(self.inventory_string)
 
     def format_inventory_from_items(self):
         new_item_string = ""
