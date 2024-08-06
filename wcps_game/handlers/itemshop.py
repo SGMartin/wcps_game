@@ -24,10 +24,10 @@ from wcps_game.packets.error_codes import ItemShopError
 
 class ItemShopHandler(PacketHandler):
     async def process(self, user: "User") -> None:
-        
+
         action_type = int(self.get_block(0))
         item_code = self.get_block(1)
-        db_id = self.get_block(2)  # I believe this is unused in CP1 ???
+        # db_id = self.get_block(2)  # I believe this is unused in CP1 ???
         lease_option = int(self.get_block(4))
 
         item_database = ItemDatabase()
@@ -97,7 +97,7 @@ class ItemShopHandler(PacketHandler):
                 )
                 await user.send(low_level.buil())
                 return
-            
+
             # Do not let premium gold users buy 5th slot as in the original game
             if user.premium == Premium.GOLD and item_code == "CA01":  # 5th slot
                 cannot_buy_slot = PacketFactory.create_packet(
@@ -203,4 +203,3 @@ class ItemShopHandler(PacketHandler):
                 logging.warning(f"Unknown action for item {item_code}")
         elif action_type == ItemAction.REMOVE:
             logging.warning("CP1 removal item??")
-
