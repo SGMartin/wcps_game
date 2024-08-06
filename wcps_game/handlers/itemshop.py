@@ -95,7 +95,7 @@ class ItemShopHandler(PacketHandler):
                     packet_id=PacketList.ITEMSHOP,
                     error_code=ItemShopError.LEVEL_UNSUITABLE
                 )
-                await user.send(low_level.buil())
+                await user.send(low_level.build())
                 return
 
             # Do not let premium gold users buy 5th slot as in the original game
