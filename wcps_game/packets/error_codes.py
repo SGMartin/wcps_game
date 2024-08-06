@@ -42,5 +42,5 @@ class ItemShopError:
     LEVEL_UNSUITABLE = 97050     # Your level is unsuitable
     NO_LEVEL_REQUIREMENT = 97060  # You do not meet the level requirements to purchase this weapon.
     INVENTORY_FULL = 97070      # Your inventory is full
-    EXCEEDED_LEASY = 97080      # Cannot purchase. You have exceeded maximum lease period.
+    EXCEEDED_LEASE = 97080      # Cannot purchase. You have exceeded maximum lease period.
     CANNOT_BUY_TWICE = 97090    # You cannot purchase the item twice.

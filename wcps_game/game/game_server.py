@@ -7,7 +7,7 @@ import time
 from wcps_core.constants import Ports, ServerTypes, InternalKeys
 
 from wcps_game.config import settings
-from wcps_game.database import get_user_details_and_stats
+from wcps_game.database import get_user_details_and_stats, update_user_money
 from wcps_game.game.constants import Premium
 from wcps_game.game.user_stats import UserStats
 from wcps_game.game.inventory import Inventory
@@ -118,7 +118,8 @@ class User(NetworkEntity):
     # TODO: Do we need a lock here?
     async def send_ping(self):
         if not self.is_updated_ping:
-            await self.disconnect()
+            #await self.disconnect()
+            print("SHOULD DISCONNECT?")
             logging.error(f"Could not send ping to {self.username}")
         else:
             self.is_updated_ping = False
@@ -145,6 +146,12 @@ class User(NetworkEntity):
                 self.premium = Premium.F2P
             else:
                 self.premium_seconds_left = premium_time_left
+
+    async def update_money(self, new_money: int):
+        if await update_user_money(username=self.username, new_money=new_money):
+            self.money = new_money
+        else:
+            logging.error(f"Failed to update money for {self.username} to {new_money}")
 
 
 class GameServer(NetworkEntity):

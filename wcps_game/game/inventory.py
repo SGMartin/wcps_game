@@ -300,17 +300,39 @@ class Inventory:
         all_codes = [item.item_code for item in self.item_list]
         return code_to_check in all_codes
     
-    def add_item(self, item_code: str, expire_date: int):
+    def get_item(self, item_code: str) -> Item:
+        if self.has_item(item_code):
+            this_item = next((item for item in self.item_list if item.item_code == item_code), None)
+            return this_item
+
+    async def add_item(self, item_code: str, start_date: int, lease_seconds: int, price: int):
+        # TODO: we could pass the item directly
         new_item = Item(
             slot=0,
-            db_id=-1,  #TODO: is this actually used anywhere? Can be retrieved from db later
+            db_id=-1,  # TODO: is this actually used anywhere? Can be retrieved from db later
             item_code=item_code,
-            expire_date_seconds=expire_date
+            expire_date_seconds=start_date + lease_seconds
         )
 
         self.item_list.append(new_item)
         self.format_inventory_from_items()
-        print(self.inventory_string)
+
+        can_update_db = await db.add_user_inventory(
+            username=self.owner.username,
+            inventory_code=item_code,
+            startdate=start_date,
+            leasing_seconds=lease_seconds,
+            price=price
+        )
+        return can_update_db
+
+    async def extend_item_duration(self, item_code: str, seconds_to_add: int):
+        this_item = self.get_item(item_code=item_code)
+
+        if this_item is not None:
+            this_item.expire_date = this_item.expire_date + timedelta(seconds=seconds_to_add)
+
+        self.format_inventory_from_items()
 
     def format_inventory_from_items(self):
         new_item_string = ""

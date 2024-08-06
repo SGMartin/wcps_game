@@ -125,6 +125,14 @@ class ItemAction:
     REMOVE = 0x458
 
 
+class LeaseDays:
+    DAYS_3 = 0
+    DAYS_7 = 1
+    DAYS_15 = 2
+    DAYS_30 = 3
+    DAYS_90 = 4  # TODO: is really 90? check with client after tools are redone
+
+
 class GameMode:
     EXPLOSIVE = 0
     FFA = 1

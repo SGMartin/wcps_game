@@ -12,6 +12,7 @@ from wcps_game.handlers.leave_server import LeaveServerHandler
 from wcps_game.handlers.ping import PingHandler
 from wcps_game.handlers.userlist import UserListHandler
 from wcps_game.handlers.equipment import EquipmentHandler
+from wcps_game.handlers.itemshop import ItemShopHandler
 
 # Dictionary to map packet IDs to handler classes
 HANDLER_MAP = {
@@ -28,7 +29,8 @@ HANDLER_MAP = {
     PacketList.USERLIST: UserListHandler,
 
     # Shop
-    PacketList.EQUIPMENT: EquipmentHandler
+    PacketList.EQUIPMENT: EquipmentHandler,
+    PacketList.ITEMSHOP: ItemShopHandler
 }
 
 

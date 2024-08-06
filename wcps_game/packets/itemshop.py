@@ -21,7 +21,7 @@ class ItemShop(OutPacket):
             self.append(corerr.SUCCESS)
             self.append(ItemAction.BUY)
             self.append(-1)  # ??
-            self.append(3)  # ? client version as reported in request time?
+            self.append(3)  # ? client version as reported in request time? buy type??
             self.append(len(user.inventory.item_list))
             self.append(user.inventory.inventory_string)
             self.append(user.money)
