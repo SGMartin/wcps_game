@@ -1,5 +1,6 @@
 import asyncio
 import aiomysql
+import logging
 
 from wcps_game.config import settings
 
@@ -257,3 +258,126 @@ async def update_user_equipment(username: str, target_class: str, new_loadout: s
             await connection.commit()
             return cur.rowcount > 0  # Returns True if a row was updated, False otherwise
 
+
+async def add_user_inventory(
+    username: str,
+    inventory_code: str,
+    startdate: int,
+    leasing_seconds: int,
+    price: int,
+    retail: bool = False,
+    price_cash: int = 0
+) -> bool:
+    async with pool.acquire() as connection:
+        await connection.select_db(settings().database_name)
+        async with connection.cursor() as cur:
+            # First, get the user id based on the username
+            user_query = """
+            SELECT id
+            FROM users
+            WHERE username = %s
+            """
+            await cur.execute(user_query, (username,))
+            user_result = await cur.fetchone()
+
+            if not user_result:
+                return False  # User not found
+
+            user_id = user_result[0]
+
+            # Now, insert the new inventory item
+            insert_query = """
+            INSERT INTO user_inventory (
+                owner, code, retail, startdate, leasing_seconds, price, price_cash, expired, deleted
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, 0, 0)
+            """
+            await cur.execute(
+                insert_query,
+                (user_id, inventory_code, retail, startdate, leasing_seconds, price, price_cash)
+            )
+            await connection.commit()
+            return cur.rowcount > 0  # Returns True if a row was inserted, False otherwise
+
+
+async def extend_leasing_time(username: str, item_code: str, leasing_time: int) -> bool:
+    async with pool.acquire() as connection:
+        await connection.select_db(settings().database_name)
+        async with connection.cursor() as cur:
+            # First, get the user id based on the username
+            user_query = """
+            SELECT id
+            FROM users
+            WHERE username = %s
+            """
+            await cur.execute(user_query, (username,))
+            user_result = await cur.fetchone()
+
+            if not user_result:
+                return False  # User not found
+
+            user_id = user_result[0]
+
+            # Now, select the last row in user_inventory with the given conditions
+            select_query = """
+            SELECT id, leasing_seconds
+            FROM user_inventory
+            WHERE owner = %s AND code = %s AND expired = 0 AND deleted = 0
+            ORDER BY id DESC
+            LIMIT 1
+            """
+            await cur.execute(select_query, (user_id, item_code))
+            inventory_result = await cur.fetchone()
+
+            if not inventory_result:
+                return False  # No matching inventory item found
+
+            inventory_id, current_leasing_seconds = inventory_result
+
+            # Update the leasing_seconds by adding the leasing_time
+            new_leasing_seconds = current_leasing_seconds + leasing_time
+            update_query = """
+            UPDATE user_inventory
+            SET leasing_seconds = %s
+            WHERE id = %s
+            """
+            await cur.execute(update_query, (new_leasing_seconds, inventory_id))
+            await connection.commit()
+            return cur.rowcount > 0  # Returns True if a row was updated, False otherwise
+
+
+async def update_user_money(username: str, new_money: int) -> bool:
+    async with pool.acquire() as connection:
+        await connection.select_db(settings().database_name)
+        async with connection.cursor() as cur:
+            # First, get the user id based on the username
+            user_query = """
+            SELECT id
+            FROM users
+            WHERE username = %s
+            """
+            await cur.execute(user_query, (username,))
+            user_result = await cur.fetchone()
+
+            if not user_result:
+                logging.error(f"User not found for username: {username}")
+                return False  # User not found
+
+            user_id = user_result[0]
+            logging.info(f"User ID for {username} is {user_id}")
+
+            # Now, update the money field
+            update_query = """
+            UPDATE users
+            SET money = %s
+            WHERE id = %s
+            """
+            await cur.execute(update_query, (new_money, user_id))
+            await connection.commit()
+            if cur.rowcount > 0:
+                return True  # Money updated successfully
+            else:
+                logging.error(f"Failed to update money for user {username}")
+                return False  # No rows updated
+
+    logging.error(f"Function reached an unexpected end for user {username}")
+    return False  # Explicit return at the end of the function
