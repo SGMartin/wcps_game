@@ -95,6 +95,15 @@ class ItemShopHandler(PacketHandler):
                 )
                 await user.send(low_level.buil())
                 return
+            
+            # Do not let premium gold users buy 5th slot as in the original game
+            if user.premium == Premium.GOLD and item_code == "CA01":  # 5th slot
+                cannot_buy_slot = PacketFactory.create_packet(
+                    packet_id=PacketList.ITEMSHOP,
+                    error_code=ItemShopError.SLOT5_FREE_GOLD
+                )
+                await user.send(cannot_buy_slot.build())
+                return
 
             this_weapon_cost = item_database.get_weapon_costs(item_code)[lease_option]
 
@@ -176,6 +185,8 @@ class ItemShopHandler(PacketHandler):
 
 
         elif action_type == ItemAction.USE:
-            print("RESEARCH ME")
+            # 2024-08-06 16:18:19,706 - INFO - IN:: 21177118 30208 1111 CB03 5 3 -1 
+            # KD RESET
+            print("KD RESET")
         elif action_type == ItemAction.REMOVE:
             print("RESEARCH ME")
