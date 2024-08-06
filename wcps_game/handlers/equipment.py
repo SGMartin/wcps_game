@@ -55,7 +55,7 @@ class EquipmentHandler(PacketHandler):
 
         if not is_item_equip:  # Unequipping the item
             if equipped_in_slot >= 0:
-                u.inventory.equipment.remove_item_from_slot(
+                await u.inventory.equipment.remove_item_from_slot(
                     target_class=target_branch,
                     target_slot=alt_target_slot
                 )
@@ -84,7 +84,7 @@ class EquipmentHandler(PacketHandler):
 
         if weapon_subtype in valid_codes_for_slot:
             # Perform the actual equipment
-            u.inventory.equipment.add_item_to_slot(
+            await u.inventory.equipment.add_item_to_slot(
                 target_class=target_branch,
                 target_slot=target_slot,
                 item_code=weapon_code

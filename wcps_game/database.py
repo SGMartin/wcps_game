@@ -237,3 +237,23 @@ async def set_inventory_items_expired(items: list) -> bool:
             await cur.execute(query, params)
             await connection.commit()
             return cur.rowcount > 0
+
+
+async def update_user_equipment(username: str, target_class: str, new_loadout: str) -> bool:
+    valid_branches = {"engineer", "medic", "sniper", "assault", "heavy_trooper"}
+    if target_class not in valid_branches:
+        raise ValueError(f"Invalid column name: {target_class}")
+
+    async with pool.acquire() as connection:
+        await connection.select_db(settings().database_name)
+        async with connection.cursor() as cur:
+            query = f"""
+            UPDATE user_loadout l
+            JOIN users u ON u.id = l.id
+            SET l.{target_class} = %s
+            WHERE u.username = %s
+            """
+            await cur.execute(query, (new_loadout, username))
+            await connection.commit()
+            return cur.rowcount > 0  # Returns True if a row was updated, False otherwise
+
