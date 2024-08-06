@@ -343,6 +343,14 @@ class Inventory:
 
         self.format_inventory_from_items()
 
+    async def remove_item(self, item_to_remove: str):
+        if self.has_item(item_to_remove):
+            self.item_list = [item for item in self.item_list if item.item_code != item_to_remove]
+
+            self.format_inventory_from_items()
+            self.update_slot_states()
+            await db.remove_item_for_user(username=self.owner.username, item_code=item_to_remove)
+
     def format_inventory_from_items(self):
         new_item_string = ""
 

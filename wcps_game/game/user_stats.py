@@ -1,5 +1,5 @@
 import asyncio
-from wcps_game.database import get_user_stats
+from wcps_game.database import get_user_stats, reset_user_kd
 
 
 class UserStats:
@@ -41,3 +41,10 @@ class UserStats:
     async def update_deaths(self, deaths: int):
         async with self._update_lock:
             self.deaths += deaths
+
+    async def reset_kills_deaths(self):
+        async with self._update_lock:
+            self.kills = 0
+            self.deaths = 0
+
+        await reset_user_kd(username=self.owner)

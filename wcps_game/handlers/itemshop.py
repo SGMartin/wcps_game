@@ -7,6 +7,7 @@
 
 from typing import TYPE_CHECKING
 import time
+import logging
 
 if TYPE_CHECKING:
     from wcps_game.game.game_server import User
@@ -52,14 +53,15 @@ class ItemShopHandler(PacketHandler):
         if action_type not in valid_actions:
             return
 
-        if action_type == ItemAction.BUY:
-            if len(item_code) != 4:
-                return
-            if not item_database.item_exists(item_code):
-                await user.disconnect()  # TODO: log probable cheater
+        if len(item_code) != 4:
+            return
+        if not item_database.item_exists(item_code):
+            await user.disconnect()  # TODO: log probable cheater
 
-            if not item_database.is_active(item_code) and user.rights < 3:
-                await user.disconnect()  # TODO: log probable cheater
+        if not item_database.is_active(item_code) and user.rights < 3:
+            await user.disconnect()  # TODO: log probable cheater
+
+        if action_type == ItemAction.BUY:
 
             if lease_option not in valid_lease:
                 await user.disconnect()  # TODO: log probable cheater
@@ -183,10 +185,22 @@ class ItemShopHandler(PacketHandler):
                     )         
                     await user.send(error_packet.build())
 
-
         elif action_type == ItemAction.USE:
             # 2024-08-06 16:18:19,706 - INFO - IN:: 21177118 30208 1111 CB03 5 3 -1 
             # KD RESET
-            print("KD RESET")
+            # In CP1 PF20, only K/D reset uses this by default. Let's implement it
+            if item_code == "CB03":
+                await user.stats.reset_kills_deaths()
+                await user.inventory.remove_item(item_to_remove=item_code)
+                use_packet = PacketFactory.create_packet(
+                    packet_id=PacketList.USEITEM,
+                    error_code=1,
+                    user=user,
+                    item_px=item_code
+                )
+                await user.send(use_packet.build())
+            else:
+                logging.warning(f"Unknown action for item {item_code}")
         elif action_type == ItemAction.REMOVE:
-            print("RESEARCH ME")
+            logging.warning("CP1 removal item??")
+
