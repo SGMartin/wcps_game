@@ -381,3 +381,66 @@ async def update_user_money(username: str, new_money: int) -> bool:
 
     logging.error(f"Function reached an unexpected end for user {username}")
     return False  # Explicit return at the end of the function
+
+
+async def reset_user_kd(username: str) -> bool:
+    async with pool.acquire() as connection:
+        await connection.select_db(settings().database_name)
+        async with connection.cursor() as cur:
+            # Step 1: Get the user ID
+            user_id_query = """
+            SELECT id
+            FROM users
+            WHERE username = %s
+            """
+            await cur.execute(user_id_query, (username,))
+            user_id_result = await cur.fetchone()
+
+            if not user_id_result:
+                return False  # User not found
+
+            user_id = user_id_result[0]
+
+            # Step 2: Update the user stats
+            update_query = """
+            UPDATE user_stats
+            SET kills = 0, deaths = 0
+            WHERE id = %s
+            """
+            await cur.execute(update_query, (user_id,))
+            await connection.commit()
+
+            # Check if any rows were affected
+            return cur.rowcount > 0
+
+
+async def remove_item_for_user(username: str, item_code: str) -> bool:
+    async with pool.acquire() as connection:
+        await connection.select_db(settings().database_name)
+        async with connection.cursor() as cur:
+            # Step 1: Get the user ID based on the username
+            user_query = """
+            SELECT id
+            FROM users
+            WHERE username = %s
+            """
+            await cur.execute(user_query, (username,))
+            user_result = await cur.fetchone()
+
+            if not user_result:
+                return False  # User not found
+
+            user_id = user_result[0]
+
+            # Step 2: Update the first instance of the specified item
+            update_query = """
+            UPDATE user_inventory
+            SET expired = 1, deleted = 1
+            WHERE owner = %s AND code = %s AND expired = 0 AND deleted = 0
+            LIMIT 1
+            """
+            await cur.execute(update_query, (user_id, item_code))
+            await connection.commit()
+            
+            # Check if any rows were affected
+            return cur.rowcount > 0
