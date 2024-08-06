@@ -28,3 +28,19 @@ class EquipmentError:
     INVALID_SLOT = 97011      # Can't be equipped at the slot.
     INVALID_BRANCH = 97080    # Item is unsuitable for this branch of the service
     ALREADY_EQUIPPED = 97090  # Item is already equipped
+
+
+class ItemShopError:
+    PREMIUM_ONLY = 98010         # Available to Premium users only.
+    GOLD_PREMIUM_ONLY = 98020    # Available to Gold users only.
+    SLOT5_FREE_GOLD = 98030      # 5th Slot is free for Gold user.
+    INVALID_ITEM = 97010         # Item is no longer valid
+    SLOT5_NEEDED = 97012         # You must purchase 5th slot first.
+    SLOT5_LOW_TIME = 97015       # Insufficient slot time.
+    CANNOT_BE_BOUGHT = 97020     # Item cannot be bought
+    NOT_ENOUGH_MONEY = 97040     # Insufficient balance
+    LEVEL_UNSUITABLE = 97050     # Your level is unsuitable
+    NO_LEVEL_REQUIREMENT = 97060  # You do not meet the level requirements to purchase this weapon.
+    INVENTORY_FULL = 97070      # Your inventory is full
+    EXCEEDED_LEASY = 97080      # Cannot purchase. You have exceeded maximum lease period.
+    CANNOT_BUY_TWICE = 97090    # You cannot purchase the item twice.
