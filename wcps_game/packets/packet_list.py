@@ -21,3 +21,4 @@ class PacketList:
     # Shop
     EQUIPMENT = 0x7512
     UPDATE_INVENTORY = 0x7900  # Also controls when items expire
+    ITEMSHOP = 0x7600
