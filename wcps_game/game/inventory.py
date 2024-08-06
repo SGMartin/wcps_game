@@ -53,16 +53,25 @@ class Equipment:
             success = False
         return success
 
-    def extract_loadout_from_db_result(self, db_result: dict):
+    def extract_loadout_from_db_result(self, db_result: dict, expired_list: list = []):
         if db_result:
-            loadout = {
+            db_loadout = {
                 game_constants.Classes.ENGINEER: db_result["engineer"],
                 game_constants.Classes.MEDIC: db_result["medic"],
                 game_constants.Classes.SNIPER: db_result["sniper"],
                 game_constants.Classes.ASSAULT: db_result["assault"],
                 game_constants.Classes.HEAVY: db_result["heavy_trooper"]
             }
-            self.loadout = loadout
+            expired_codes = [item.item_code for item in expired_list]
+
+            # Remove expired weapons from the loadout
+            if len(expired_codes) > 0:
+                for i in range(0, game_constants.MAX_CLASSES):
+                    old_slots = db_loadout[i].split(",")
+                    new_slots = ["^" if item in expired_codes else item for item in old_slots]
+                    db_loadout[i] = ",".join(new_slots)
+
+            self.loadout = db_loadout
             self.equipment_slots = self.get_equipment_slots_from_loadouts(self.loadout)
         else:
             logging.error(f"Failed to load equipment for {self.owner.username}. Going to default")
@@ -144,7 +153,7 @@ class Equipment:
 
 class Inventory:
     default_inventory_string = ""
-    for i in range(32):
+    for i in range(game_constants.MAX_ITEMS):
         if i == 0:
             default_inventory_string = "^"
         else:
@@ -228,9 +237,12 @@ class Inventory:
     async def load_inventory_equipment_from_db(self, db_results: dict):
 
         if db_results:
-            # Attempt to parse loadout
-            self.equipment.extract_loadout_from_db_result(db_result=db_results["loadout"])
+            # Attempt to parse equipment and loadout
             await self.extract_inventory_from_db_result(db_results=db_results["inventory"])
+            self.equipment.extract_loadout_from_db_result(
+                db_result=db_results["loadout"],
+                expired_list=self.expired_items
+                )
         else:
             logging.error(f"Cannot load inventory for {self.owner.username}. Setting defaults")
             self.reset()
@@ -242,7 +254,6 @@ class Inventory:
         added_items = []
 
         for item in db_results:
-            # TODO: check expiration here
             if len(added_items) <= game_constants.MAX_ITEMS:
 
                 current_epoch_time = int(time.time())
