@@ -9,13 +9,16 @@ from wcps_game.packets.packet_list import PacketList
 from wcps_game.packets.packet_factory import PacketFactory
 
 
-class SelectChannel(PacketHandler):
+class SelectChannelHandler(PacketHandler):
     async def process(self, user: "User"):
         if user.authorized:
 
             target_channel = int(self.get_block(0))
 
             if target_channel <= ChannelType.BATTLEGROUP:  # min. channel 0 max channel BG
+
+                # TODO: move this to user/channel class and implement upper bounds
+                await user.this_server.channels[target_channel].add_user(user)
                 user.channel = target_channel
 
                 channel_change = PacketFactory.create_packet(

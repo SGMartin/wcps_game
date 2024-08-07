@@ -1,5 +1,7 @@
 import asyncio
 
+from wcps_core.packets import OutPacket
+
 from wcps_game.game.constants import ChannelType
 
 
@@ -74,3 +76,9 @@ class Channel:
     async def get_rooms(self):
         async with self._rooms_lock:
             return {k: v for k, v in self.rooms.items() if v is not None}
+
+    async def broadcast_packet_to_channel(self, packet: OutPacket):
+        all_users = await self.get_users()
+
+        for user in all_users:
+            await user.send(packet)
