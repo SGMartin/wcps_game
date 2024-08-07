@@ -38,11 +38,15 @@ class ChatHandler(PacketHandler):
             in_message = self.get_block(3)
 
             # TODO: this could be a function
-            message_delim = f">>{chr(0x1D)}"
-            message_parts = in_message.split(message_delim)
+            try:
+                message_delim = f">>{chr(0x1D)}"
+                message_parts = in_message.split(message_delim)
 
-            real_message = message_parts[1].replace(chr(0x1D), chr(0x20))
-            real_message = real_message.strip()
+                real_message = message_parts[1].replace(chr(0x1D), chr(0x20))
+                real_message = real_message.strip()
+            except:
+                logging.warning(f"Invalid message {in_message}")
+                return
 
             if len(real_message) > 60:
                 logging.warning(f"Sent a too long message {real_message}")

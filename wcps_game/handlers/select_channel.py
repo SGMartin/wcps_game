@@ -31,6 +31,16 @@ class SelectChannelHandler(PacketHandler):
                 )
                 await user.send(channel_change.build())
 
+                # Send userlist for this channel
+                all_channel_users = await user.this_server.channels[target_channel].get_users()
+                userlist = PacketFactory.create_packet(
+                    packet_id=PacketList.USERLIST,
+                    lobby_user_list=all_channel_users,
+                    target_page=0
+                ).build()
+   
+                await user.this_server.channels[target_channel].broadcast_packet_to_channel(userlist)
+
                 from wcps_game.game.channels import Room
 
                 fake_room_list = []

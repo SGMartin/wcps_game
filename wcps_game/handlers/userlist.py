@@ -26,7 +26,7 @@ class UserListHandler(PacketHandler):
 
             # TODO: filter those that are in the lobby / channel?
             # TODO: show newist players first
-            lobby_users = list(u.this_server.online_users.values())
+            lobby_users = await u.this_server.channels[u.channel].get_users()
 
             packet = PacketFactory.create_packet(
                 packet_id=PacketList.USERLIST,

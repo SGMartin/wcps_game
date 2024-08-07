@@ -19,27 +19,24 @@ class UserList(OutPacket):
 
         # User list count. Technically I managed to get to 302 with slider = 1
         # but sometime it crashes going back. 250 ALWAYS work
-        test_pop = 250
-        self.append(test_pop)
+        self.append(len(lobby_user_list))
         self.append(target_page)  # user list page
 
         # Discovered by SGMartin. The user list is a slider. The higher the value,
         # the lower the userlist rotates. Max. to 10 and the user list stays in place
         slider = 1
 
-        # TODO: remove the statics
         for idx, this_user in enumerate(lobby_user_list):
-            for i in range(0, test_pop):
-                self.append(i + target_page * slider)
-                self.append(i)  # id
-                self.append(i+1)  # session id
-                self.append(f"user{i}")  # displayname
-                self.append(-1)  # clan id
-                self.append(-1)  # clan name
-                self.append(-1)  # clan rank
-                self.append(-1)  # ¿master?
-                self.append(0)  # unknown
-                self.append(16)  # unknown
-                self.append(i*2500)  # xp
-                self.append(3)  # premium
-                self.append(0)
+            self.append(idx + target_page * slider)
+            self.append(idx)  # id
+            self.append(this_user.session_id)  # session id
+            self.append(this_user.displayname)  # displayname
+            self.append(-1)  # clan id
+            self.append(-1)  # clan name
+            self.append(-1)  # clan rank
+            self.append(-1)  # ¿master?
+            self.append(0)  # unknown
+            self.append(16)  # unknown
+            self.append(this_user.xp)  # xp
+            self.append(this_user.premium)  # premium
+            self.append(0)

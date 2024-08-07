@@ -81,4 +81,5 @@ class Channel:
         all_users = await self.get_users()
 
         for user in all_users:
-            await user.send(packet)
+            if user.room is None:
+                await user.send(packet)

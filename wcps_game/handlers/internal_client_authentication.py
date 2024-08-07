@@ -50,18 +50,11 @@ class AuthorizeClientHandler(PacketHandler):
                     await this_user.send(packet.build())
                     # Ping player ASAP so that they log with the right premium status
                     await this_user.send_ping()
-                    # TODO: move to change channel when ready
-                    userlist_packet = PacketFactory.create_packet(
-                        packet_id=PacketList.USERLIST,
-                        lobby_user_list=list(server.online_users.values()),
-                        target_page=0
-                    )
-                    await this_user.send(userlist_packet.build())
                     # Item has expired packet. Here or after channel selection with userlist?
                     update_inventory_packet = PacketFactory.create_packet(
-                        packet_id=PacketList.UPDATE_INVENTORY,
-                        user=this_user
-                    )
+                         packet_id=PacketList.UPDATE_INVENTORY,
+                         user=this_user
+                     )
                     await this_user.send(update_inventory_packet.build())
                     this_user.inventory.expired_items.clear()
                 else:
