@@ -8,7 +8,8 @@ from wcps_core.constants import Ports, ServerTypes, InternalKeys
 
 from wcps_game.config import settings
 from wcps_game.database import get_user_details_and_stats, update_user_money
-from wcps_game.game.constants import Premium
+from wcps_game.game.constants import Premium, ChannelType
+from wcps_game.game.channels import Channel
 from wcps_game.game.user_stats import UserStats
 from wcps_game.game.inventory import Inventory
 from wcps_game.entities.network_entities import NetworkEntity
@@ -48,6 +49,8 @@ class User(NetworkEntity):
         self.displayname = ""
         self.xp = 0
         self.money = 0
+        self.channel = 0
+
         # Premium data
         self.premium = Premium.F2P
         self.premium_seconds_left = -1
@@ -118,7 +121,7 @@ class User(NetworkEntity):
     # TODO: Do we need a lock here?
     async def send_ping(self):
         if not self.is_updated_ping:
-            #await self.disconnect()
+            # await self.disconnect()
             print("SHOULD DISCONNECT?")
             logging.error(f"Could not send ping to {self.username}")
         else:
@@ -183,6 +186,11 @@ class GameServer(NetworkEntity):
 
         self.online_users = {}
 
+        self.channels = {
+            ChannelType.CQC: Channel(channel_type=ChannelType.CQC),
+            ChannelType.URBANOPS: Channel(channel_type=ChannelType.URBANOPS),
+            ChannelType.BATTLEGROUP: Channel(channel_type=ChannelType.BATTLEGROUP)
+        }
         # Lock to ensure thread safety and asyncio safety
         self.lock = asyncio.Lock()
 
