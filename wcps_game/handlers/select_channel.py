@@ -17,6 +17,10 @@ class SelectChannelHandler(PacketHandler):
 
             if target_channel <= ChannelType.BATTLEGROUP:  # min. channel 0 max channel BG
 
+                # Check if the user was previously in any channel
+                if user.channel > 0:
+                    await user.this_server.channels[user.channel].remove_user(user)
+
                 # TODO: move this to user/channel class and implement upper bounds
                 await user.this_server.channels[target_channel].add_user(user)
                 user.channel = target_channel
