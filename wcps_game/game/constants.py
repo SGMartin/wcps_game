@@ -341,3 +341,9 @@ BranchSlotCodes = {
             7: []
         }
 }
+
+
+class RoomPingLimit:
+    GREEN = 0
+    YELLOW = 1
+    ALL = 2
