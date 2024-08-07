@@ -13,6 +13,7 @@ from wcps_game.packets.equipment import Equipment
 from wcps_game.packets.update_inventory import UpdateInventory
 from wcps_game.packets.itemshop import ItemShop
 from wcps_game.packets.use_px_item import UsePXItem
+from wcps_game.packets.select_channel import SelectChannel
 
 
 class PacketFactory:
@@ -24,6 +25,7 @@ class PacketFactory:
         # Lobby
         PacketList.REQUEST_SERVER_TIME: ServerTime,
         PacketList.PLAYER_AUTHORIZATION: PlayerAuthorization,
+        PacketList.SELECT_CHANNEL: SelectChannel,
         PacketList.PING: Ping,
         PacketList.LEAVE_SERVER: LeaveServer,
         PacketList.USERLIST: UserList,

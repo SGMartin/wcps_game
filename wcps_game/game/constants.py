@@ -58,7 +58,7 @@ class Premium:
     GOLD = 3
 
 
-class Channel:
+class ChannelType:
     NONE = 0
     CQC = 1
     URBANOPS = 2
