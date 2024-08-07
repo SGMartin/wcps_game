@@ -14,6 +14,7 @@ from wcps_game.packets.update_inventory import UpdateInventory
 from wcps_game.packets.itemshop import ItemShop
 from wcps_game.packets.use_px_item import UsePXItem
 from wcps_game.packets.select_channel import SelectChannel
+from wcps_game.packets.room_list import RoomList
 
 
 class PacketFactory:
@@ -29,6 +30,7 @@ class PacketFactory:
         PacketList.PING: Ping,
         PacketList.LEAVE_SERVER: LeaveServer,
         PacketList.USERLIST: UserList,
+        PacketList.ROOMLIST: RoomList,
         # Shop
         PacketList.EQUIPMENT: Equipment,
         PacketList.UPDATE_INVENTORY: UpdateInventory,
