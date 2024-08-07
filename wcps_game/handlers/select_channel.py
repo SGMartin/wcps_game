@@ -12,7 +12,7 @@ from wcps_game.packets.packet_factory import PacketFactory
 class SelectChannel(PacketHandler):
     async def process(self, user: "User"):
         if user.authorized:
-            
+
             target_channel = int(self.get_block(0))
 
             if target_channel <= ChannelType.BATTLEGROUP:  # min. channel 0 max channel BG
@@ -27,7 +27,7 @@ class SelectChannel(PacketHandler):
                 from wcps_game.game.channels import Room
 
                 fake_room_list = []
-                
+
                 for i in range(0, 101):
                     this_room = Room(f"room {i}", 1, i)
                     fake_room_list.append(this_room)
@@ -41,4 +41,3 @@ class SelectChannel(PacketHandler):
 
         else:
             await user.disconnect()
-
