@@ -7,26 +7,26 @@ class Room:
     def __init__(self, name, channel: ChannelType, room_id: int = -1):
         # MOCK CLASS
         self.name = "MV"
-        self.channel = Channel.CQC
-        self.state = 1
+        self.channel = ChannelType.CQC
+        self.state = 2
         self.master = 2
-        self.displayname = "HERIDOTE"
+        self.displayname = "VIVA SINSO"
         self.has_password = 0
         self.maximum_players = 16
         self.player_count = 12
-        self.map = 2
-        self.mode = 7
+        self.map = 15
+        self.mode = 0
         self.mode2 = 0
         self.timeleft = 0
         self.game_mode = 0
-        self.joinable = 0
+        self.joinable = 1
         self.supermaster = 0
         self.type = 0
         self.level_limit = 0
         self.premium = 0
-        self.enable_kick = 0
-        self.autostart = 0
-        self.pinglimit = 1
+        self.enable_kick = 1
+        self.autostart = 1
+        self.pinglimit = 2
         self.clanwar = -1
 
 
