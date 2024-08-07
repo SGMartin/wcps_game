@@ -20,6 +20,7 @@ class PacketList:
     SELECT_CHANNEL = 0x7001
     USERLIST = 0x7100
     ROOMLIST = 0x7200
+    CHAT = 0x7400
     # Shop
     EQUIPMENT = 0x7512
     UPDATE_INVENTORY = 0x7900  # Also controls when items expire
