@@ -117,7 +117,7 @@ class User(NetworkEntity):
             self.authorized = False
             try:
                 # TODO: improve leave server routine including mysql queries
-                await self.this_server.channels[self.channel].remove_user(self.username)
+                await self.this_server.channels[self.channel].remove_user(self)
                 await self.this_server.remove_player(self.username)
             except Exception as e:
                 logging.exception(f"Error removing player {self.username}: {e}")
