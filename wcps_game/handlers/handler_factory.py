@@ -10,7 +10,8 @@ from wcps_game.handlers.request_server_time import RequestServerTimeHandler
 from wcps_game.handlers.client_authentication import ClientAuthenticationHandler
 from wcps_game.handlers.leave_server import LeaveServerHandler
 from wcps_game.handlers.ping import PingHandler
-from wcps_game.handlers.select_channel import SelectChannel
+from wcps_game.handlers.select_channel import SelectChannelHandler
+from wcps_game.handlers.chat import ChatHandler
 from wcps_game.handlers.userlist import UserListHandler
 from wcps_game.handlers.equipment import EquipmentHandler
 from wcps_game.handlers.itemshop import ItemShopHandler
@@ -26,9 +27,10 @@ HANDLER_MAP = {
     PacketList.REQUEST_SERVER_TIME: RequestServerTimeHandler,
     PacketList.PLAYER_AUTHORIZATION: ClientAuthenticationHandler,
     PacketList.LEAVE_SERVER: LeaveServerHandler,
-    PacketList.SELECT_CHANNEL: SelectChannel,
+    PacketList.SELECT_CHANNEL: SelectChannelHandler,
     PacketList.PING: PingHandler,
     PacketList.USERLIST: UserListHandler,
+    PacketList.CHAT: ChatHandler,
 
     # Shop
     PacketList.EQUIPMENT: EquipmentHandler,

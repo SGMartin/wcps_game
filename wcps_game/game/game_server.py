@@ -5,6 +5,7 @@ from datetime import datetime
 import time
 
 from wcps_core.constants import Ports, ServerTypes, InternalKeys
+from wcps_core.packets import OutPacket
 
 from wcps_game.config import settings
 from wcps_game.database import get_user_details_and_stats, update_user_money
@@ -50,6 +51,7 @@ class User(NetworkEntity):
         self.xp = 0
         self.money = 0
         self.channel = 0
+        self.room = None
 
         # Premium data
         self.premium = Premium.F2P
@@ -114,6 +116,8 @@ class User(NetworkEntity):
         if self.authorized:
             self.authorized = False
             try:
+                # TODO: improve leave server routine including mysql queries
+                await self.this_server.channels[self.channel].remove_user(self.username)
                 await self.this_server.remove_player(self.username)
             except Exception as e:
                 logging.exception(f"Error removing player {self.username}: {e}")
@@ -224,9 +228,19 @@ class GameServer(NetworkEntity):
     async def get_player(self, username) -> User:
         async with self.lock:
             user = self.online_users.get(username)
-            if user is None:
-                raise Exception(f"User {username} not found")
             return user
+
+    async def get_player_by_displayname(self, displayname) -> User:
+        async with self.lock:
+            for user in self.online_users.values():
+                if user.displayname == displayname:
+                    return user
+            return None
+
+    async def broadcast_packet_to_lobby(self, packet: OutPacket):
+        for user in self.online_users.values():
+            if user.authorized and user.room is None:
+                await user.send(packet)
 
     def get_player_by_session(self, session_id: int):
         for user in self.online_users.values():
