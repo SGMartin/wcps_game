@@ -180,11 +180,11 @@ class GameServer(NetworkEntity):
         self.is_first_authorized = True
         self.authorized = False
         self.session_id = None
+        self.id = settings().authentication_id
 
         # Game properties
         self.max_players = 3600
         self.current_rooms = 0
-        self.id = 0
         self.server_type = ServerTypes.ENTIRE
         self.premium_only = False
 
