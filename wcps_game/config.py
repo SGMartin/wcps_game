@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     server_name: str = "WCPS"
     server_ip: str = "127.0.0.1"
     authentication_server_ip: str = "127.0.0.1"
+    authentication_id: int = 0
 
     class Config:
         env_file = ".env"

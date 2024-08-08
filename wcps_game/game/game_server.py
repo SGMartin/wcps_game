@@ -52,6 +52,7 @@ class User(NetworkEntity):
         self.money = 0
         self.channel = 0
         self.room = None
+        self.userlist_page = 0
 
         # Premium data
         self.premium = Premium.F2P
@@ -180,11 +181,11 @@ class GameServer(NetworkEntity):
         self.is_first_authorized = True
         self.authorized = False
         self.session_id = None
+        self.id = settings().authentication_id
 
         # Game properties
         self.max_players = 3600
         self.current_rooms = 0
-        self.id = 0
         self.server_type = ServerTypes.ENTIRE
         self.premium_only = False
 

@@ -44,3 +44,9 @@ class ItemShopError:
     INVENTORY_FULL = 97070      # Your inventory is full
     EXCEEDED_LEASE = 97080      # Cannot purchase. You have exceeded maximum lease period.
     CANNOT_BUY_TWICE = 97090    # You cannot purchase the item twice.
+
+
+class CouponError:
+    SUCCESS = 0
+    ALREADY_USED = -1
+    INCORRECT_CODE = -2
