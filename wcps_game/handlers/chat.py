@@ -47,7 +47,6 @@ class ChatHandler(PacketHandler):
             except:
                 logging.warning(f"Invalid message {in_message}")
                 return
-
             if len(real_message) > 60:
                 logging.warning(f"Sent a too long message {real_message}")
                 return
