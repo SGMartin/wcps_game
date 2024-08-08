@@ -12,6 +12,7 @@ from wcps_game.packets.userlist import UserList
 from wcps_game.packets.equipment import Equipment
 from wcps_game.packets.update_inventory import UpdateInventory
 from wcps_game.packets.itemshop import ItemShop
+from wcps_game.packets.coupon import Coupon
 from wcps_game.packets.use_px_item import UsePXItem
 from wcps_game.packets.select_channel import SelectChannel
 from wcps_game.packets.room_list import RoomList
@@ -37,7 +38,8 @@ class PacketFactory:
         PacketList.EQUIPMENT: Equipment,
         PacketList.UPDATE_INVENTORY: UpdateInventory,
         PacketList.ITEMSHOP: ItemShop,
-        PacketList.USEITEM: UsePXItem
+        PacketList.USEITEM: UsePXItem,
+        PacketList.COUPON: Coupon
 
     }
 
