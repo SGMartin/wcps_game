@@ -3,6 +3,8 @@ import asyncio
 from wcps_core.packets import OutPacket
 
 from wcps_game.game.constants import ChannelType
+from wcps_game.packets.packet_list import PacketList
+from wcps_game.packets.packet_factory import PacketFactory
 
 
 class Room:
@@ -66,6 +68,15 @@ class Channel:
         async with self._users_lock:
             if user.username in self.users:
                 del self.users[user.username]
+
+                users_left = await self.get_users()
+                for user in users_left:
+                    new_user_list = PacketFactory.create_packet(
+                        packet_id=PacketList.USERLIST,
+                        lobby_user_list=users_left,
+                        target_page=users_left.userlist_page
+                    )
+                    await user.send(new_user_list.build())
             else:
                 print("User not in channel")
 

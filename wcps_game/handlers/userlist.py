@@ -22,7 +22,7 @@ class UserListHandler(PacketHandler):
             if target_userlist_page > 27:
                 target_userlist_page = 27
 
-            u.user_list_page = target_userlist_page
+            u.userlist_page = target_userlist_page
 
             # TODO: filter those that are in the lobby / channel?
             # TODO: show newist players first

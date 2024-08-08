@@ -24,6 +24,7 @@ class SelectChannelHandler(PacketHandler):
                 # TODO: move this to user/channel class and implement upper bounds
                 await user.this_server.channels[target_channel].add_user(user)
                 user.channel = target_channel
+                user.userlist_page = 0
 
                 channel_change = PacketFactory.create_packet(
                     packet_id=PacketList.SELECT_CHANNEL,
@@ -36,9 +37,9 @@ class SelectChannelHandler(PacketHandler):
                 userlist = PacketFactory.create_packet(
                     packet_id=PacketList.USERLIST,
                     lobby_user_list=all_channel_users,
-                    target_page=0
+                    target_page=user.userlist_page
                 ).build()
-   
+
                 await user.this_server.channels[target_channel].broadcast_packet_to_channel(userlist)
 
                 from wcps_game.game.channels import Room

@@ -123,7 +123,7 @@ class UDPListener:
 
             elif packet[14] in {0x10, 0x30, 0x31, 0x32, 0x34}:
                 # Handle additional sub-packet types
-                pass
+                logging.info(f"UDP ROOM packet {packet[14]}")
             else:
                 logging.error(f"Unhandled UDP sub-packet {packet[14]:02x}")
         else:

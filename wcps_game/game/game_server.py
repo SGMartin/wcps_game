@@ -52,6 +52,7 @@ class User(NetworkEntity):
         self.money = 0
         self.channel = 0
         self.room = None
+        self.userlist_page = 0
 
         # Premium data
         self.premium = Premium.F2P
