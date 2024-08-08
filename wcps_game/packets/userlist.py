@@ -28,15 +28,16 @@ class UserList(OutPacket):
 
         for idx, this_user in enumerate(lobby_user_list):
             self.append(idx + target_page * slider)
-            self.append(idx)  # id
+            print(f"Internal {this_user.username} id is {this_user.internal_id}")
+            self.append(this_user.session_id)  # used to be internal id
             self.append(this_user.session_id)  # session id
             self.append(this_user.displayname)  # displayname
             self.append(-1)  # clan id
             self.append(-1)  # clan name
-            self.append(-1)  # clan rank
-            self.append(-1)  # ¿master?
+            self.append(-1)  # clan rank or icon id?
+            self.append(-1)  # Clan master = 5. Rank?
             self.append(0)  # unknown
             self.append(16)  # unknown
             self.append(this_user.xp)  # xp
             self.append(this_user.premium)  # premium
-            self.append(0)
+            self.append(this_user.channel)  # channel ?

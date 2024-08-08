@@ -24,7 +24,7 @@ class PlayerAuthorization(OutPacket):
             self.append(er.SUCCESS)
             self.append("Gameserver1")
             self.append(u.session_id)   # session id
-            self.append(u.internal_id)  # user id?
+            self.append(u.session_id)  # user id? Used to be internal id
             self.append(u.session_id)   # session.id
             self.append(u.displayname)  # displayname
             # clan blocks
