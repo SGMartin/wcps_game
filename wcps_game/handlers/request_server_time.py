@@ -26,7 +26,7 @@ class RequestServerTimeHandler(PacketHandler):
                 packet_id=PacketList.REQUEST_SERVER_TIME,
                 error_code=ServerTimeError.CLIENT_VERSION_MISSMATCH
                 )
-            await u.send(packet.buils())
+            await u.send(packet.build())
             await u.disconnect()
             return
 
