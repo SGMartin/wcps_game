@@ -141,8 +141,8 @@ class GameMode:
 
 
 class RoomStatus:
-    WAITING = 0
-    PLAYING = 1
+    WAITING = 1
+    PLAYING = 2
 
 
 class RoomUpdateType:
