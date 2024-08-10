@@ -32,7 +32,7 @@ class Room:
         self.id = -1
         self.displayname = displayname
 
-        self.channel = master.channel
+        self.channel = master.this_server.channels[master.channel]
         self.type = room_type  # Unused in CP1
         self.level_limit = level_limit
         self.premium_only = premium_only
@@ -51,7 +51,7 @@ class Room:
         else:
             self.supermaster = False
 
-        self.max_players = gconstants.RoomMaximumPlayers.MAXIMUM_PLAYERS[self.channel][max_players]
+        self.max_players = gconstants.RoomMaximumPlayers.MAXIMUM_PLAYERS[self.channel.type][max_players]
 
         # Auto/default settings on room creating
         self.state = gconstants.RoomStatus.WAITING
@@ -69,7 +69,7 @@ class Room:
             gconstants.ChannelType.BATTLEGROUP: 2  # Emblem
         }
 
-        self.current_map = map_defaults[self.channel]
+        self.current_map = map_defaults[self.channel.type]
 
         default_modes = {
             gconstants.ChannelType.CQC: gconstants.GameMode.EXPLOSIVE,
@@ -77,7 +77,7 @@ class Room:
             gconstants.ChannelType.BATTLEGROUP: gconstants.GameMode.TDM
         }
 
-        self.game_mode = default_modes[self.channel]
+        self.game_mode = default_modes[self.channel.type]
         self.ping_limit = gconstants.RoomPingLimit.GREEN
 
         # Set the user who sent the packet as the default master
@@ -107,7 +107,7 @@ class Room:
 
     def get_player_count(self) -> int:
         player_count = 0
-        for player in self.players:
+        for player in self.players.values():
             if player is not None:
                 player_count += 1
 
@@ -161,11 +161,10 @@ class Room:
             user.set_room(None, 0)
 
             if self.get_player_count() == 0:  # Empty room, destroy it
-                self.destroy()
-                return
-
-            if old_player.id == self.master_slot:  # This player was the master
-                print("Implement new master routine here")
+                await self.destroy()
+            else:
+                if old_player.id == self.master_slot:  # This player was the master
+                    print("Implement new master routine here")
 
             # Finally, send the room leave packet
             room_leave = PacketFactory.create_packet(
@@ -176,8 +175,11 @@ class Room:
             )
             await user.send(room_leave.build())
 
-    async def destroy():
-        print("Implement me!")
+    async def destroy(self):
+        # Clear the room slot from the channel
+        await self.channel.remove_room(self.id)
+
+        print("Notify the players the room is done?")
 
     async def send(self, buffer: "OutPacket"):
         for player in self.players.values():
