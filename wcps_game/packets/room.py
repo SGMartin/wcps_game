@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from wcps_game.game.rooms import Room
+    from wcps_game.game.game_server import User
 
 from wcps_core.constants import ErrorCodes as corerr
 from wcps_core.packets import OutPacket
@@ -24,6 +25,21 @@ class RoomCreate(OutPacket):
             self.append(corerr.SUCCESS)
             self.append(0)  # ?
             add_room_info_to_packet(self, new_room)
+
+
+class RoomLeave(OutPacket):
+    def __init__(self, user: "User", room: "Room"):
+        super().__init__(
+            packet_id=PacketList.DO_EXIT_ROOM,
+            xor_key=ClientXorKeys.SEND
+        )
+        self.append(corerr.SUCCESS)
+        self.append(user.session_id)
+        self.append(0)  # TODO: temporary until we have slots working
+        self.append(0)  # TODO: temporary until we have player count working
+        self.append(room.master_slot)
+        self.append(user.xp)
+        self.append(user.money)
 
 
 def add_room_info_to_packet(packet: OutPacket, room):

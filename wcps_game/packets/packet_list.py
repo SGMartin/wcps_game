@@ -31,4 +31,4 @@ class PacketList:
     # Room
     ROOM_CREATE = 0x7300
     ROOM_JOIM = 0x7310
-    ROOM_LEAVE = 0x7340
+    DO_EXIT_ROOM = 0x7340

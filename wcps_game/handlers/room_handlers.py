@@ -110,6 +110,7 @@ class RoomCreateHandler(PacketHandler):
 
         # The master user has been notified
         await user.send(room_create_packet.build())
+        user.room = new_room
         # Notify the rest of the lobby
         # TODO: investigate room pages
         # await this_channel.broadcast_packet_to_channel(room_create_packet.build())
@@ -120,3 +121,21 @@ class RoomCreateHandler(PacketHandler):
             error_code=RoomCreateError.GENERIC
         )
         await user.send(error_packet.build())
+
+
+class RoomLeaveHandler(PacketHandler):
+    async def process(self, user: "User"):
+
+        if not user.authorized:
+            return
+
+        if user.room is not None:
+            print("TODO: implement user removal here")
+            print("TODO: room update here")
+
+            room_leave = PacketFactory.create_packet(
+                packet_id=PacketList.DO_EXIT_ROOM,
+                user=user,
+                room=user.room
+            )
+            await user.send(room_leave.build()) 
