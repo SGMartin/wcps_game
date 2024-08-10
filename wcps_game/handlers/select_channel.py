@@ -1,5 +1,4 @@
 from typing import TYPE_CHECKING
-import logging
 
 if TYPE_CHECKING:
     from wcps_game.game.game_server import User
@@ -40,7 +39,6 @@ class SelectChannelHandler(PacketHandler):
                             lobby_user_list=all_channel_users,
                             target_page=channel_member.userlist_page
                             )
-                        logging.info(f"Updated {len(all_channel_users)} channel userlist for {channel_member.displayname}")
                         await channel_member.send(userlist.build())
 
                 # from wcps_game.game.channels import Room
