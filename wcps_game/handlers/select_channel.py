@@ -13,9 +13,7 @@ from wcps_game.packets.packet_factory import PacketFactory
 class SelectChannelHandler(PacketHandler):
     async def process(self, user: "User"):
         if user.authorized:
-            print(f"User current channel is {user.channel}")
             target_channel = int(self.get_block(0))
-            print(f"User target channel is {target_channel}")
             if target_channel <= ChannelType.BATTLEGROUP:  # min. channel 0 max channel BG
                 # Check if the user was previously in any channel
                 if user.channel > 0:
@@ -42,7 +40,6 @@ class SelectChannelHandler(PacketHandler):
                             lobby_user_list=all_channel_users,
                             target_page=channel_member.userlist_page
                             )
-                        print(userlist.blocks)
                         logging.info(f"Updated {len(all_channel_users)} channel userlist for {channel_member.displayname}")
                         await channel_member.send(userlist.build())
 

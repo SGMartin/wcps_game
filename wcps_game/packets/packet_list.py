@@ -27,3 +27,8 @@ class PacketList:
     ITEMSHOP = 0x7600
     USEITEM = 0x7800
     COUPON = 0x8100
+
+    # Room
+    ROOM_CREATE = 0x7300
+    ROOM_JOIM = 0x7310
+    ROOM_LEAVE = 0x7340

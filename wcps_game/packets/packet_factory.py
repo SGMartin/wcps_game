@@ -17,6 +17,7 @@ from wcps_game.packets.use_px_item import UsePXItem
 from wcps_game.packets.select_channel import SelectChannel
 from wcps_game.packets.room_list import RoomList
 from wcps_game.packets.chat import Chat
+from wcps_game.packets.room import RoomCreate
 
 
 class PacketFactory:
@@ -39,7 +40,9 @@ class PacketFactory:
         PacketList.UPDATE_INVENTORY: UpdateInventory,
         PacketList.ITEMSHOP: ItemShop,
         PacketList.USEITEM: UsePXItem,
-        PacketList.COUPON: Coupon
+        PacketList.COUPON: Coupon,
+        # Room
+        PacketList.ROOM_CREATE: RoomCreate
 
     }
 
