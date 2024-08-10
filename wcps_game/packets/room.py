@@ -36,7 +36,7 @@ class RoomLeave(OutPacket):
         self.append(corerr.SUCCESS)
         self.append(user.session_id)
         self.append(old_slot)
-        self.append(len(room.players))
+        self.append(room.get_player_count())
         self.append(room.master_slot)
         self.append(user.xp)
         self.append(user.money)
@@ -53,7 +53,7 @@ def add_room_info_to_packet(packet: OutPacket, room):
     packet.append(room.displayname)
     packet.append(room.password_protected)
     packet.append(room.max_players)
-    packet.append(len(room.players))
+    packet.append(room.get_player_count())
     packet.append(room.current_map)
     packet.append(room.rounds_setting)  # Explosive rounds when game mode is explosives/mission
     packet.append(room.tickets_setting)  # TDM tickets and FFA rounds

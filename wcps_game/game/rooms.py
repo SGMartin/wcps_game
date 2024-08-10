@@ -4,9 +4,13 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from wcps_game.game.game_server import User
+    from wcps_core.packets import OutPacket
 
 from wcps_game.game import constants as gconstants
 from wcps_game.game.player import Player
+
+from wcps_game.packets.packet_list import PacketList
+from wcps_game.packets.packet_factory import PacketFactory
 
 
 class Room:
@@ -101,11 +105,19 @@ class Room:
 
         return team_count
 
+    def get_player_count(self) -> int:
+        player_count = 0
+        for player in self.players:
+            if player is not None:
+                player_count += 1
+
+        return player_count
+
     async def add_player(self, user: "User") -> bool:
 
         can_join = False
 
-        if len(self.players) >= self.max_players or self.user_limit:
+        if self.get_player_count() >= self.max_players or self.user_limit:
             return can_join
 
         async with self._players_lock:
@@ -130,3 +142,44 @@ class Room:
                     return True
 
                 return False
+
+    async def remove_player(self, user: "User"):
+        if not user.authorized or user.room is None:
+            return
+
+        if self.id != user.room.id:  # Is the user somehow removing himself from other room?
+            return
+
+        async with self._players_lock:
+            if self.players.get(user.room_slot) is None:
+                return
+
+            old_player = self.players[user.room_slot]
+
+            # Release the slot and set the player room slot to 0
+            self.players[user.room_slot] = None
+            user.set_room(None, 0)
+
+            if self.get_player_count() == 0:  # Empty room, destroy it
+                self.destroy()
+                return
+
+            if old_player.id == self.master_slot:  # This player was the master
+                print("Implement new master routine here")
+
+            # Finally, send the room leave packet
+            room_leave = PacketFactory.create_packet(
+                packet_id=PacketList.DO_EXIT_ROOM,
+                user=user,
+                room=self,
+                old_slot=old_player.id
+            )
+            await user.send(room_leave.build())
+
+    async def destroy():
+        print("Implement me!")
+
+    async def send(self, buffer: "OutPacket"):
+        for player in self.players.values():
+            if player is not None:
+                await player.user.send(buffer)

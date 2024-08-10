@@ -129,12 +129,6 @@ class RoomLeaveHandler(PacketHandler):
             return
 
         if user.room is not None:
-            print("TODO: implement user removal here")
-            print("TODO: room update here")
+            await user.room.remove_player(user)
 
-            room_leave = PacketFactory.create_packet(
-                packet_id=PacketList.DO_EXIT_ROOM,
-                user=user,
-                room=user.room
-            )
-            await user.send(room_leave.build())
+        print("IMPLEMENT LOBBY UPDATE HERE")

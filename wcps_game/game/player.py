@@ -12,5 +12,8 @@ class Player:
         self.ready = False
         self.state = gconstants.RoomStatus.WAITING  # same as room :)
 
+        # Add self reference. TODO: Can we trim down self references down the road?
+        self.user = user
+
     def toggle_ready(self):
         self.ready = not self.ready
