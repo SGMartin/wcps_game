@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from wcps_game.game.game_server import User
 
 from wcps_game.handlers.packet_handler import PacketHandler
-from wcps_game.game.constants import ChatChannel
+from wcps_game.game.constants import ChatChannel, RoomStatus
 from wcps_game.packets.packet_list import PacketList
 from wcps_game.packets.packet_factory import PacketFactory
 
@@ -80,8 +80,21 @@ class ChatHandler(PacketHandler):
                 logging.info("ROOMS NOT YET IMPLEMENTED")
                 return
             if message_channel == ChatChannel.ROOM2ALL:
-                logging.info("ROOMS NOT YET IMPLEMENTED")
-                return
+                if user.room is not None:
+                    if user.room.state == RoomStatus.WAITING and user.room.master == user and user.room.supermaster:
+                        receiver_id = 998  # Sets text in yellow for supermaster
+
+                    this_packet = PacketFactory.create_packet(
+                        packet_id=PacketList.CHAT,
+                        error_code=1,
+                        user=user,
+                        chat_type=message_channel,
+                        receiver_id=receiver_id,
+                        receiver_username=receiver_name,
+                        message=real_message
+                    )
+                    await user.room.send(this_packet.build())
+
             if message_channel == ChatChannel.CLAN:
                 logging.info("CLAN CHAT NOT READY YET")
                 return
