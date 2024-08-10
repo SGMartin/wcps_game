@@ -4,6 +4,11 @@ import logging
 from datetime import datetime
 import time
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from wcps_game.game.rooms import Room
+
 from wcps_core.constants import Ports, ServerTypes, InternalKeys
 from wcps_core.packets import OutPacket
 
@@ -53,6 +58,7 @@ class User(NetworkEntity):
         self.channel = 0
         self.room = None
         self.userlist_page = 0
+        self.room_page = 0
 
         # Premium data
         self.premium = Premium.F2P
@@ -160,6 +166,13 @@ class User(NetworkEntity):
             self.money = new_money
         else:
             logging.error(f"Failed to update money for {self.username} to {new_money}")
+
+    def set_room(self, room: "Room", room_slot: int):
+        self.room = room
+        self.room_slot = room_slot  # TODO: check to see If we can remove this one
+        # reset room and user list page
+        self.room_page = 0
+        self.userlist_page = 0
 
 
 class GameServer(NetworkEntity):

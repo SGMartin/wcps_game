@@ -75,7 +75,6 @@ class RoomCreateHandler(PacketHandler):
             return
 
         # If we arrive here, it's time to start the room if any slot is available
-        print(f"This level limit requested is {level_limit}")
         new_room = Room(
             master=user,
             displayname=room_name,
@@ -110,7 +109,7 @@ class RoomCreateHandler(PacketHandler):
 
         # The master user has been notified
         await user.send(room_create_packet.build())
-        user.room = new_room
+
         # Notify the rest of the lobby
         # TODO: investigate room pages
         # await this_channel.broadcast_packet_to_channel(room_create_packet.build())
@@ -138,4 +137,4 @@ class RoomLeaveHandler(PacketHandler):
                 user=user,
                 room=user.room
             )
-            await user.send(room_leave.build()) 
+            await user.send(room_leave.build())

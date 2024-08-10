@@ -28,15 +28,15 @@ class RoomCreate(OutPacket):
 
 
 class RoomLeave(OutPacket):
-    def __init__(self, user: "User", room: "Room"):
+    def __init__(self, user: "User", room: "Room", old_slot: int):
         super().__init__(
             packet_id=PacketList.DO_EXIT_ROOM,
             xor_key=ClientXorKeys.SEND
         )
         self.append(corerr.SUCCESS)
         self.append(user.session_id)
-        self.append(0)  # TODO: temporary until we have slots working
-        self.append(0)  # TODO: temporary until we have player count working
+        self.append(old_slot)
+        self.append(len(room.players))
         self.append(room.master_slot)
         self.append(user.xp)
         self.append(user.money)
@@ -53,14 +53,14 @@ def add_room_info_to_packet(packet: OutPacket, room):
     packet.append(room.displayname)
     packet.append(room.password_protected)
     packet.append(room.max_players)
-    packet.append(1)  # TODO: player count update here
-    packet.append(12)  # TODO: current map update here
+    packet.append(len(room.players))
+    packet.append(room.current_map)
     packet.append(room.rounds_setting)  # Explosive rounds when game mode is explosives/mission
     packet.append(room.tickets_setting)  # TDM tickets and FFA rounds
     packet.append(0)  # Unknown
     packet.append(room.game_mode)  # game mode
     packet.append(4)  # Unknown
-    packet.append(1)  # Can join?
+    packet.append(1)  # #TODO: Can join?
     packet.append(0)  # ??
     packet.append(room.supermaster)
     packet.append(room.type)  # Unused in Chapter 1
