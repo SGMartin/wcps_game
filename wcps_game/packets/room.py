@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 from wcps_core.constants import ErrorCodes as corerr
 from wcps_core.packets import OutPacket
 
-# from wcps_game.game.constants import GameMode
+from wcps_game.game.constants import GameMode
 from wcps_game.packets.packet_list import PacketList, ClientXorKeys
 from wcps_game.packets.error_codes import RoomCreateError
 
@@ -42,9 +42,24 @@ class RoomLeave(OutPacket):
         self.append(user.money)
 
 
+class RoomList(OutPacket):
+    def __init__(self, room_page: int, room_list: list):
+        super().__init__(
+            packet_id=PacketList.DO_ROOM_LIST,
+            xor_key=ClientXorKeys.SEND
+        )
+
+        self.append(len(room_list))  # The total room list for this page
+        self.append(room_page)
+        self.append(0)  # ?
+
+        for room in room_list:
+            add_room_info_to_packet(self, room)
+
+
 def add_room_info_to_packet(packet: OutPacket, room):
-    # cqc_rounds = room.rounds_setting if room.game_mode == GameMode.EXPLOSIVE else 0
-    # tdm_tickets = room.tickets_setting if room.game_mode > GameMode.EXPLOSIVE else 0
+    cqc_rounds = room.rounds_setting if room.game_mode == GameMode.EXPLOSIVE else 0
+    tdm_tickets = room.tickets_setting if room.game_mode > GameMode.EXPLOSIVE else 0
 
     packet.append(room.id)
     packet.append(1)  # Unknown
@@ -55,8 +70,8 @@ def add_room_info_to_packet(packet: OutPacket, room):
     packet.append(room.max_players)
     packet.append(room.get_player_count())
     packet.append(room.current_map)
-    packet.append(room.rounds_setting)  # Explosive rounds when game mode is explosives/mission
-    packet.append(room.tickets_setting)  # TDM tickets and FFA rounds
+    packet.append(cqc_rounds)  # Explosive rounds when game mode is explosives/mission
+    packet.append(tdm_tickets)  # TDM tickets and FFA rounds
     packet.append(0)  # Unknown
     packet.append(room.game_mode)  # game mode
     packet.append(4)  # Unknown
