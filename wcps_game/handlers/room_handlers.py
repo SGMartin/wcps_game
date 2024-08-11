@@ -175,4 +175,5 @@ class RoomListHandler(PacketHandler):
             room_page=user.room_page,
             room_list=rooms_to_send
         )
+        # TODO: recheck filtering step of waiting rooms
         await user.send(room_packet.build())
