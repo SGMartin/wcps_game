@@ -132,3 +132,47 @@ class RoomLeaveHandler(PacketHandler):
             await user.room.remove_player(user)
 
         print("IMPLEMENT LOBBY UPDATE HERE")
+
+
+class RoomListHandler(PacketHandler):
+    async def process(self, user: "User"):
+        if not user.authorized:
+            return
+
+        if user.room is not None:
+            return
+        # 2024-08-11 00:06:22,839 - INFO - IN:: bytearray(b'27754355 29184 1 0 0 \n')
+        # go_forward = bool(int(self.get_block(0)))
+        show_waiting = False if int(self.get_block(1)) == 1 else True
+        go_backward = bool(int(self.get_block(2)))
+
+        if go_backward:
+            user.room_page = user.room_page - 1
+        else:
+            user.room_page = user.room_page + 1
+
+        if user.room_page < 0:
+            user.room_page = 0
+
+        all_channel_rooms = await user.this_server.channels[user.channel].get_all_rooms()
+        last_waiting_rooms = []
+        last_rooms = []
+
+        for idx, room in all_channel_rooms.items():
+            if room is not None:
+                if room.id >= 8 * user.room_page and room.id < 8 * (user.room_page + 1):
+                    last_rooms.append(room)
+                if room.state == gconstants.RoomStatus.WAITING:
+                    last_waiting_rooms.append(room)
+
+        if show_waiting:
+            rooms_to_send = last_waiting_rooms[-8:]
+        else:
+            rooms_to_send = last_rooms
+
+        room_packet = PacketFactory.create_packet(
+            packet_id=PacketList.DO_ROOM_LIST,
+            room_page=user.room_page,
+            room_list=rooms_to_send
+        )
+        await user.send(room_packet.build())

@@ -16,7 +16,7 @@ from wcps_game.handlers.userlist import UserListHandler
 from wcps_game.handlers.equipment import EquipmentHandler
 from wcps_game.handlers.itemshop import ItemShopHandler
 from wcps_game.handlers.coupon import CouponHandler
-from wcps_game.handlers.room_handlers import RoomCreateHandler, RoomLeaveHandler
+from wcps_game.handlers.room_handlers import RoomCreateHandler, RoomLeaveHandler, RoomListHandler
 
 # Dictionary to map packet IDs to handler classes
 HANDLER_MAP = {
@@ -41,6 +41,7 @@ HANDLER_MAP = {
 
     # Room
     PacketList.ROOM_CREATE: RoomCreateHandler,
+    PacketList.DO_ROOM_LIST: RoomListHandler,
     PacketList.DO_EXIT_ROOM: RoomLeaveHandler
 
 }
