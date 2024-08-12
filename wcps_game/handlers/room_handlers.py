@@ -131,7 +131,26 @@ class RoomLeaveHandler(PacketHandler):
         if user.room is not None:
             await user.room.remove_player(user)
 
-        print("IMPLEMENT LOBBY UPDATE HERE")
+            user.userlist_page = 0
+            channel_users = await user.this_server.channels[user.channel].get_users()
+
+            user_list_full = PacketFactory.create_packet(
+                packet_id=PacketList.USERLIST,
+                lobby_user_list=channel_users,
+                target_page=user.userlist_page
+            )
+            await user.send(user_list_full.build())
+
+            # Send an userlist packet for all users in the user list for their current page
+            # TODO: check if packet DO_USERLIST_CHANGE (0x7110) would work here?
+            for c_user in channel_users:
+                if c_user.room is None:
+                    this_user_update = PacketFactory.create_packet(
+                        packet_id=PacketList.USERLIST,
+                        lobby_user_list=channel_users,
+                        target_page=c_user.userlist_page
+                    )
+                    await c_user.send(this_user_update.build())
 
 
 class RoomListHandler(PacketHandler):
