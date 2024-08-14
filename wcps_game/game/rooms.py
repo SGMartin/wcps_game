@@ -1,4 +1,5 @@
 import asyncio
+import math
 
 from typing import TYPE_CHECKING
 
@@ -30,6 +31,7 @@ class Room:
 
         # Defined at room creation
         self.id = -1
+        self.room_page = None
         self.displayname = displayname
 
         self.channel = master.this_server.channels[master.channel]
@@ -96,6 +98,7 @@ class Room:
 
     def authorize(self, room_id: int):
         self.id = room_id
+        self.room_page = round(math.floor(self.id / 8))
 
     def get_players_in_team(self, team_to_count):
         team_count = 0
@@ -178,8 +181,6 @@ class Room:
     async def destroy(self):
         # Clear the room slot from the channel
         await self.channel.remove_room(self.id)
-
-        print("Notify the players the room is done?")
 
     async def send(self, buffer: "OutPacket"):
         for player in self.players.values():

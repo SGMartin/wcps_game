@@ -32,3 +32,4 @@ class PacketList:
     ROOM_CREATE = 0x7300
     ROOM_JOIM = 0x7310
     DO_EXIT_ROOM = 0x7340
+    DO_ROOM_INFO_CHANGE = 0x7210

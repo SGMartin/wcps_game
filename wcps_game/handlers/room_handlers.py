@@ -111,8 +111,16 @@ class RoomCreateHandler(PacketHandler):
         await user.send(room_create_packet.build())
 
         # Notify the rest of the lobby
-        # TODO: investigate room pages
-        # await this_channel.broadcast_packet_to_channel(room_create_packet.build())
+        channel_users = await user.this_server.channels[user.channel].get_users()
+
+        for user_to_update in channel_users:
+            if user_to_update.room is None and user.room_page == new_room.room_page:
+                update_packet = PacketFactory.create_packet(
+                    packet_id=PacketList.DO_ROOM_INFO_CHANGE,
+                    room_to_update=new_room,
+                    update_type=gconstants.RoomUpdateType.CREATE
+                )
+                await user_to_update.send(update_packet.build())
 
     async def send_generic_error(user: "User"):
         error_packet = PacketFactory.create_packet(

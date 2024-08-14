@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 from wcps_core.constants import ErrorCodes as corerr
 from wcps_core.packets import OutPacket
 
-from wcps_game.game.constants import GameMode
+from wcps_game.game.constants import GameMode, RoomUpdateType
 from wcps_game.packets.packet_list import PacketList, ClientXorKeys
 from wcps_game.packets.error_codes import RoomCreateError
 
@@ -55,6 +55,17 @@ class RoomList(OutPacket):
 
         for room in room_list:
             add_room_info_to_packet(self, room)
+
+
+class RoomInfoUpdate(OutPacket):
+    def __init__(self, room_to_update: "Room", update_type: RoomUpdateType):
+        self.append(room_to_update.id)
+
+        if update_type == RoomUpdateType.DELETE:
+            self.append(update_type)
+        else:
+            self.append(update_type)
+            add_room_info_to_packet(room_to_update)
 
 
 def add_room_info_to_packet(packet: OutPacket, room):
