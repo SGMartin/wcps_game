@@ -11,7 +11,7 @@ from wcps_game.game.rooms import Room
 from wcps_game.handlers.packet_handler import PacketHandler
 from wcps_game.packets.packet_list import PacketList
 from wcps_game.packets.packet_factory import PacketFactory
-from wcps_game.packets.error_codes import RoomCreateError
+from wcps_game.packets.error_codes import RoomCreateError, RoomJoinError
 
 
 class RoomCreateHandler(PacketHandler):
@@ -130,6 +130,86 @@ class RoomCreateHandler(PacketHandler):
         await user.send(error_packet.build())
 
 
+class RoomJoinHandler(PacketHandler):
+    async def process(self, user: "User"):
+        if not user.authorized:
+            return
+
+        if user.room is not None:
+            return
+
+        room_target = int(self.get_block(0))
+        room_password = self.get_block(1)
+
+        # Target room not found
+        if user.this_server.channels[user.channel].rooms[room_target] is None:
+            generic_err = PacketFactory.create_packet(
+                packet_id=PacketList.DO_JOIN_ROOM,
+                error_code=RoomJoinError.GENERIC,
+                room_to_join=None
+            )
+            await user.send(generic_err.build())
+            return
+
+        this_room = user.this_server.channels[user.channel].rooms[room_target]
+
+        # Password protected and incorrect password
+        if this_room.password_protected and this_room.password != room_password:
+            password_incorrect = PacketFactory.create_packet(
+                packet_id=PacketList.DO_JOIN_ROOM,
+                error_code=RoomJoinError.INVALID_PASSWORD,
+                room_to_join=None
+
+            )
+            await user.send(password_incorrect.build())
+            return
+
+        if this_room.premium_only and user.premium == gconstants.Premium.F2P:
+            not_premium = PacketFactory.create_packet(
+                packet_id=PacketList.DO_JOIN_ROOM,
+                error_code=RoomJoinError.PREMIUM_ONLY,
+                room_to_join=None
+            )
+            await user.send(not_premium.build())
+            return
+
+        # Player level is unsuitable
+        this_player_level = gconstants.get_level_for_exp(user.xp)
+        level_required = gconstants.RoomLevelLimits.MIN_LEVEL_REQUIREMENTS.get(
+            this_room.level_limit
+            )
+
+        if this_player_level not in level_required:
+            bad_level_error = PacketFactory.create_packet(
+                packet_id=PacketList.DO_JOIN_ROOM,
+                error_code=RoomJoinError.UNSUITABLE_LEVEL,
+                room_to_join=None
+            )
+            await user.send(bad_level_error.build())
+            return
+
+        # If this function does not return none, it will send the room join packet
+        player = await this_room.add_player(user)
+
+        if player is None:
+            if this_room.user_limit:
+                cannot_join_error = PacketFactory.create_packet(
+                    packet_id=PacketList.DO_JOIN_ROOM,
+                    error_code=RoomJoinError.MAX_USERS,
+                    room_to_join=None
+                )
+                await user.send(cannot_join_error.build())
+            else:
+                room_full_error = PacketFactory.create_packet(
+                    packet_id=PacketList.DO_JOIN_ROOM,
+                    error_code=RoomJoinError.ROOM_FULL,
+                    room_to_join=None
+                )
+                await user.send(room_full_error.build())
+        else:
+            return
+
+
 class RoomLeaveHandler(PacketHandler):
     async def process(self, user: "User"):
 
@@ -137,11 +217,16 @@ class RoomLeaveHandler(PacketHandler):
             return
 
         if user.room is not None:
-            await user.room.remove_player(user)
+            room_left = user.room
+            this_room_page = room_left.room_page
+            is_last_player = room_left.get_player_count() == 1
 
-            user.userlist_page = 0
+            await room_left.remove_player(user)
+            user.set_room(None, 0)
+
             channel_users = await user.this_server.channels[user.channel].get_users()
 
+            # Send the user the userlist
             user_list_full = PacketFactory.create_packet(
                 packet_id=PacketList.USERLIST,
                 lobby_user_list=channel_users,
@@ -149,8 +234,20 @@ class RoomLeaveHandler(PacketHandler):
             )
             await user.send(user_list_full.build())
 
+            # Send the user the room list
+            all_rooms = await user.this_server.channels[user.channel].get_all_rooms()
+            rooms_to_send = [room for room in all_rooms.values() if room.room_page == user.room_page]
+
+            new_room_list = PacketFactory.create_packet(
+                packet_id=PacketList.DO_ROOM_LIST,
+                room_page=user.room_page,
+                room_list=rooms_to_send
+            )
+            await user.send(new_room_list.build())
+
             # Send an userlist packet for all users in the user list for their current page
             # TODO: check if packet DO_USERLIST_CHANGE (0x7110) would work here?
+            # TODO: IS this really necessary? He has not left the channel...
             for c_user in channel_users:
                 if c_user.room is None:
                     this_user_update = PacketFactory.create_packet(
@@ -159,6 +256,15 @@ class RoomLeaveHandler(PacketHandler):
                         target_page=c_user.userlist_page
                     )
                     await c_user.send(this_user_update.build())
+
+                    # Send a room update packet to the lobby if there are players left
+                    if c_user.room_page == this_room_page and not is_last_player:
+                        room_update = PacketFactory.create_packet(
+                            packet_id=PacketList.DO_ROOM_INFO_CHANGE,
+                            room_to_update=room_left,
+                            update_type=gconstants.RoomUpdateType.UPDATE
+                        )
+                        await c_user.send(room_update.build())
 
 
 class RoomListHandler(PacketHandler):

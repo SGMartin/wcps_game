@@ -1,3 +1,7 @@
+import random
+import socket
+import struct
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -9,7 +13,7 @@ from wcps_core.packets import OutPacket
 
 from wcps_game.game.constants import GameMode, RoomUpdateType
 from wcps_game.packets.packet_list import PacketList, ClientXorKeys
-from wcps_game.packets.error_codes import RoomCreateError
+from wcps_game.packets.error_codes import RoomCreateError, RoomJoinError
 
 
 class RoomCreate(OutPacket):
@@ -73,6 +77,61 @@ class RoomInfoUpdate(OutPacket):
             add_room_info_to_packet(self, room_to_update)
 
 
+class RoomJoin(OutPacket):
+    def __init__(self, error_code: RoomJoinError, room_to_join: "Room", player_slot: int = 0):
+        super().__init__(
+            packet_id=PacketList.DO_JOIN_ROOM,
+            xor_key=ClientXorKeys.SEND
+        )
+
+        if room_to_join is None:
+            self.append(error_code)
+        else:
+            self.append(corerr.SUCCESS)
+            self.append(player_slot)
+            add_room_info_to_packet(self, room_to_join)
+
+
+class RoomPlayers(OutPacket):
+    def __init__(self, player_list: list):
+        super().__init__(
+            packet_id=PacketList.DO_GAME_USER_LIST,
+            xor_key=ClientXorKeys.SEND
+        )
+
+        self.append(len(player_list))  # How many players are in the room
+
+        for player in player_list:
+            self.append(player.user.session_id)  # Should be user id TODO: check if session id works
+            self.append(player.user.session_id)
+            self.append(player.id)  # The slot in the room
+            self.append(player.ready)  # Ready or not
+            self.append(player.team)
+            self.append(player.weapon)
+            self.append(0)  # Unknown
+            self.append(player.branch)  # Engineer, medic etc.
+            self.append(player.health)
+            self.append(player.user.displayname)
+            self.fill(-1, 3)  # Clan blocks here: ID/NAME/RANK
+            self.append(1)  # Unknown
+            self.append(0)  # Unknown
+            self.append(910)  # Unknown. The client send this on request time. Client ver???
+            self.append(player.user.premium)
+            self.append(-1)  # Unknown
+            self.append(player.user.stats.kills)
+            self.append(player.user.stats.deaths)
+            self.append(random.randint(0, 149))  # random [0, 149] unknown
+            self.append(player.user.xp)
+            self.append(player.vehicle_id)
+            self.append(player.vehicle_seat)
+            # Connection data here for UDP
+            self.append(ip_string_to_long(player.user.remote_end_point[0]))
+            self.append(player.user.remote_port)
+            self.append(ip_string_to_long(player.user.local_end_point[0]))
+            self.append(player.user.local_port)
+            self.append(0)  # Unknown
+
+
 def add_room_info_to_packet(packet: OutPacket, room):
     cqc_rounds = room.rounds_setting if room.game_mode == GameMode.EXPLOSIVE else 0
     tdm_tickets = room.tickets_setting if room.game_mode > GameMode.EXPLOSIVE else 0
@@ -102,3 +161,10 @@ def add_room_info_to_packet(packet: OutPacket, room):
     packet.append(0)  # average ping before patch G1-17
     packet.append(room.ping_limit)  # ping limit
     packet.append(-1)  # Is clan war? possibly incomplete? if enabled needs 2 blocks more
+
+
+def ip_string_to_long(ip_addr: str):
+    # Convert IP address to long (32-bit integer)
+    ip_as_long = struct.unpack("!I", socket.inet_aton(ip_addr))[0]
+    print(f"Converted {ip_addr} to {ip_as_long}")
+    return ip_as_long

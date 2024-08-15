@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import math
 
 from typing import TYPE_CHECKING
@@ -6,6 +7,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from wcps_game.game.game_server import User
     from wcps_core.packets import OutPacket
+
+from wcps_core.constants import ErrorCodes as corerr
 
 from wcps_game.game import constants as gconstants
 from wcps_game.game.player import Player
@@ -53,7 +56,8 @@ class Room:
         else:
             self.supermaster = False
 
-        self.max_players = gconstants.RoomMaximumPlayers.MAXIMUM_PLAYERS[self.channel.type][max_players]
+        self.max_players = gconstants.RoomMaximumPlayers.MAXIMUM_PLAYERS[
+            self.channel.type][max_players]
 
         # Auto/default settings on room creating
         self.state = gconstants.RoomStatus.WAITING
@@ -100,34 +104,43 @@ class Room:
         self.id = room_id
         self.room_page = round(math.floor(self.id / 8))
 
-    def get_players_in_team(self, team_to_count):
-        team_count = 0
-        for player in self.players:
-            if player.team == team_to_count:
-                team_to_count += 1
+    def get_player_count_in_team(self, team_to_count) -> int:
+        player_count = 0
 
-        return team_count
+        if team_to_count == gconstants.Team.DERBARAN:
+            slot_range = range(0, math.floor(self.max_players / 2))
+        else:
+            slot_range = range(math.floor(self.max_players / 2), self.max_players)
+
+        for slot in slot_range:
+            if self.players[slot] is not None:
+                player_count += 1
+
+        print(f"Players in {team_to_count}:{player_count}")
+        return player_count
 
     def get_player_count(self) -> int:
         player_count = 0
         for player in self.players.values():
             if player is not None:
                 player_count += 1
-
         return player_count
 
-    async def add_player(self, user: "User") -> bool:
+    def get_all_players(self) -> list:
+        return [player for player in self.players.values() if player is not None]
 
-        can_join = False
+    async def add_player(self, user: "User") -> Player:
+
+        this_player = None
 
         if self.get_player_count() >= self.max_players or self.user_limit:
-            return can_join
+            return this_player
 
         async with self._players_lock:
             player_team = gconstants.Team.DERBARAN
 
-            current_derbaran_players = self.get_players_in_team(gconstants.Team.DERBARAN)
-            current_niu_players = self.get_players_in_team(gconstants.Team.NIU)
+            current_derbaran_players = self.get_player_count_in_team(gconstants.Team.DERBARAN)
+            current_niu_players = self.get_player_count_in_team(gconstants.Team.NIU)
 
             if current_derbaran_players > current_niu_players:
                 player_team = gconstants.Team.NIU
@@ -135,16 +148,59 @@ class Room:
             # Ok, to find the team, remember that the first half of the slots are always derbaran
             # and the second half, NIU
             if player_team == gconstants.Team.DERBARAN:
-                slot_range = range(0, self.max_players / 2)
+                slot_range = range(0, math.floor(self.max_players / 2))
             else:
-                slot_range = range(self.max_players / 2, self.max_players)
+                slot_range = range(math.floor(self.max_players / 2), self.max_players)
 
             for requested_slot in slot_range:
                 if self.players[requested_slot] is None:
-                    self.players[requested_slot] = user
-                    return True
+                    this_player = Player(user=user, slot=requested_slot, team=player_team)
 
-                return False
+                    # Send the update to the room
+                    player_update = PacketFactory.create_packet(
+                        packet_id=PacketList.DO_GAME_USER_LIST,
+                        player_list=[this_player]
+                    )
+                    await self.send(player_update.build())
+                    print("Sent update to players in room")
+
+                    # Send the incoming user the room join packet
+                    join_packet = PacketFactory.create_packet(
+                        packet_id=PacketList.DO_JOIN_ROOM,
+                        error_code=corerr.SUCCESS,
+                        room_to_join=self,
+                        player_slot=requested_slot
+                        )
+
+                    user.set_room(room=self, room_slot=requested_slot)
+                    await user.send(join_packet.build())
+                    print("Sent player room join to incoming user")
+                    # Send the incoming user the room players packet
+                    # he cannot be in the packet lol
+                    room_players_packet = PacketFactory.create_packet(
+                        packet_id=PacketList.DO_GAME_USER_LIST,
+                        player_list=self.get_all_players()
+                    )
+                    await user.send(room_players_packet.build())
+                    print("Sent room players packet to incoming user")
+                    # Now add the player to the list of players
+                    self.players[requested_slot] = this_player
+
+                    # Send an update to the lobby
+                    channel_users = await self.channel.get_users()
+
+                    for user in channel_users:
+                        if user.room is None and user.room_page == self.room_page:
+                            room_update = PacketFactory.create_packet(
+                                packet_id=PacketList.DO_ROOM_INFO_CHANGE,
+                                room_to_update=self,
+                                update_type=gconstants.RoomUpdateType.UPDATE
+                            )
+                            await user.send(room_update.build())
+                    print("Lobby notify")
+                    break
+
+        return this_player
 
     async def remove_player(self, user: "User"):
         if not user.authorized or user.room is None:
@@ -167,7 +223,34 @@ class Room:
                 await self.destroy()
             else:
                 if old_player.id == self.master_slot:  # This player was the master
-                    print("Implement new master routine here")
+
+                    # This is not a supermaster room anymore
+                    # TODO: What the original server did if the new master was also SP?
+                    if self.supermaster:
+                        self.supermaster = False
+
+                    # Calculate the priority level for the new master
+                    all_players = self.get_all_players()
+                    new_master = None
+                    best_priority = 0
+
+                    for player in all_players:
+                        player_priority = player.user.premium + 1
+
+                        if player.user.inventory.has_item("CC02"):
+                            player_priority += 1
+
+                        if player_priority > best_priority:
+                            new_master = player
+                            best_priority = player_priority
+
+                    if new_master is not None:
+                        self.master = new_master.user
+                        self.master_slot = new_master.id
+                        self.players[self.master_slot].ready = True
+                    else:
+                        await self.destroy()
+                        logging.error(f"Could not find a new master for room {self.id}")
 
             # Finally, send the room leave packet
             room_leave = PacketFactory.create_packet(
@@ -176,14 +259,23 @@ class Room:
                 room=self,
                 old_slot=old_player.id
             )
+            # Send it to the user
             await user.send(room_leave.build())
+            # Send it to the rest of the room
+            await self.send(room_leave.build())
 
     async def destroy(self):
         # Get the users in the channel
         channel_users = await self.channel.get_users()
+        # Clear the room slot from the channel
+        await self.channel.remove_room(self.id)
+        # Clear players of the room
+        for room_player in self.get_all_players():
+            room_player.user.set_room(None, 0)
 
         for user in channel_users:
             if user.room is None and user.room_page == self.room_page:
+                # TODO: is this packet necessary?
                 room_delete = PacketFactory.create_packet(
                     packet_id=PacketList.DO_ROOM_INFO_CHANGE,
                     room_to_update=self,
@@ -191,13 +283,18 @@ class Room:
                 )
                 await user.send(room_delete.build())
 
-        for room_player in self.players.values():
-            if room_player is not None:
-                room_player.user.room = None
-                room_player.user.room_page = 0
+                # send them also the room list
+                room_list_for_page = await user.this_server.channels[user.channel].get_all_rooms()
+                room_list_for_page = [room for room in room_list_for_page.values() if room.room_page == user.room_page]
 
-        # Clear the room slot from the channel
-        await self.channel.remove_room(self.id)
+                new_room_list = PacketFactory.create_packet(
+                    packet_id=PacketList.DO_ROOM_LIST,
+                    room_page=user.room_page,
+                    room_list=room_list_for_page
+                )
+                await user.send(new_room_list.build())
+
+
 
     async def send(self, buffer: "OutPacket"):
         for player in self.players.values():
