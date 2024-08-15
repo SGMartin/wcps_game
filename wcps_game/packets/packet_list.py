@@ -34,3 +34,9 @@ class PacketList:
     DO_EXIT_ROOM = 0x7340
     DO_ROOM_INFO_CHANGE = 0x7210
     DO_GAME_USER_LIST = 0x7500
+
+    # Game packet
+    DO_GAME_PROCESS = 0x7530
+
+    # Subpackets of DO_GAME_PROCESS
+    DO_MAP_CLICK = 0x33

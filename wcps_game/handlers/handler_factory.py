@@ -16,7 +16,13 @@ from wcps_game.handlers.userlist import UserListHandler
 from wcps_game.handlers.equipment import EquipmentHandler
 from wcps_game.handlers.itemshop import ItemShopHandler
 from wcps_game.handlers.coupon import CouponHandler
-from wcps_game.handlers.room_handlers import RoomCreateHandler, RoomJoinHandler, RoomLeaveHandler, RoomListHandler
+from wcps_game.handlers.room_handlers import (
+    RoomCreateHandler,
+    RoomJoinHandler,
+    RoomLeaveHandler,
+    RoomListHandler,
+)
+from wcps_game.handlers.game_proccess import GameProcessHandler
 
 # Dictionary to map packet IDs to handler classes
 HANDLER_MAP = {
@@ -24,7 +30,6 @@ HANDLER_MAP = {
     PacketList.INTERNAL_GAME_AUTHENTICATION: AuthorizeServerHandler,
     PacketList.INTERNAL_CLIENT_CONNECTION: AuthConnectionHandler,
     PacketList.INTERNAL_PLAYER_AUTHENTICATION: AuthorizeClientHandler,
-
     # Server - client lobby
     PacketList.REQUEST_SERVER_TIME: RequestServerTimeHandler,
     PacketList.PLAYER_AUTHORIZATION: ClientAuthenticationHandler,
@@ -33,19 +38,17 @@ HANDLER_MAP = {
     PacketList.PING: PingHandler,
     PacketList.USERLIST: UserListHandler,
     PacketList.CHAT: ChatHandler,
-
     # Shop
     PacketList.EQUIPMENT: EquipmentHandler,
     PacketList.ITEMSHOP: ItemShopHandler,
     PacketList.COUPON: CouponHandler,
-
     # Room
     PacketList.ROOM_CREATE: RoomCreateHandler,
     PacketList.DO_ROOM_LIST: RoomListHandler,
     PacketList.DO_EXIT_ROOM: RoomLeaveHandler,
-    PacketList.DO_JOIN_ROOM: RoomJoinHandler
-
-
+    PacketList.DO_JOIN_ROOM: RoomJoinHandler,
+    # Game
+    PacketList.DO_GAME_PROCESS: GameProcessHandler,
 }
 
 
