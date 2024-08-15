@@ -42,7 +42,7 @@ class GameProcessHandler(abc.ABC):
 
         self.packet = None
         self.error_code = 1
-        self.lock = asyncio.lock()
+        self.lock = asyncio.Lock()
 
         # The subpacket ID as defined in the packet_list.py i.e. DO_READY_CLICK
         self.sub_packet = None
@@ -78,9 +78,6 @@ class GameProcessHandler(abc.ABC):
             async with self.lock:
                 # Get rid of the first bytes of the block since we are not touching them
                 self.blocks = self.blocks[4:]
-                print(f"Trimmed packet {self.blocks}")
-                print(f"Full packet {in_packet.blocks}")
-
                 self.room = user.room
 
                 # Get the player instance of the user for the room
