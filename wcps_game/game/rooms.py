@@ -179,6 +179,23 @@ class Room:
             await user.send(room_leave.build())
 
     async def destroy(self):
+        # Get the users in the channel
+        channel_users = await self.channel.get_users()
+
+        for user in channel_users:
+            if user.room is None and user.room_page == self.room_page:
+                room_delete = PacketFactory.create_packet(
+                    packet_id=PacketList.DO_ROOM_INFO_CHANGE,
+                    room_to_update=self,
+                    update_type=gconstants.RoomUpdateType.DELETE
+                )
+                await user.send(room_delete.build())
+
+        for room_player in self.players.values():
+            if room_player is not None:
+                room_player.user.room = None
+                room_player.user.room_page = 0
+
         # Clear the room slot from the channel
         await self.channel.remove_room(self.id)
 

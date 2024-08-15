@@ -59,13 +59,18 @@ class RoomList(OutPacket):
 
 class RoomInfoUpdate(OutPacket):
     def __init__(self, room_to_update: "Room", update_type: RoomUpdateType):
+        super().__init__(
+            packet_id=PacketList.DO_ROOM_INFO_CHANGE,
+            xor_key=ClientXorKeys.SEND
+        )
+
         self.append(room_to_update.id)
 
         if update_type == RoomUpdateType.DELETE:
             self.append(update_type)
         else:
             self.append(update_type)
-            add_room_info_to_packet(room_to_update)
+            add_room_info_to_packet(self, room_to_update)
 
 
 def add_room_info_to_packet(packet: OutPacket, room):
