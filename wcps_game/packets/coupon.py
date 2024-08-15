@@ -4,7 +4,7 @@ from wcps_game.packets.error_codes import CouponError
 
 
 class Coupon(OutPacket):
-    def __init__(self, error: CouponError, awarded_dinars: int = 0):
+    def __init__(self, error_code: CouponError, awarded_dinars: int = 0):
         super().__init__(
             packet_id=PacketList.COUPON,
             xor_key=ClientXorKeys.SEND
