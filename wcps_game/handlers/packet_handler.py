@@ -59,12 +59,14 @@ class GameProcessHandler(abc.ABC):
         # Are we sending map data
         self.map_data = False
         # The full packet
-        self.in_packet = None
         self.blocks = []
 
     @abc.abstractmethod
     async def handle(self):
         pass
+
+    def get_block(self, block_id: int) -> str:
+        return self.blocks[block_id]
 
     async def process(self, user: "User", in_packet: InPacket):
         # Basically we copy the full packet minus the first two blocks of ticks
@@ -102,10 +104,10 @@ class GameProcessHandler(abc.ABC):
                             new_packet.append(
                                 in_packet.blocks[2]
                             )  # 2 or 0 is the value
-                            new_packet.append(self.type)
+                            new_packet.append(self.sub_packet)
 
                             # Copy the rest of the packet as modified by the handlers
-                            new_packet.extend(self.blocks[5:])
+                            new_packet.extend(self.blocks)
                         else:
                             new_packet = [self.error_code]
 
@@ -113,7 +115,7 @@ class GameProcessHandler(abc.ABC):
                         game_data_packet = PacketFactory.create_packet(
                             packet_id=PacketList.DO_GAME_PROCESS, blocks=new_packet
                         )
-
+                        print(f"Final packet {game_data_packet.blocks}")
                         if self.error_code > corerr.SUCCESS or self.self_target:
                             await user.send(game_data_packet.build())
                         else:
