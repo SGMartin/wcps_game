@@ -35,7 +35,8 @@ class NetworkEntity:
                     buffer=data, receptor=self, xor_key=self.xor_key_receive
                 )
                 if incoming_packet.decoded_buffer:
-                    logging.info(f"IN:: {incoming_packet.decoded_buffer}")
+                    if incoming_packet.packet_id != 25600:
+                        logging.info(f"IN:: {incoming_packet.decoded_buffer}")
                     handler = self.get_handler_for_packet(incoming_packet.packet_id)
                     if handler:
                         asyncio.create_task(handler.handle(incoming_packet))

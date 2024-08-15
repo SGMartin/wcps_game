@@ -13,13 +13,28 @@ class ChangeMapHandler(GameProcessHandler):
         if self.room.state != RoomStatus.WAITING:
             return
 
-        new_map = self.get_block(2)
+        new_map = int(self.get_block(2))
         this_room_mode = self.room.game_mode
         this_room_channel = self.room.channel.type
 
         # Is this a valid map?
         map_database = MapDatabase()
-        # TODO: sanitize input
+
+        is_active = map_database.get_map_status(map_id=new_map)
+        available_channels = map_database.get_map_channels(map_id=new_map)
+        available_modes = map_database.get_map_modes(map_id=new_map)
+
+        # Map inactive or not available for this channel
+        # TODO: some of this stuff may be cheating. Log it
+        if not is_active or not available_channels[this_room_channel]:
+            print("Inactive map")
+            return
+
+        # Map mode is invalid
+        if not available_modes[this_room_mode]:
+            print("Invalid game mode")
+            return
+
         self.room.current_map = new_map
 
         self.update_lobby = True
