@@ -1,37 +1,17 @@
 import asyncio
+import logging
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from wcps_game.game.rooms import Room
+    from wcps_game.game.game_server import User
+
 
 from wcps_core.packets import OutPacket
 
 from wcps_game.game.constants import ChannelType
 from wcps_game.packets.packet_list import PacketList
 from wcps_game.packets.packet_factory import PacketFactory
-
-
-class Room:
-    def __init__(self, name, channel: ChannelType, room_id: int = -1):
-        # MOCK CLASS
-        self.name = "MV"
-        self.channel = ChannelType.CQC
-        self.state = 2
-        self.master = 2
-        self.displayname = "VIVA SINSO"
-        self.has_password = 0
-        self.maximum_players = 16
-        self.player_count = 12
-        self.map = 15
-        self.mode = 0
-        self.mode2 = 0
-        self.timeleft = 0
-        self.game_mode = 0
-        self.joinable = 1
-        self.supermaster = 0
-        self.type = 0
-        self.level_limit = 0
-        self.premium = 0
-        self.enable_kick = 1
-        self.autostart = 1
-        self.pinglimit = 2
-        self.clanwar = -1
 
 
 class Channel:
@@ -43,7 +23,7 @@ class Channel:
         self._users_lock = asyncio.Lock()
         self._rooms_lock = asyncio.Lock()
 
-    async def add_room(self, new_room: Room):
+    async def add_room(self, new_room: "Room"):
         async with self._rooms_lock:
             for slot, room in self.rooms.items():
                 if room is None:
@@ -62,14 +42,14 @@ class Channel:
             if user.username not in self.users:
                 self.users[user.username] = user
             else:
-                print("User already in channel")
+                logging.info("User {user.displayname} already in the channel")
 
-    async def remove_user(self, user):
+    async def remove_user(self, user: "User"):
         async with self._users_lock:
             if user.username in self.users:
                 del self.users[user.username]
             else:
-                print("User not in channel")
+                logging.info(f"User {user.displayname} not in channel")
 
         users_left = await self.get_users()
         for user in users_left:
@@ -85,7 +65,7 @@ class Channel:
         async with self._users_lock:
             return list(self.users.values())
 
-    async def get_rooms(self):
+    async def get_all_rooms(self):
         async with self._rooms_lock:
             return {k: v for k, v in self.rooms.items() if v is not None}
 

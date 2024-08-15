@@ -5,6 +5,9 @@ from typing import Tuple, Optional, TYPE_CHECKING
 import sys
 
 from wcps_core.constants import Ports
+from wcps_game.game.constants import RoomStatus
+from wcps_game.packets.packet_factory import PacketFactory
+from wcps_game.packets.packet_list import PacketList, ClientXorKeys
 
 if TYPE_CHECKING:
     from wcps_game.game.game_server import GameServer
@@ -121,9 +124,53 @@ class UDPListener:
                 self.write_ip_endpoint(this_user.local_end_point, response, 50)
                 self.transport.sendto(response, addr)
 
+                room_id = self.to_ushort(packet, 6)
+
+                # Temporal test to try to keep the player updated of rooms while training
+                if room_id == 999:
+                    rooms = await this_user.this_server.channels[this_user.channel].get_all_rooms()
+                    rooms = [room for room in rooms.values() if room.room_page == this_user.room_page]
+
+                    room_list = PacketFactory.create_packet(
+                        packet_id=PacketList.DO_ROOM_LIST,
+                        room_page=this_user.room_page,
+                        room_list=rooms
+                    )
+                    await this_user.send(room_list.build())
+
             elif packet[14] in {0x10, 0x30, 0x31, 0x32, 0x34}:
-                # Handle additional sub-packet types
-                logging.info(f"UDP ROOM packet {packet[14]}")
+
+                session_id_bytes = packet[4:6][::-1]  # Reverse the bytes to match the C# code
+                target_id = self.to_ushort(packet, 22)
+                room_id = self.to_ushort(packet, 6)
+                session_id = struct.unpack(">H", session_id_bytes)[0]
+
+                if this_user.room is None and room_id != 999:  # Training is 999
+                    return
+
+                U2 = self.game_server.get_player_by_session(target_id)
+
+                if room_id == 999:  # He is training, set up special tunnel
+                    U1 = U2
+                    this_user.set_room(None, 999)
+                else:
+                    # Retrieve the users from the game server4
+                    U1 = self.game_server.get_player_by_session(session_id)
+                    if (
+                        U1 is not None and U2 is not None and
+                        U1.room.id == room_id and U2.room.id == room_id and
+                        U1.room.state == RoomStatus.PLAYING
+                    ):
+                        self.transport.sendto(packet, U2.remote_end_point)
+                    else:
+                        logging.error(
+                            f"UDP TUNNEL PACKET FAULTY - ROOM DID NOT MATCH SENDER "
+                            f"{U1.displayname if U1 else 'None'}/"
+                            f"{U2.displayname if U2 else 'None'}/"
+                            f"{U1.room.id if U1 else 'None'}/"
+                            f"{U2.room.id if U2 else 'None'}/"
+                            f"{room_id}"
+                        )
             else:
                 logging.error(f"Unhandled UDP sub-packet {packet[14]:02x}")
         else:

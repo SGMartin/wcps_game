@@ -15,8 +15,8 @@ from wcps_game.packets.itemshop import ItemShop
 from wcps_game.packets.coupon import Coupon
 from wcps_game.packets.use_px_item import UsePXItem
 from wcps_game.packets.select_channel import SelectChannel
-from wcps_game.packets.room_list import RoomList
 from wcps_game.packets.chat import Chat
+from wcps_game.packets.room import RoomCreate, RoomLeave, RoomList, RoomInfoUpdate, RoomJoin, RoomPlayers
 
 
 class PacketFactory:
@@ -32,14 +32,20 @@ class PacketFactory:
         PacketList.PING: Ping,
         PacketList.LEAVE_SERVER: LeaveServer,
         PacketList.USERLIST: UserList,
-        PacketList.ROOMLIST: RoomList,
         PacketList.CHAT: Chat,
         # Shop
         PacketList.EQUIPMENT: Equipment,
         PacketList.UPDATE_INVENTORY: UpdateInventory,
         PacketList.ITEMSHOP: ItemShop,
         PacketList.USEITEM: UsePXItem,
-        PacketList.COUPON: Coupon
+        PacketList.COUPON: Coupon,
+        # Room
+        PacketList.ROOM_CREATE: RoomCreate,
+        PacketList.DO_ROOM_LIST: RoomList,
+        PacketList.DO_EXIT_ROOM: RoomLeave,
+        PacketList.DO_ROOM_INFO_CHANGE: RoomInfoUpdate,
+        PacketList.DO_JOIN_ROOM: RoomJoin,
+        PacketList.DO_GAME_USER_LIST: RoomPlayers
 
     }
 

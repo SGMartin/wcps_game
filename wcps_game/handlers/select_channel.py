@@ -1,5 +1,4 @@
 from typing import TYPE_CHECKING
-import logging
 
 if TYPE_CHECKING:
     from wcps_game.game.game_server import User
@@ -13,9 +12,7 @@ from wcps_game.packets.packet_factory import PacketFactory
 class SelectChannelHandler(PacketHandler):
     async def process(self, user: "User"):
         if user.authorized:
-            print(f"User current channel is {user.channel}")
             target_channel = int(self.get_block(0))
-            print(f"User target channel is {target_channel}")
             if target_channel <= ChannelType.BATTLEGROUP:  # min. channel 0 max channel BG
                 # Check if the user was previously in any channel
                 if user.channel > 0:
@@ -25,6 +22,7 @@ class SelectChannelHandler(PacketHandler):
                 await user.this_server.channels[target_channel].add_user(user)
                 user.channel = target_channel
                 user.userlist_page = 0
+                user.room_page = 0
 
                 channel_change = PacketFactory.create_packet(
                     packet_id=PacketList.SELECT_CHANNEL,
@@ -33,6 +31,7 @@ class SelectChannelHandler(PacketHandler):
                 await user.send(channel_change.build())
 
                 # Send userlist for this channel
+                # TODO: Move this and the user list to channel class????
                 all_channel_users = await user.this_server.channels[target_channel].get_users()
 
                 for channel_member in all_channel_users:
@@ -42,24 +41,19 @@ class SelectChannelHandler(PacketHandler):
                             lobby_user_list=all_channel_users,
                             target_page=channel_member.userlist_page
                             )
-                        print(userlist.blocks)
-                        logging.info(f"Updated {len(all_channel_users)} channel userlist for {channel_member.displayname}")
                         await channel_member.send(userlist.build())
 
-                # from wcps_game.game.channels import Room
+                # Send the room list to the user
+                all_rooms_channel = await user.this_server.channels[target_channel].get_all_rooms()
 
-                # fake_room_list = []
+                # Send only the first 8 rooms since it's page 1
+                first_page_rooms = list(all_rooms_channel.values())[0:8]
 
-                # for i in range(0, 101):
-                #     this_room = Room(f"room {i}", 1, i)
-                #     fake_room_list.append(this_room)
-
-                # fake_room_packet = PacketFactory.create_packet(
-                #     packet_id=PacketList.ROOMLIST,
-                #     room_page=0,
-                #     room_list=fake_room_list[0:7]
-                # )
-                # await user.send(fake_room_packet.build())
-
+                room_list = PacketFactory.create_packet(
+                    packet_id=PacketList.DO_ROOM_LIST,
+                    room_page=0,
+                    room_list=first_page_rooms
+                )
+                await user.send(room_list.build())
         else:
             await user.disconnect()

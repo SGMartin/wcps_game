@@ -28,7 +28,6 @@ class UserList(OutPacket):
 
         for idx, this_user in enumerate(lobby_user_list):
             self.append(idx + target_page * slider)
-            print(f"Internal {this_user.username} id is {this_user.internal_id}")
             self.append(this_user.session_id)  # used to be internal id
             self.append(this_user.session_id)  # session id
             self.append(this_user.displayname)  # displayname

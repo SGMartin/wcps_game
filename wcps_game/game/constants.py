@@ -141,8 +141,8 @@ class GameMode:
 
 
 class RoomStatus:
-    WAITING = 0
-    PLAYING = 1
+    WAITING = 1
+    PLAYING = 2
 
 
 class RoomUpdateType:
@@ -347,3 +347,22 @@ class RoomPingLimit:
     GREEN = 0
     YELLOW = 1
     ALL = 2
+
+
+class RoomLevelLimits:
+    MIN_LEVEL_REQUIREMENTS = {
+        0: range(0, 101),
+        1: range(1, 11),
+        2: range(11, 101),
+        3: range(21, 101),
+        4: range(31, 101),
+        5: range(41, 101)
+    }
+
+
+class RoomMaximumPlayers:
+    MAXIMUM_PLAYERS = {
+        ChannelType.CQC: [8, 16],
+        ChannelType.URBANOPS: [8, 16, 20, 24],
+        ChannelType.BATTLEGROUP: [8, 16, 20, 24, 32]
+    }

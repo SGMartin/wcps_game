@@ -50,3 +50,28 @@ class CouponError:
     SUCCESS = 0
     ALREADY_USED = -1
     INCORRECT_CODE = -2
+
+
+class RoomCreateError:
+    GENERIC = 92010          # Failed to create game room. Please try again later.
+    NOTCLAN = 93090              # Only clan members can host a game room for Clan Battle.
+    MAX_ROOM_LIMIT = 94060      # Cannot create a game room. Number of game rooms have exceeded.
+    UNSUITABLE_LEVEL = 94300       # Unsuitable level
+
+
+class RoomJoinError:
+    GENERIC = 94010
+    INVALID_PASSWORD = 94030
+    MAX_USERS = 94060
+    MAX_SPECS = 94070
+    CANNOT_JOIN_LOADING = 94100
+    CALCULATING_RESULTS = 94110
+    ROOM_FULL = 94120
+    UNSUITABLE_LEVEL = 94300
+    PREMIUM_ONLY = 94301
+
+
+class RoomInvitationError:
+    GENERIC = 93010
+    INVITED = 93020
+    ALREADY_IN_ROOM = 93030
