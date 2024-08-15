@@ -37,3 +37,6 @@ class PacketList:
 
     # Game packet
     DO_GAME_PROCESS = 0x7530
+
+    # Subpackets of DO_GAME_PROCESS
+    DO_MAP_CLICK = 0x33

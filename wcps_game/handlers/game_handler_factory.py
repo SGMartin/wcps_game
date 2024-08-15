@@ -1,0 +1,19 @@
+import logging
+
+from wcps_game.handlers.packet_handler import GameProcessHandler
+from wcps_game.packets.packet_list import PacketList
+
+# Dictionary to map packet IDs to handler classes
+HANDLER_MAP = {
+    # Lobby subpackets
+    PacketList.DO_MAP_CLICK: None
+}
+
+
+def get_subhandler_for_packet(subpacket_id: int) -> GameProcessHandler:
+    handler_class = HANDLER_MAP.get(subpacket_id)
+    if handler_class:
+        return handler_class()
+    else:
+        logging.info(f"Unknown subpacket: {subpacket_id}")
+        return None
