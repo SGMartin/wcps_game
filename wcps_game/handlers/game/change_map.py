@@ -27,12 +27,10 @@ class ChangeMapHandler(GameProcessHandler):
         # Map inactive or not available for this channel
         # TODO: some of this stuff may be cheating. Log it
         if not is_active or not available_channels[this_room_channel]:
-            print("Inactive map")
             return
 
         # Map mode is invalid
         if not available_modes[this_room_mode]:
-            print("Invalid game mode")
             return
 
         self.room.current_map = new_map
