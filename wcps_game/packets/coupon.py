@@ -10,6 +10,6 @@ class Coupon(OutPacket):
             xor_key=ClientXorKeys.SEND
         )
 
-        self.append(CouponError)
+        self.append(error_code)
         self.append(0)  # ?
         self.append(awarded_dinars)
