@@ -40,3 +40,5 @@ class PacketList:
 
     # Subpackets of DO_GAME_PROCESS
     DO_MAP_CLICK = 0x33
+    DO_TYPE_CLICK = 0x34
+    DO_ROUND_CLICK = 0x35

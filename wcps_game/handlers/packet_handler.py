@@ -142,3 +142,6 @@ class GameProcessHandler(abc.ABC):
                                     await chuser.send(room_update.build())
         else:
             logging.error(f"Unknown subpacket format {self.blocks[3]}, {self.blocks}")
+
+    def set_block(self, block_id: int, value: str) -> None:
+        self.blocks[block_id] = value
