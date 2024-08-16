@@ -388,16 +388,15 @@ class Room:
             player.reset_game_state()
             player.round_start()
 
+    async def end_game(self, winner_team: gconstants.Team):
+        pass
+
     # EXPERIMENTAL
     async def run(self):
-        self.UpTick = 0
-        self.DownTick = 1800000
-        self.LastTick = -1
-
         while self.state == gconstants.RoomStatus.PLAYING:
-            self.UpTick += 1000
-            self.DownTick -= 1000
-            self.LastTick = datetime.now().second
+            self.up_ticks += 1000
+            self.down_ticks -= 1000
+            self.last_tick = datetime.now().second
 
             clock_packet = PacketFactory.create_packet(
                 packet_id=PacketList.DO_GAME_UPDATE_CLOCK, room=self
