@@ -17,10 +17,10 @@ class GameUpdateClock(OutPacket):
 
         self.append(room.up_ticks)  # Spawn counter
         self.append(room.down_ticks)  # Time left
-        self.append(room.current_game_mode.current_round_derbaran)
-        self.append(room.current_game_mode.current_round_niu)
-        self.append(room.current_game_mode.scoreboard_derbaran)
-        self.append(room.current_game_mode.scoreboard_niu)
+        self.append(room.current_game_mode.current_round_derbaran())
+        self.append(room.current_game_mode.current_round_niu())
+        self.append(room.current_game_mode.scoreboard_derbaran())
+        self.append(room.current_game_mode.scoreboard_niu())
         self.append(2)  # What's this?
         self.append(0)  # Conquest stuff?
         self.append(30)  # Conquest ?
