@@ -42,3 +42,4 @@ class PacketList:
     DO_MAP_CLICK = 0x33
     DO_TYPE_CLICK = 0x34
     DO_ROUND_CLICK = 0x35
+    DO_KILL_CLICK = 0x37

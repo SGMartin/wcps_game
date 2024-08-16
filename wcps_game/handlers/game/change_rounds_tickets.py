@@ -18,10 +18,10 @@ class ChangeRoundsHandler(GameProcessHandler):
         if self.room.game_mode != GameMode.EXPLOSIVE:
             return
 
-        self.target_rounds = int(self.get_block(2))
+        target_rounds = int(self.get_block(2))
 
-        if self.target_rounds in range(0, len(ROUND_LIMITS)):
-            self.room.rounds_setting = self.target_rounds
+        if target_rounds in range(0, len(ROUND_LIMITS)):
+            self.room.rounds_setting = target_rounds
         else:
             self.room.rounds_setting = 0
 
