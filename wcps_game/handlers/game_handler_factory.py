@@ -12,6 +12,7 @@ from wcps_game.handlers.game.toggle_autostart import ToggleAutoStartHandler
 from wcps_game.handlers.game.toggle_user_limit import ToggleUserLimitHandler
 from wcps_game.handlers.game.toggle_ready import ToggleReadyHandler
 from wcps_game.handlers.game.change_side import ChangeSideHandler
+from wcps_game.handlers.game.start import StartRoomHandler
 
 # Dictionary to map packet IDs to handler classes
 HANDLER_MAP = {
@@ -24,7 +25,9 @@ HANDLER_MAP = {
     PacketList.DO_AUTOSTART_CLICK: ToggleAutoStartHandler,
     PacketList.DO_HOLD_CLICK: ToggleUserLimitHandler,
     PacketList.DO_READY_CLICK: ToggleReadyHandler,
-    PacketList.DO_TEAM_CLICK: ChangeSideHandler
+    PacketList.DO_TEAM_CLICK: ChangeSideHandler,
+    PacketList.DO_ROOM_START: StartRoomHandler
+
 }
 
 

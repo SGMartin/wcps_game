@@ -40,6 +40,8 @@ class PacketList:
 
     # Subpackets of DO_GAME_PROCESS
     # Lobby related #
+    DO_ROOM_START = 0x1  # ID by DarkRaptor
+    DO_ROOM_START_CONFIRM = 0x4  # ID by DarkRaptor
     DO_READY_CLICK = 0x32
     DO_MAP_CLICK = 0x33
     DO_TYPE_CLICK = 0x34
