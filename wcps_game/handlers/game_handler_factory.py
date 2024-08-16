@@ -5,12 +5,14 @@ from wcps_game.packets.packet_list import PacketList
 
 from wcps_game.handlers.game.change_map import ChangeMapHandler
 from wcps_game.handlers.game.change_mode import ChangeGameModeHandler
+from wcps_game.handlers.game.change_rounds_tickets import ChangeRoundsHandler
 
 # Dictionary to map packet IDs to handler classes
 HANDLER_MAP = {
     # Lobby subpackets
     PacketList.DO_MAP_CLICK: ChangeMapHandler,
-    PacketList.DO_TYPE_CLICK: ChangeGameModeHandler
+    PacketList.DO_TYPE_CLICK: ChangeGameModeHandler,
+    PacketList.DO_ROUND_CLICK: ChangeRoundsHandler
 }
 
 
