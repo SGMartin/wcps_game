@@ -143,7 +143,7 @@ class UDPListener:
                 session_id_bytes = packet[4:6][::-1]  # Reverse the bytes to match the C# code
                 target_id = self.to_ushort(packet, 22)
                 room_id = self.to_ushort(packet, 6)
-                session_id = struct.unpack(">H", session_id_bytes)[0]
+                session_id = struct.unpack("<H", session_id_bytes)[0]
 
                 if this_user.room is None and room_id != 999:  # Training is 999
                     return
@@ -154,9 +154,7 @@ class UDPListener:
                     U1 = U2
                     this_user.set_room(None, 999)
                 else:
-                    # Retrieve the users from the game server4
-                    # U1 = self.game_server.get_player_by_session(session_id)
-                    U1 = this_user
+                    U1 = self.game_server.get_player_by_session(session_id)
                     if (
                         U1 is not None and U2 is not None and
                         U1.room.id == room_id and U2.room.id == room_id and
