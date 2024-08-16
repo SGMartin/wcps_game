@@ -13,6 +13,10 @@ from wcps_game.handlers.game.toggle_user_limit import ToggleUserLimitHandler
 from wcps_game.handlers.game.toggle_ready import ToggleReadyHandler
 from wcps_game.handlers.game.change_side import ChangeSideHandler
 from wcps_game.handlers.game.start import StartRoomHandler
+# from wcps_game.handlers.game.ingame.game_setup import GameSetupHandler
+# from wcps_game.handlers.game.ingame.branch_select import BranchSelectHandler
+# from wcps_game.handlers.game.ingame.spawn import SpawnHandler
+# from wcps_game.handlers.game.ingame.test import TestHandler
 
 # Dictionary to map packet IDs to handler classes
 HANDLER_MAP = {
@@ -26,7 +30,12 @@ HANDLER_MAP = {
     PacketList.DO_HOLD_CLICK: ToggleUserLimitHandler,
     PacketList.DO_READY_CLICK: ToggleReadyHandler,
     PacketList.DO_TEAM_CLICK: ChangeSideHandler,
-    PacketList.DO_ROOM_START: StartRoomHandler
+    PacketList.DO_ROOM_START: StartRoomHandler,
+
+    # Ingame subpackets
+    # PacketList.DO_REQUEST_MISSION: GameSetupHandler,
+    # PacketList.DO_BRANCH_CLICK: BranchSelectHandler,
+    # PacketList.DO_PLAYER_REGEN: SpawnHandler
 
 }
 
@@ -37,4 +46,5 @@ def get_subhandler_for_packet(subpacket_id: int) -> GameProcessHandler:
         return handler_class()
     else:
         logging.info(f"Unknown subpacket: {subpacket_id}")
-        return None
+        # print("RETURNING TEST AUTOANSWER PACKET")
+        # return TestHandler()

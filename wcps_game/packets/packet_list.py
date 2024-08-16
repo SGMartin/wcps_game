@@ -35,8 +35,9 @@ class PacketList:
     DO_ROOM_INFO_CHANGE = 0x7210
     DO_GAME_USER_LIST = 0x7500
 
-    # Game packet
+    # Game packets
     DO_GAME_PROCESS = 0x7530
+    DO_GAME_UPDATE_CLOCK = 0x7540
 
     # Subpackets of DO_GAME_PROCESS
     # Lobby related #
@@ -51,3 +52,8 @@ class PacketList:
     DO_PING_CLICK = 0x3B
     DO_HOLD_CLICK = 0x3A
     DO_AUTOSTART_CLICK = 0x3E
+    # In game subpackets
+    DO_REQUEST_MISSION = 0x192  # ID by darkraptor
+    DO_GO = 0x193
+    DO_BRANCH_CLICK = 0x64
+    DO_PLAYER_REGEN = 0x96
