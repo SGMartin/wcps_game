@@ -25,5 +25,7 @@ class ChangeRoundsHandler(GameProcessHandler):
         else:
             self.room.rounds_setting = 0
 
+        self.set_block(2, self.room.rounds_setting)
+
         self.update_lobby = True
         self.answer = True
