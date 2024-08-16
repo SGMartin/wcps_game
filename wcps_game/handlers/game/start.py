@@ -40,3 +40,4 @@ class StartRoomHandler(GameProcessHandler):
             self.set_block(2, self.room.current_map)
             self.answer = True
             self.update_lobby = True
+            await self.room.start()

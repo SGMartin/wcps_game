@@ -2,6 +2,7 @@ import asyncio
 import logging
 import math
 
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -378,12 +379,20 @@ class Room:
             if player is not None:
                 await player.user.send(buffer)
 
+    async def start(self):
+        self.up_ticks = 0
+        self.down_ticks = 1800000
+        self.last_tick = -1
+
+        for player in self.players.values():
+            player.reset_game_state()
+            player.round_start()
+
     # EXPERIMENTAL
     async def run(self):
         self.UpTick = 0
         self.DownTick = 1800000
         self.LastTick = -1
-        from datetime import datetime
 
         while self.state == gconstants.RoomStatus.PLAYING:
             self.UpTick += 1000

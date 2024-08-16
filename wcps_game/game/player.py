@@ -14,15 +14,42 @@ class Player:
         self.ready = False
         self.state = gconstants.RoomStatus.WAITING  # same as room :)
 
-        # game data
-        self.health = 1000
-        self.weapon = 0  # ??
-        self.branch = gconstants.Classes.ENGINEER   # Eng, medic etc
-        self.vehicle_id = -1
-        self.vehicle_seat = -1
-
-        # Add self reference. TODO: Can we trim down self references down the road?
         self.user = user
+
+        self.reset_game_state()
 
     def toggle_ready(self):
         self.ready = not self.ready
+
+    def reset_game_state(self):
+
+        # game data
+        self.health = 1000
+        self.spawn_protection_ticks = 3000
+        self.weapon = 0
+        self.branch = gconstants.Classes.ENGINEER   # Eng, medic etc
+        self.vehicle_id = -1
+        self.vehicle_seat = -1
+        self.alive = True
+
+        # game stats
+        self.assists = 0
+        self.bombs_defused = 0
+        self.bombs_planted = 0
+        self.deaths = 0
+        self.flags_taken = 0
+        self.headshots = 0
+        self.kills = 0
+        self.losses = 0
+        self.money_earned = 0
+        self.points = 0
+        self.vehicles_destroyed = 0
+        self.wins = 0
+        self.xp_earned = 0
+
+    def round_start(self):
+        self.can_spawn = True
+        self.health = 1000
+        self.alive = True
+        self.vehicle_id = -1
+        self.vehicle_seat = -1
