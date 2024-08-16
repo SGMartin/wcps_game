@@ -14,7 +14,7 @@ from wcps_core.constants import ErrorCodes as corerr
 from wcps_game.game import constants as gconstants
 from wcps_game.game.player import Player
 
-from wcps_game.game.gamemodes.ffa import FFA
+from wcps_game.game.game_modes.ffa import FFA
 
 from wcps_game.packets.packet_list import PacketList
 from wcps_game.packets.packet_factory import PacketFactory
