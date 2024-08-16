@@ -179,21 +179,20 @@ class BaseGameMode(ABC):
         # Distance can only be short / mid / long
         damage_type = damage_type_coefs[DamageDistances.SHORT] / 100  # TODO: DISTANCE HERE
 
-        # Hitbox
-        bone_multipliers = {
-            HitboxBone.HEADNECK: DamageMultipliers.HEADNECK,
-            HitboxBone.TORSOLIMBS: DamageMultipliers.TORSOLIMBS,
-            HitboxBone.FEETHANDS: DamageMultipliers.FEETHANDS
-        }
-
-        bone_coef = bone_multipliers[hitbox] / 100
-
         if radius > 0:  # Then it is a radius damage
             radius_coef = radius / 100
             damage_taken = weapon_power * radius_coef * damage_type
         else:
+            # Hitbox
+            bone_multipliers = {
+                HitboxBone.HEADNECK: DamageMultipliers.HEADNECK,
+                HitboxBone.TORSOLIMBS: DamageMultipliers.TORSOLIMBS,
+                HitboxBone.FEETHANDS: DamageMultipliers.FEETHANDS
+            }
+
+            bone_coef = bone_multipliers[hitbox] / 100
             damage_taken = weapon_power * damage_type * bone_coef
 
         final_damage = round(damage_taken)
-        print(f"Final damage for this player: {weapon}: {weapon_power} * {radius_coef} * {damage_type} * {bone_coef}")
+        print(f"Final damage for this player: {weapon}: {weapon_power} * {radius} * {damage_type} * {hitbox}")
         return final_damage
