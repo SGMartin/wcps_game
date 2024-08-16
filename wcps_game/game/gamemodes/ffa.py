@@ -59,7 +59,7 @@ class FFA(BaseGameMode):
     def scoreboard_niu(self):
         return self.max_kills
 
-    def get_spawn_id(self):
+    async def get_spawn_id(self):
         async with self._spawn_lock:
             if not self.bln_first_spawn:
                 self.b_spawn_point += 1

@@ -14,6 +14,8 @@ from wcps_core.constants import ErrorCodes as corerr
 from wcps_game.game import constants as gconstants
 from wcps_game.game.player import Player
 
+from wcps_game.game.gamemodes.ffa import FFA
+
 from wcps_game.packets.packet_list import PacketList
 from wcps_game.packets.packet_factory import PacketFactory
 
@@ -86,6 +88,7 @@ class Room:
         }
 
         self.game_mode = default_modes[self.channel.type]
+        self.current_game_mode = None  # This will hold a reference for the actual game mode
         self.ping_limit = gconstants.RoomPingLimit.GREEN
 
         # Set the user who sent the packet as the default master
@@ -384,9 +387,17 @@ class Room:
         self.down_ticks = 1800000
         self.last_tick = -1
 
-        for player in self.players.values():
+        for player in self.get_all_players():
             player.reset_game_state()
             player.round_start()
+
+        # Initialize the game modes
+        game_modes = {
+            gconstants.GameMode.FFA: FFA
+        }
+
+        self.current_game_mode = game_modes[self.game_mode]()
+        self.current_game_mode.initialize(self)
 
     async def end_game(self, winner_team: gconstants.Team):
         pass
