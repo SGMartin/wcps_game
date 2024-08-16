@@ -104,7 +104,7 @@ class UDPListener:
         if this_user is None:
             return
 
-        logging.info(f"IN:: UDP packet of type {type_} with session ID {session_id}")
+        # logging.info(f"IN:: UDP packet of type {type_} with session ID {session_id}")
 
         if type_ == 0x1001:  # Initial packet
             self.write_ushort(self.port + 1, packet, 4)
@@ -155,7 +155,8 @@ class UDPListener:
                     this_user.set_room(None, 999)
                 else:
                     # Retrieve the users from the game server4
-                    U1 = self.game_server.get_player_by_session(session_id)
+                    # U1 = self.game_server.get_player_by_session(session_id)
+                    U1 = this_user
                     if (
                         U1 is not None and U2 is not None and
                         U1.room.id == room_id and U2.room.id == room_id and

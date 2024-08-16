@@ -395,7 +395,8 @@ class Room:
 
         # Initialize the game modes
         game_modes = {
-            gconstants.GameMode.FFA: FFA
+            gconstants.GameMode.FFA: FFA,
+            gconstants.GameMode.TDM: FFA  # test distances
         }
 
         self.current_game_mode = game_modes[self.game_mode]()
@@ -423,6 +424,7 @@ class Room:
                             packet_id=PacketList.DO_GAME_UPDATE_CLOCK, room=self
                         )
                         await self.send(clock_packet.build())
+                        await self.update_spawn_protection()
 
                         # Reset the last_tick_time
                         last_tick_time = current_time
@@ -432,3 +434,13 @@ class Room:
 
         except Exception as e:
             logging.error(f"Error in core room loop {e}", exc_info=True)
+
+    async def update_spawn_protection(self):
+        room_players = self.get_all_players()
+
+        for player in room_players:
+            if player.alive and player.spawn_protection_ticks > 0:
+                player.spawn_protection_ticks -= 1000
+
+            if player.spawn_protection_ticks < 0:
+                player.spawn_protection_ticks = 0

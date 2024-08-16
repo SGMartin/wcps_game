@@ -65,3 +65,20 @@ class Player:
             self.can_spawn = False
 
         self.spawn_protection_ticks = 3000
+
+    async def add_kills(self, headshot: bool = False):
+        self.kills += 1
+        await self.user.stats.update_kills(kills=1)
+
+        if headshot:
+            self.headshots += 1
+
+        self.points += 5
+
+    async def add_deaths(self):
+        self.deaths += 1
+        await self.user.stats.update_deaths(deaths=1)
+        self.health = 0
+        self.alive = False
+        self.vehicle_id = -1
+        self.vehicle_seat - 1

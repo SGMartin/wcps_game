@@ -56,4 +56,6 @@ class PacketList:
     DO_REQUEST_MISSION = 0x192  # ID by darkraptor
     DO_GO = 0x193
     DO_BRANCH_CLICK = 0x64
+    DO_DAMAGED_PLAYER = 0x67
     DO_PLAYER_REGEN = 0x96
+    DO_PLAYER_DIE = 0x98
