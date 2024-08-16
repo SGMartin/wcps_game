@@ -55,7 +55,7 @@ class PacketFactory:
         PacketList.DO_JOIN_ROOM: RoomJoin,
         PacketList.DO_GAME_USER_LIST: RoomPlayers,
         # Game
-        PacketList.DO_GAME_PROCESS: GameProcess,
+        PacketList.DO_GAME_PROCESS: GameProcess
     }
 
     @staticmethod

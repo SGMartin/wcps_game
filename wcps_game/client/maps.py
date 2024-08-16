@@ -21,7 +21,21 @@ class MapDatabase:
         try:
             # Get the directory of this script
             self._runtime_dir = Path(__file__).resolve().parent
-            self._maps = pd.read_csv(f"{self._runtime_dir}/maps.csv")
+            dtypes = {
+                "map_id": "int",
+                "map_name": "str",
+                "cqc": "bool",
+                "uo": "bool",
+                "bg": "bool",
+                "explosive": "bool",
+                "deathmatch": "bool",
+                "ffa": "int",
+                "conquest": "bool",
+                "premium": "str",
+                "active": "bool"
+            }
+            self._maps = pd.read_csv(f"{self._runtime_dir}/maps.csv", dtype=dtypes)
+
             logging.info("Client data files loaded!")
         except FileNotFoundError as e:
             raise RuntimeError(
@@ -95,3 +109,26 @@ class MapDatabase:
             ]
 
         return premium
+
+    def get_first_map_for_mode(self, game_mode: int, channel: int) -> int:
+        modes = {
+            constants.GameMode.EXPLOSIVE: "explosive",
+            constants.GameMode.FFA: "ffa",
+            constants.GameMode.TDM: "deathmatch",
+            constants.GameMode.CONQUEST: "conquest"
+        }
+        channels = {
+            constants.ChannelType.CQC: "cqc",
+            constants.ChannelType.URBANOPS: "uo",
+            constants.ChannelType.BATTLEGROUP: "bg"
+        }
+
+        this_game_mode = modes[game_mode]
+        this_channel = channels[channel]
+
+        available_maps = self._maps.loc[
+            (self._maps[this_game_mode] > 0) & (self._maps[this_channel]),
+            "map_id"
+            ].sort_values(ascending=True).iloc[0]
+
+        return available_maps

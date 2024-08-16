@@ -116,7 +116,6 @@ class Room:
             if self.players[slot] is not None:
                 player_count += 1
 
-        print(f"Players in {team_to_count}:{player_count}")
         return player_count
 
     def get_player_count(self) -> int:
@@ -201,6 +200,52 @@ class Room:
                     break
 
         return this_player
+
+    async def switch_player_side(self, player_to_switch: Player):
+
+        can_switch = False
+
+        max_team_size = round(self.max_players / 2)
+        target_team = gconstants.Team.DERBARAN if player_to_switch.team == gconstants.Team.NIU else gconstants.Team.NIU
+        target_team_players = self.get_player_count_in_team(target_team)
+
+        if target_team_players >= max_team_size or self.is_clanwar:
+            return
+
+        if target_team == gconstants.Team.DERBARAN:
+            slot_range = range(0, math.floor(self.max_players / 2))
+        else:
+            slot_range = range(math.floor(self.max_players / 2), self.max_players)
+
+        async with self._players_lock:
+
+            for requested_slot in slot_range:
+                if self.players[requested_slot] is None:
+
+                    # Get the old player slot
+                    old_slot = player_to_switch.id
+
+                    # Update the player object stats
+                    player_to_switch.team = target_team
+                    player_to_switch.id = requested_slot
+                    player_to_switch.user.room_slot = requested_slot
+
+                    # Insert it into the slot
+                    self.players[requested_slot] = player_to_switch
+
+                    # Remove it from the old slot
+                    self.players[old_slot] = None
+
+                    if old_slot == self.master_slot:
+                        self.master = player_to_switch.user
+                        self.master_slot = requested_slot
+
+                    can_switch = True
+                    break
+
+                can_switch = False
+
+        return can_switch
 
     async def remove_player(self, user: "User"):
         if not user.authorized or user.room is None:
@@ -293,8 +338,6 @@ class Room:
                     room_list=room_list_for_page
                 )
                 await user.send(new_room_list.build())
-
-
 
     async def send(self, buffer: "OutPacket"):
         for player in self.players.values():

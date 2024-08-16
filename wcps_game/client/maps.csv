@@ -36,5 +36,5 @@ map_id,map_name,cqc,uo,bg,explosive,deathmatch,conquest,ffa,premium,active
 32,crater,False,False,True,False,True,True,0,Bronze,True
 33,bluestorm,True,False,False,False,True,False,0,Bronze,True
 34,beringia,True,False,False,True,False,False,8,Bronze,True
-35,paroho,False,Ture,False,False,Ture,Ture,0,Bronze,True
+35,paroho,False,True,False,False,True,True,0,Bronze,True
 36,darkglow,True,False,False,False,True,False,0,Bronze,True
