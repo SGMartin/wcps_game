@@ -10,6 +10,7 @@ from wcps_game.handlers.game.change_kills_tickets import ChangeKillsTicketsHandl
 from wcps_game.handlers.game.change_ping_limit import ChangePingLimitHandler
 from wcps_game.handlers.game.toggle_autostart import ToggleAutoStartHandler
 from wcps_game.handlers.game.toggle_user_limit import ToggleUserLimitHandler
+from wcps_game.handlers.game.toggle_ready import ToggleReadyHandler
 
 # Dictionary to map packet IDs to handler classes
 HANDLER_MAP = {
@@ -20,7 +21,8 @@ HANDLER_MAP = {
     PacketList.DO_KILL_CLICK: ChangeKillsTicketsHandler,
     PacketList.DO_PING_CLICK: ChangePingLimitHandler,
     PacketList.DO_AUTOSTART_CLICK: ToggleAutoStartHandler,
-    PacketList.DO_HOLD_CLICK: ToggleUserLimitHandler
+    PacketList.DO_HOLD_CLICK: ToggleUserLimitHandler,
+    PacketList.DO_READY_CLICK: ToggleReadyHandler
 }
 
 
