@@ -6,9 +6,11 @@ class SpawnHandler(GameProcessHandler):
     async def handle(self):
 
         if self.room.state == RoomStatus.PLAYING and self.player.can_spawn:
-            self.set_block(7, 1)  # spawn slot
-            self.set_block(8, 1)  # spawn slot
-            self.set_block(9, 1)  # spawn slot
+            this_spawnslot = await self.room.current_game_mode.get_spawn_id()
+
+            self.set_block(7, this_spawnslot)  # spawn slot
+            self.set_block(8, this_spawnslot)  # spawn slot
+            self.set_block(9, this_spawnslot)  # spawn slot
 
             self.player.spawn(int(self.get_block(3)))
             self.answer = True
