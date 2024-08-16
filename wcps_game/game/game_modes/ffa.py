@@ -54,10 +54,10 @@ class FFA(BaseGameMode):
 
     # FFA uses these two to keep track of the top killer kills
     def scoreboard_derbaran(self):
-        return self.current_winner_kills
+        return self.max_kills
 
     def scoreboard_niu(self):
-        return self.max_kills
+        return self.current_winner_kills
 
     async def get_spawn_id(self):
         async with self._spawn_lock:
