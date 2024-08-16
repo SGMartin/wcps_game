@@ -53,3 +53,15 @@ class Player:
         self.alive = True
         self.vehicle_id = -1
         self.vehicle_seat = -1
+
+    def spawn(self, this_branch: gconstants.Classes):
+        self.health = 1000
+        self.alive = True
+        self.branch = this_branch
+        self.vehicle_id = -1
+        self.vehicle_seat = - 1
+
+        if self.user.room.game_mode == gconstants.GameMode.EXPLOSIVE:
+            self.can_spawn = False
+
+        self.spawn_protection_ticks = 3000

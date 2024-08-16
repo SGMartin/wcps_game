@@ -63,6 +63,8 @@ class Room:
             self.channel.type
         ][max_players]
 
+        self.running = False
+
         # Auto/default settings on room creating
         self.state = gconstants.RoomStatus.WAITING
         self.rounds_setting = 3  # Packet specific
@@ -402,16 +404,31 @@ class Room:
     async def end_game(self, winner_team: gconstants.Team):
         pass
 
-    # EXPERIMENTAL
     async def run(self):
-        while self.state == gconstants.RoomStatus.PLAYING:
-            self.up_ticks += 1000
-            self.down_ticks -= 1000
-            self.last_tick = datetime.now().second
+        try:
+            last_tick_time = datetime.now()
 
-            clock_packet = PacketFactory.create_packet(
-                packet_id=PacketList.DO_GAME_UPDATE_CLOCK, room=self
-            )
-            await self.send(clock_packet.build())
+            while self.state == gconstants.RoomStatus.PLAYING:
+                if self.current_game_mode is not None and self.current_game_mode.initialized:
+                    current_time = datetime.now()
+                    elapsed_time = (current_time - last_tick_time).total_seconds()
 
-            await asyncio.sleep(1)  # In seconds
+                    if elapsed_time >= 1:
+                        self.up_ticks += 1000
+                        self.down_ticks -= 1000
+                        self.last_tick = current_time.second
+
+                        # Create and send clock packet
+                        clock_packet = PacketFactory.create_packet(
+                            packet_id=PacketList.DO_GAME_UPDATE_CLOCK, room=self
+                        )
+                        await self.send(clock_packet.build())
+
+                        # Reset the last_tick_time
+                        last_tick_time = current_time
+
+                # Sleep for a short interval to allow for precise timing
+                await asyncio.sleep(0.01)
+
+        except Exception as e:
+            logging.error(f"Error in core room loop {e}", exc_info=True)
