@@ -29,7 +29,7 @@ class Room:
         level_limit: int = 0,
         premium_only: bool = False,
         vote_kick: bool = True,
-        is_clanwar: bool = False
+        is_clanwar: bool = False,
     ):
 
         # Defined at room creation
@@ -57,11 +57,12 @@ class Room:
             self.supermaster = False
 
         self.max_players = gconstants.RoomMaximumPlayers.MAXIMUM_PLAYERS[
-            self.channel.type][max_players]
+            self.channel.type
+        ][max_players]
 
         # Auto/default settings on room creating
         self.state = gconstants.RoomStatus.WAITING
-        self.rounds_setting = 3   # Packet specific
+        self.rounds_setting = 3  # Packet specific
         self.tickets_setting = 3  # Packet specific
         self.rounds = gconstants.ROUND_LIMITS[self.rounds_setting]  # Actual setting
         self.tdm_tickets = gconstants.TDM_LIMITS[self.tickets_setting]  # Actual setting
@@ -72,7 +73,7 @@ class Room:
         map_defaults = {
             gconstants.ChannelType.CQC: 12,  # Marien
             gconstants.ChannelType.URBANOPS: 0,  # Montana
-            gconstants.ChannelType.BATTLEGROUP: 2  # Emblem
+            gconstants.ChannelType.BATTLEGROUP: 2,  # Emblem
         }
 
         self.current_map = map_defaults[self.channel.type]
@@ -80,7 +81,7 @@ class Room:
         default_modes = {
             gconstants.ChannelType.CQC: gconstants.GameMode.EXPLOSIVE,
             gconstants.ChannelType.URBANOPS: gconstants.GameMode.TDM,
-            gconstants.ChannelType.BATTLEGROUP: gconstants.GameMode.TDM
+            gconstants.ChannelType.BATTLEGROUP: gconstants.GameMode.TDM,
         }
 
         self.game_mode = default_modes[self.channel.type]
@@ -92,7 +93,10 @@ class Room:
         self.master.set_room(self, room_slot=0)
 
         # Add the master as a player to the dict of players
-        this_player = Player(user=self.master, slot=self.master_slot, team=gconstants.Team.DERBARAN)
+        this_player = Player(
+            user=self.master, slot=self.master_slot, team=gconstants.Team.DERBARAN
+        )
+        this_player.ready = True
 
         # User data for networking
         self.players = dict.fromkeys(range(0, self.max_players))
@@ -118,6 +122,21 @@ class Room:
 
         return player_count
 
+    def get_ready_player_count_in_team(self, team_to_count) -> int:
+        player_count = 0
+
+        if team_to_count == gconstants.Team.DERBARAN:
+            slot_range = range(0, math.floor(self.max_players / 2))
+        else:
+            slot_range = range(math.floor(self.max_players / 2), self.max_players)
+
+        for slot in slot_range:
+            if self.players[slot] is not None:
+                if self.players[slot].ready:
+                    player_count += 1
+
+        return player_count
+
     def get_player_count(self) -> int:
         player_count = 0
         for player in self.players.values():
@@ -138,7 +157,9 @@ class Room:
         async with self._players_lock:
             player_team = gconstants.Team.DERBARAN
 
-            current_derbaran_players = self.get_player_count_in_team(gconstants.Team.DERBARAN)
+            current_derbaran_players = self.get_player_count_in_team(
+                gconstants.Team.DERBARAN
+            )
             current_niu_players = self.get_player_count_in_team(gconstants.Team.NIU)
 
             if current_derbaran_players > current_niu_players:
@@ -153,35 +174,36 @@ class Room:
 
             for requested_slot in slot_range:
                 if self.players[requested_slot] is None:
-                    this_player = Player(user=user, slot=requested_slot, team=player_team)
+                    this_player = Player(
+                        user=user, slot=requested_slot, team=player_team
+                    )
 
                     # Send the update to the room
                     player_update = PacketFactory.create_packet(
                         packet_id=PacketList.DO_GAME_USER_LIST,
-                        player_list=[this_player]
+                        player_list=[this_player],
                     )
                     await self.send(player_update.build())
-                    print("Sent update to players in room")
 
                     # Send the incoming user the room join packet
                     join_packet = PacketFactory.create_packet(
                         packet_id=PacketList.DO_JOIN_ROOM,
                         error_code=corerr.SUCCESS,
                         room_to_join=self,
-                        player_slot=requested_slot
-                        )
+                        player_slot=requested_slot,
+                    )
 
                     user.set_room(room=self, room_slot=requested_slot)
                     await user.send(join_packet.build())
-                    print("Sent player room join to incoming user")
+
                     # Send the incoming user the room players packet
                     # he cannot be in the packet lol
                     room_players_packet = PacketFactory.create_packet(
                         packet_id=PacketList.DO_GAME_USER_LIST,
-                        player_list=self.get_all_players()
+                        player_list=self.get_all_players(),
                     )
                     await user.send(room_players_packet.build())
-                    print("Sent room players packet to incoming user")
+
                     # Now add the player to the list of players
                     self.players[requested_slot] = this_player
 
@@ -193,7 +215,7 @@ class Room:
                             room_update = PacketFactory.create_packet(
                                 packet_id=PacketList.DO_ROOM_INFO_CHANGE,
                                 room_to_update=self,
-                                update_type=gconstants.RoomUpdateType.UPDATE
+                                update_type=gconstants.RoomUpdateType.UPDATE,
                             )
                             await user.send(room_update.build())
                     print("Lobby notify")
@@ -206,7 +228,11 @@ class Room:
         can_switch = False
 
         max_team_size = round(self.max_players / 2)
-        target_team = gconstants.Team.DERBARAN if player_to_switch.team == gconstants.Team.NIU else gconstants.Team.NIU
+        target_team = (
+            gconstants.Team.DERBARAN
+            if player_to_switch.team == gconstants.Team.NIU
+            else gconstants.Team.NIU
+        )
         target_team_players = self.get_player_count_in_team(target_team)
 
         if target_team_players >= max_team_size or self.is_clanwar:
@@ -251,7 +277,9 @@ class Room:
         if not user.authorized or user.room is None:
             return
 
-        if self.id != user.room.id:  # Is the user somehow removing himself from other room?
+        if (
+            self.id != user.room.id
+        ):  # Is the user somehow removing himself from other room?
             return
 
         async with self._players_lock:
@@ -302,7 +330,7 @@ class Room:
                 packet_id=PacketList.DO_EXIT_ROOM,
                 user=user,
                 room=self,
-                old_slot=old_player.id
+                old_slot=old_player.id,
             )
             # Send it to the user
             await user.send(room_leave.build())
@@ -324,18 +352,24 @@ class Room:
                 room_delete = PacketFactory.create_packet(
                     packet_id=PacketList.DO_ROOM_INFO_CHANGE,
                     room_to_update=self,
-                    update_type=gconstants.RoomUpdateType.DELETE
+                    update_type=gconstants.RoomUpdateType.DELETE,
                 )
                 await user.send(room_delete.build())
 
                 # send them also the room list
-                room_list_for_page = await user.this_server.channels[user.channel].get_all_rooms()
-                room_list_for_page = [room for room in room_list_for_page.values() if room.room_page == user.room_page]
+                room_list_for_page = await user.this_server.channels[
+                    user.channel
+                ].get_all_rooms()
+                room_list_for_page = [
+                    room
+                    for room in room_list_for_page.values()
+                    if room.room_page == user.room_page
+                ]
 
                 new_room_list = PacketFactory.create_packet(
                     packet_id=PacketList.DO_ROOM_LIST,
                     room_page=user.room_page,
-                    room_list=room_list_for_page
+                    room_list=room_list_for_page,
                 )
                 await user.send(new_room_list.build())
 
@@ -343,3 +377,22 @@ class Room:
         for player in self.players.values():
             if player is not None:
                 await player.user.send(buffer)
+
+    # EXPERIMENTAL
+    async def run(self):
+        self.UpTick = 0
+        self.DownTick = 1800000
+        self.LastTick = -1
+        from datetime import datetime
+
+        while self.state == gconstants.RoomStatus.PLAYING:
+            self.UpTick += 1000
+            self.DownTick -= 1000
+            self.LastTick = datetime.now().second
+
+            clock_packet = PacketFactory.create_packet(
+                packet_id=PacketList.DO_GAME_UPDATE_CLOCK, room=self
+            )
+            await self.send(clock_packet.build())
+
+            await asyncio.sleep(1)  # In seconds
