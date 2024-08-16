@@ -39,7 +39,11 @@ class PacketList:
     DO_GAME_PROCESS = 0x7530
 
     # Subpackets of DO_GAME_PROCESS
+    # Lobby related #
     DO_MAP_CLICK = 0x33
     DO_TYPE_CLICK = 0x34
     DO_ROUND_CLICK = 0x35
     DO_KILL_CLICK = 0x37
+    DO_PING_CLICK = 0x3B
+    DO_HOLD_CLICK = 0x3A
+    DO_AUTOSTART_CLICK = 0x3E
