@@ -14,7 +14,7 @@ from wcps_core.packets import OutPacket
 
 from wcps_game.config import settings
 from wcps_game.database import get_user_details_and_stats, update_user_money
-from wcps_game.game.constants import Premium, ChannelType
+from wcps_game.game.constants import Premium, ChannelType, get_level_for_exp
 from wcps_game.game.channels import Channel
 from wcps_game.game.user_stats import UserStats
 from wcps_game.game.inventory import Inventory
@@ -166,6 +166,30 @@ class User(NetworkEntity):
             self.money = new_money
         else:
             logging.error(f"Failed to update money for {self.username} to {new_money}")
+
+    async def end_game(self, xp_earned, money_earned):
+        current_xp = self.xp
+        new_xp = current_xp + xp_earned
+        self.xp = new_xp
+
+        # have we leveled up?
+        current_level = get_level_for_exp(current_xp)
+        new_level = get_level_for_exp(new_xp)
+
+        if new_level > current_level:
+            levels_gained = new_level - current_level
+
+            reward_money = levels_gained * 2500  # TODO: customize this
+            self.money += reward_money
+
+            level_up = PacketFactory.create_packet(
+                packet_id=PacketList.DO_PROMOTION,
+                user=self,
+                money_earned=reward_money
+            )
+            await self.send(level_up.build())
+
+        self.money = self.money + money_earned
 
     def set_room(self, room: "Room", room_slot: int):
         self.room = room

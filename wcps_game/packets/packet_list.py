@@ -40,6 +40,7 @@ class PacketList:
     DO_GAME_UPDATE_CLOCK = 0x7540
     DO_GAME_SCORE = 0x7550
     DO_GAME_RESULT = 0x7560
+    DO_PROMOTION_OLD = 0x8200
 
     # Subpackets of DO_GAME_PROCESS
     # Lobby related #

@@ -175,7 +175,10 @@ class Player:
         self.xp_earned = xp_earned
         self.money_earned = money_earned
 
-        self.ready = False
+        if self.id == self.user.room.master_slot:
+            self.ready = True
+        else:
+            self.ready = False
 
         # Call user end game here
-        print(f"Player won {self.xp_earned} XP and {self.money_earned} dinars")
+        await self.user.end_game(xp_earned=self.xp_earned, money_earned=self.money_earned)
