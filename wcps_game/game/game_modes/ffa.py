@@ -74,7 +74,7 @@ class FFA(BaseGameMode):
 
     def on_death(self, killer, victim):
         if killer is not None:
-            if killer.Kills > self.current_winner_kills:
+            if killer.kills > self.current_winner_kills:
                 self.current_winner_kills = killer.kills
 
             if self.current_winner_kills >= self.max_kills:
