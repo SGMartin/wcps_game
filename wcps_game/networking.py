@@ -105,21 +105,16 @@ class UDPListener:
         if this_user is None:
             return
 
-        # logging.info(f"IN:: UDP packet of type {type_} with session ID {session_id}")
-
         if type_ == 0x1001:  # Initial packet
             self.write_ushort(self.port + 1, packet, 4)
             self.transport.sendto(packet, addr)
         elif type_ == 0x1010:  # UDP Ping packet
             if packet[14] == 0x21:
                 this_user.local_end_point = self.to_ip_endpoint(packet, 32)
-                print(this_user.local_end_point)
                 this_user.remote_end_point = addr
-                print(this_user.remote_end_point)
                 this_user.remote_port = self.reverse_port(addr[1])
-                print(this_user.remote_port)
                 this_user.local_port = self.reverse_port(this_user.local_end_point[1])
-                print(this_user.local_port)
+
                 response = self.extend(packet, 65)
                 response[17] = 0x41
                 response[-1] = 0x11
@@ -152,8 +147,8 @@ class UDPListener:
                     )
                     await this_user.send(room_list.build())
 
+            # TUNNELING
             elif packet[14] in {0x10, 0x30, 0x31, 0x32, 0x34}:
-
                 session_id_bytes = packet[4:6][
                     ::-1
                 ]  # Reverse the bytes to match the C# code
@@ -222,8 +217,6 @@ class UDPListener:
     def write_ip_endpoint(self, data: bytearray, endpoint: tuple, offset: int):
         ip_addr, port = endpoint
         # Convert IP address to bytes in big-endian order
-        print("HERE")
-        print(ip_addr)
         ip_bytes = struct.pack(
             ">I",
             int(ip_addr.split(".")[0]) << 24

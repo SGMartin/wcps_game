@@ -166,6 +166,6 @@ def add_room_info_to_packet(packet: OutPacket, room):
 
 def ip_string_to_long(ip_addr: str):
     packed_ip = socket.inet_aton(ip_addr)
-    ip_as_long = struct.unpack(">I", packed_ip)[0]
+    ip_as_long = struct.unpack("<I", packed_ip)[0]
     logging.info(f"Converted {ip_addr} to {ip_as_long}")
     return ip_as_long
