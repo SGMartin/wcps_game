@@ -60,3 +60,4 @@ class PacketList:
     DO_DAMAGED_PLAYER = 0x67
     DO_PLAYER_REGEN = 0x96
     DO_PLAYER_DIE = 0x98
+    DO_CHANGE_WEAPONS = 0x9B

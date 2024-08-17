@@ -17,6 +17,8 @@ from wcps_game.handlers.game.ingame.game_setup import GameSetupHandler
 from wcps_game.handlers.game.ingame.branch_select import BranchSelectHandler
 from wcps_game.handlers.game.ingame.spawn import SpawnHandler
 from wcps_game.handlers.game.ingame.player_damage import PlayerDamageHandler
+from wcps_game.handlers.game.ingame.switch_weapon import SwitchWeaponHandler
+
 # from wcps_game.handlers.game.ingame.test import TestHandler
 
 # Dictionary to map packet IDs to handler classes
@@ -37,7 +39,8 @@ HANDLER_MAP = {
     PacketList.DO_REQUEST_MISSION: GameSetupHandler,
     PacketList.DO_BRANCH_CLICK: BranchSelectHandler,
     PacketList.DO_PLAYER_REGEN: SpawnHandler,
-    PacketList.DO_DAMAGED_PLAYER: PlayerDamageHandler
+    PacketList.DO_DAMAGED_PLAYER: PlayerDamageHandler,
+    PacketList.DO_CHANGE_WEAPONS: SwitchWeaponHandler
 
 }
 
