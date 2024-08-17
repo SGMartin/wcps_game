@@ -403,7 +403,25 @@ class Room:
         self.current_game_mode.initialize(self)
 
     async def end_game(self, winner_team: gconstants.Team):
-        pass
+        if self.state != gconstants.RoomStatus.PLAYING:
+            return
+
+        players = self.get_all_players()
+
+        # TODO: send the statistics here
+        for player in players:
+            await player.end_game()
+
+        end_game = PacketFactory.create_packet(
+            packet_id=PacketList.DO_GAME_RESULT,
+            room=self,
+            players=self.get_all_players(),
+            winner_team=self.current_game_mode.winner()
+        )
+        await self.send(end_game.build())
+
+        self.current_game_mode = None
+        self.state = gconstants.RoomStatus.WAITING
 
     async def run(self):
         try:
@@ -411,23 +429,34 @@ class Room:
 
             while self.state == gconstants.RoomStatus.PLAYING:
                 if self.current_game_mode is not None and self.current_game_mode.initialized:
-                    current_time = datetime.now()
-                    elapsed_time = (current_time - last_tick_time).total_seconds()
 
-                    if elapsed_time >= 1:
-                        self.up_ticks += 1000
-                        self.down_ticks -= 1000
-                        self.last_tick = current_time.second
+                    if self.current_game_mode.is_goal_reached():  # Game ended
+                        await self.end_game(self.current_game_mode.winner())
+                        break  # TODO: check if we should actually do this
 
-                        # Create and send clock packet
-                        clock_packet = PacketFactory.create_packet(
-                            packet_id=PacketList.DO_GAME_UPDATE_CLOCK, room=self
-                        )
-                        await self.send(clock_packet.build())
-                        await self.update_spawn_protection()
+                    if self.current_game_mode.freeze_tick:
+                        self.last_tick = -1
+                    else:
+                        # Call the game mode routine here
+                        await self.current_game_mode.process()
 
-                        # Reset the last_tick_time
-                        last_tick_time = current_time
+                        current_time = datetime.now()
+                        elapsed_time = (current_time - last_tick_time).total_seconds()
+
+                        if elapsed_time >= 1:
+                            self.up_ticks += 1000
+                            self.down_ticks -= 1000
+                            self.last_tick = current_time.second
+
+                            # Create and send clock packet
+                            clock_packet = PacketFactory.create_packet(
+                                packet_id=PacketList.DO_GAME_UPDATE_CLOCK, room=self
+                            )
+                            await self.send(clock_packet.build())
+                            await self.update_spawn_protection()
+
+                            # Reset the last_tick_time
+                            last_tick_time = current_time
 
                 # Sleep for a short interval to allow for precise timing
                 await asyncio.sleep(0.01)

@@ -37,9 +37,9 @@ class FFA(BaseGameMode):
     def winner(self):
         return gconstants.Team.NONE  # No teams in FFA
 
-    def process(self):
+    async def process(self):
         if self.room.down_ticks <= 0 or self.room.get_player_count() <= 1:
-            self.room.end_game(self.winner())
+            await self.room.end_game(self.winner())
 
     def is_goal_reached(self):
         return self.current_winner_kills >= self.max_kills
@@ -72,10 +72,10 @@ class FFA(BaseGameMode):
 
         return self.b_spawn_point
 
-    def on_death(self, killer, victim):
+    async def on_death(self, killer, victim):
         if killer is not None:
             if killer.kills > self.current_winner_kills:
                 self.current_winner_kills = killer.kills
 
             if self.current_winner_kills >= self.max_kills:
-                self.room.end_game(gconstants.Team.NONE)
+                await self.room.end_game(gconstants.Team.NONE)

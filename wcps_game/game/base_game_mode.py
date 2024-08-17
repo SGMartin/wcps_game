@@ -6,7 +6,14 @@ if TYPE_CHECKING:
     from wcps_game.handlers.packet_handler import GameProcessHandler
     from wcps_game.game.player import Player
 
-from wcps_game.game.constants import GameMode, HitboxBone, DamageTypes, DamageMultipliers, DamageDistances, DefaultWeapon
+from wcps_game.game.constants import (
+    GameMode,
+    HitboxBone,
+    DamageTypes,
+    DamageMultipliers,
+    DamageDistances,
+    DefaultWeapon,
+)
 from wcps_game.client.items import ItemDatabase
 from wcps_game.packets.packet_list import PacketList
 
@@ -31,7 +38,7 @@ class BaseGameMode(ABC):
         pass
 
     @abstractmethod
-    def process(self):
+    async def process(self):
         pass
 
     @abstractmethod
@@ -51,14 +58,13 @@ class BaseGameMode(ABC):
         pass
 
     @abstractmethod
-    def on_death(self, killer, target):
+    async def on_death(self, killer, victim):
         pass
 
     def get_spawn_id(self) -> int:
         return 0
 
     async def on_damage(self, damage_handler: "GameProcessHandler"):
-        # 30000 0 0 2 103 0 1 1 4 0 14 0 14 2 0 0 1242 0 0 3682.5825 183.8098 2690.4419 4.0000 0 0 3.0000 0 DC04 \n')
         is_player = bool(int(damage_handler.get_block(2)))
         target_id = int(damage_handler.get_block(3))
         is_radius_damage = bool(int(damage_handler.get_block(10)))
@@ -88,13 +94,20 @@ class BaseGameMode(ABC):
             print(f"Weapon {weapon_code} is not yet implemented")
             return
 
-        if not attacker.user.inventory.has_item(weapon_code) and weapon_code not in DefaultWeapon.DEFAULTS:
+        if (
+            not attacker.user.inventory.has_item(weapon_code)
+            and weapon_code not in DefaultWeapon.DEFAULTS
+        ):
             # TODO: cheater?
-            print(f"Weapon {weapon_code} is not in {attacker.user.displayname} inventory")
+            print(
+                f"Weapon {weapon_code} is not in {attacker.user.displayname} inventory"
+            )
             return
 
         if not self.can_be_damaged(attacker=attacker, victim=victim):
-            print(f"{attacker.user.displayname} cannot damage {victim.user.displayname}")
+            print(
+                f"{attacker.user.displayname} cannot damage {victim.user.displayname}"
+            )
             return
 
         if not item_database.is_weapon(weapon_code):
@@ -115,17 +128,24 @@ class BaseGameMode(ABC):
             damage_type=DamageTypes.INFANTRY,
             hitbox=bone_id,
             distance=0,  # TODO,
-            radius=radius
+            radius=radius,
         )
         await self.damage_player(
             handler=damage_handler,
             attacker=attacker,
             victim=victim,
             damage=damage_taken,
-            is_headshot=is_headshot
+            is_headshot=is_headshot,
         )
 
-    async def damage_player(self, handler: "GameProcessHandler", attacker: "Player", victim: "Player", damage: int, is_headshot: bool = False):
+    async def damage_player(
+        self,
+        handler: "GameProcessHandler",
+        attacker: "Player",
+        victim: "Player",
+        damage: int,
+        is_headshot: bool = False,
+    ):
 
         current_victim_health = victim.health
         remaining_victim_health = victim.health - damage
@@ -141,6 +161,7 @@ class BaseGameMode(ABC):
 
             await victim.add_deaths()
             await attacker.add_kills(headshot=is_headshot)
+            await self.on_death(killer=attacker, victim=victim)
 
         handler.set_block(12, victim.health)
         handler.set_block(13, current_victim_health)
@@ -164,7 +185,9 @@ class BaseGameMode(ABC):
         can_be_damaged = True
         return can_be_damaged
 
-    def damage_calculator(self, weapon: str, damage_type: int, hitbox: int, distance: int, radius: int):
+    def damage_calculator(
+        self, weapon: str, damage_type: int, hitbox: int, distance: int, radius: int
+    ):
         item_database = ItemDatabase()
 
         damage_taken = 0
@@ -173,11 +196,12 @@ class BaseGameMode(ABC):
         weapon_power = item_database.get_weapon_power(code=weapon)
         # A list of coefs. for personal/surface/air/ship etc.
         damage_type_coefs = item_database.get_weapon_damage_class(
-            code=weapon,
-            damage_class=damage_type
-            )
+            code=weapon, damage_class=damage_type
+        )
         # Distance can only be short / mid / long
-        damage_type = damage_type_coefs[DamageDistances.SHORT] / 100  # TODO: DISTANCE HERE
+        damage_type = (
+            damage_type_coefs[DamageDistances.SHORT] / 100
+        )  # TODO: DISTANCE HERE
 
         if radius > 0:  # Then it is a radius damage
             radius_coef = radius / 100
@@ -187,12 +211,11 @@ class BaseGameMode(ABC):
             bone_multipliers = {
                 HitboxBone.HEADNECK: DamageMultipliers.HEADNECK,
                 HitboxBone.TORSOLIMBS: DamageMultipliers.TORSOLIMBS,
-                HitboxBone.FEETHANDS: DamageMultipliers.FEETHANDS
+                HitboxBone.FEETHANDS: DamageMultipliers.FEETHANDS,
             }
 
             bone_coef = bone_multipliers[hitbox] / 100
             damage_taken = weapon_power * damage_type * bone_coef
 
         final_damage = round(damage_taken)
-        print(f"Final damage for this player: {weapon}: {weapon_power} * {radius} * {damage_type} * {hitbox}")
         return final_damage
