@@ -1,5 +1,6 @@
 import asyncio
 import struct
+import socket
 import logging
 from typing import Tuple, Optional, TYPE_CHECKING
 import sys
@@ -7,15 +8,10 @@ import sys
 from wcps_core.constants import Ports
 from wcps_game.game.constants import RoomStatus
 from wcps_game.packets.packet_factory import PacketFactory
-from wcps_game.packets.packet_list import PacketList, ClientXorKeys
+from wcps_game.packets.packet_list import PacketList
 
 if TYPE_CHECKING:
     from wcps_game.game.game_server import GameServer
-
-
-class ClientXorKeys:
-    SEND = 0x96
-    RECEIVE = 0xC3
 
 
 class AuthenticationClient:
@@ -60,6 +56,11 @@ class AuthenticationClient:
     async def reconnect(self):
         await self.disconnect()
         await self.connect()
+
+
+class ClientXorKeys:
+    SEND = 0x96
+    RECEIVE = 0xC3
 
 
 class UDPListener:
@@ -112,35 +113,50 @@ class UDPListener:
         elif type_ == 0x1010:  # UDP Ping packet
             if packet[14] == 0x21:
                 this_user.local_end_point = self.to_ip_endpoint(packet, 32)
+                print(this_user.local_end_point)
                 this_user.remote_end_point = addr
-                this_user.remote_port = self.reverse_port(addr)
-                this_user.local_port = self.reverse_port(this_user.local_end_point)
-
+                print(this_user.remote_end_point)
+                this_user.remote_port = self.reverse_port(addr[1])
+                print(this_user.remote_port)
+                this_user.local_port = self.reverse_port(this_user.local_end_point[1])
+                print(this_user.local_port)
                 response = self.extend(packet, 65)
                 response[17] = 0x41
                 response[-1] = 0x11
                 self.write_ushort(this_user.session_id, response, 4)
-                self.write_ip_endpoint(this_user.remote_end_point, response, 32)
-                self.write_ip_endpoint(this_user.local_end_point, response, 50)
+                self.write_ip_endpoint(
+                    endpoint=this_user.remote_end_point, data=response, offset=32
+                )
+                self.write_ip_endpoint(
+                    endpoint=this_user.local_end_point, data=response, offset=50
+                )
                 self.transport.sendto(response, addr)
 
                 room_id = self.to_ushort(packet, 6)
 
                 # Temporal test to try to keep the player updated of rooms while training
                 if room_id == 999:
-                    rooms = await this_user.this_server.channels[this_user.channel].get_all_rooms()
-                    rooms = [room for room in rooms.values() if room.room_page == this_user.room_page]
+                    rooms = await this_user.this_server.channels[
+                        this_user.channel
+                    ].get_all_rooms()
+                    rooms = [
+                        room
+                        for room in rooms.values()
+                        if room.room_page == this_user.room_page
+                    ]
 
                     room_list = PacketFactory.create_packet(
                         packet_id=PacketList.DO_ROOM_LIST,
                         room_page=this_user.room_page,
-                        room_list=rooms
+                        room_list=rooms,
                     )
                     await this_user.send(room_list.build())
 
             elif packet[14] in {0x10, 0x30, 0x31, 0x32, 0x34}:
 
-                session_id_bytes = packet[4:6][::-1]  # Reverse the bytes to match the C# code
+                session_id_bytes = packet[4:6][
+                    ::-1
+                ]  # Reverse the bytes to match the C# code
                 target_id = self.to_ushort(packet, 22)
                 room_id = self.to_ushort(packet, 6)
                 session_id = struct.unpack("<H", session_id_bytes)[0]
@@ -156,9 +172,11 @@ class UDPListener:
                 else:
                     U1 = self.game_server.get_player_by_session(session_id)
                     if (
-                        U1 is not None and U2 is not None and
-                        U1.room.id == room_id and U2.room.id == room_id and
-                        U1.room.state == RoomStatus.PLAYING
+                        U1 is not None
+                        and U2 is not None
+                        and U1.room.id == room_id
+                        and U2.room.id == room_id
+                        and U1.room.state == RoomStatus.PLAYING
                     ):
                         self.transport.sendto(packet, U2.remote_end_point)
                     else:
@@ -176,45 +194,58 @@ class UDPListener:
             logging.error(f"Unhandled UDP packet type {type_}")
 
     def to_ushort(self, data: bytes, offset: int) -> int:
-        """Convert bytes to ushort with big-endian."""
         return struct.unpack(">H", data[offset: offset + 2])[0]
+
+    def to_uint(self, data: bytes, offset: int) -> int:
+        return struct.unpack(">I", data[offset: offset + 4])[0]
 
     def write_ushort(self, value: int, data: bytearray, offset: int):
         """Write ushort value to bytearray at specified offset."""
-        struct.pack_into(">H", data, offset, value)
+        return struct.pack_into(">H", data, offset, value)
 
-    def to_ip_endpoint(self, data: bytes, offset: int) -> Tuple[str, int]:
-        """Convert bytes to IPEndPoint."""
+    def write_uint(self, value: int) -> bytes:
+        return struct.pack(">I", value)
+
+    def to_ip_endpoint(self, data: bytes, offset: int) -> str:
+        # Apply XOR key to the relevant bytes
+        decoded_data = bytearray(data)
         for i in range(offset, offset + 6):
-            data[i] ^= self.XOR_SEND_KEY
-        port = self.to_ushort(data, offset)
-        ip = struct.unpack(">I", data[offset + 2: offset + 6])[0]
-        ip_address = (
-            f"{(ip >> 24) & 0xFF}.{(ip >> 16) & 0xFF}.{(ip >> 8) & 0xFF}.{ip & 0xFF}"
-        )
+            decoded_data[i] ^= self.XOR_SEND_KEY
+
+        # Extract port and IP address after applying XOR key
+        port = struct.unpack("<H", decoded_data[offset: offset + 2])[0]
+        ip = struct.unpack(">I", decoded_data[offset + 2: offset + 6])[0]
+        ip_address = socket.inet_ntoa(struct.pack(">I", ip))
+
         return ip_address, port
 
-    def write_ip_endpoint(
-        self, endpoint: Tuple[str, int], data: bytearray, offset: int
-    ) -> bytearray:
-        """Write IPEndPoint to bytearray at specified offset with big-endian and XOR."""
-        ip_address, port = endpoint
-        port_bytes = struct.pack(">H", port)
+    def write_ip_endpoint(self, data: bytearray, endpoint: tuple, offset: int):
+        ip_addr, port = endpoint
+        # Convert IP address to bytes in big-endian order
+        print("HERE")
+        print(ip_addr)
         ip_bytes = struct.pack(
             ">I",
-            int(ip_address.split(".")[0]) << 24
-            | int(ip_address.split(".")[1]) << 16
-            | int(ip_address.split(".")[2]) << 8
-            | int(ip_address.split(".")[3]),
+            int(ip_addr.split(".")[0]) << 24
+            | int(ip_addr.split(".")[1]) << 16
+            | int(ip_addr.split(".")[2]) << 8
+            | int(ip_addr.split(".")[3]),
         )
+        # Convert port to bytes in little-endian order
+        port_bytes = struct.pack("<H", port)
         value = port_bytes + ip_bytes
-        value = bytearray(b ^ self.XOR_RECEIVE_KEY for b in value)
-        data[offset: offset + 6] = value
+
+        # Reverse the byte order as done in C#
+        value = value[::-1]
+
+        # Apply XOR operation
+        for i in range(6):
+            data[offset + i] = value[i] ^ self.XOR_RECEIVE_KEY
+
         return data
 
-    def reverse_port(self, addr: Tuple[str, int]) -> int:
-        """Reverse port to match the C# implementation."""
-        return struct.unpack(">H", struct.pack("<H", addr[1]))[0]
+    def reverse_port(self, port: int) -> int:
+        return struct.unpack(">H", struct.pack("<H", port))[0]
 
     def extend(self, packet: bytes, length: int) -> bytearray:
         """Extend packet to a new length."""
