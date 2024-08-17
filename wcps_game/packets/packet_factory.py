@@ -26,6 +26,7 @@ from wcps_game.packets.room import (
 )
 from wcps_game.packets.game_process import GameProcess
 from wcps_game.packets.game_clock import GameUpdateClock
+from wcps_game.packets.scoreboard import ScoreBoard
 
 
 class PacketFactory:
@@ -57,7 +58,8 @@ class PacketFactory:
         PacketList.DO_GAME_USER_LIST: RoomPlayers,
         # Game
         PacketList.DO_GAME_PROCESS: GameProcess,
-        PacketList.DO_GAME_UPDATE_CLOCK: GameUpdateClock
+        PacketList.DO_GAME_UPDATE_CLOCK: GameUpdateClock,
+        PacketList.DO_GAME_SCORE: ScoreBoard
     }
 
     @staticmethod
