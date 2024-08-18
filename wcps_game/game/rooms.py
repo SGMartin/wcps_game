@@ -153,6 +153,9 @@ class Room:
     def get_all_players(self) -> list:
         return [player for player in self.players.values() if player is not None]
 
+    def get_player_team(self, player_slot: int) -> int:
+        return self.players[player_slot].team
+
     async def add_player(self, user: "User") -> Player:
 
         this_player = None
