@@ -40,7 +40,7 @@ async def get_user_details(username: str) -> dict:
                         "xp": int(user_details[2]),
                         "money": int(user_details[3]),
                         "premium": int(user_details[4]),
-                        "premium_expiredate": int(user_details[5])
+                        "premium_expiredate": int(user_details[5]),
                     }
                     return this_user
                 else:
@@ -64,7 +64,7 @@ async def get_user_stats(username: str) -> dict:
                 if len(user_details) == 6:
                     this_user = {
                         "kills": int(user_details[1]),
-                        "deaths": int(user_details[2])
+                        "deaths": int(user_details[2]),
                     }
                     return this_user
                 else:
@@ -100,7 +100,7 @@ async def get_user_details_and_stats(username: str) -> dict:
                     "premium": int(user_details[3]),
                     "premium_expiredate": int(user_details[4]),
                     "kills": int(user_details[5]),
-                    "deaths": int(user_details[6])
+                    "deaths": int(user_details[6]),
                 }
                 return this_user
             else:
@@ -108,7 +108,7 @@ async def get_user_details_and_stats(username: str) -> dict:
 
 
 async def get_user_equipment(username: str) -> dict:
-    async with pool.acquire()as connection:
+    async with pool.acquire() as connection:
         await connection.select_db(settings().database_name)
         async with connection.cursor() as cur:
             query = """
@@ -121,7 +121,7 @@ async def get_user_equipment(username: str) -> dict:
             WHERE
                 u.username = %s
             """
-            await cur.execute(query, (username, ))
+            await cur.execute(query, (username,))
             user_loadout = await cur.fetchone()
             if user_loadout:
                 this_loadout = {
@@ -129,7 +129,7 @@ async def get_user_equipment(username: str) -> dict:
                     "medic": user_loadout[1],
                     "sniper": user_loadout[2],
                     "assault": user_loadout[3],
-                    "heavy_trooper": user_loadout[4]
+                    "heavy_trooper": user_loadout[4],
                 }
                 return this_loadout
             else:
@@ -137,7 +137,7 @@ async def get_user_equipment(username: str) -> dict:
 
 
 async def get_user_inventory(username: str) -> dict:
-    async with pool.acquire()as connection:
+    async with pool.acquire() as connection:
         await connection.select_db(settings().database_name)
         async with connection.cursor() as cur:
             query = """
@@ -151,7 +151,7 @@ async def get_user_inventory(username: str) -> dict:
             WHERE
                 u.username = %s AND i.expired != 0 AND i.deleted != 0
             """
-            await cur.execute(query, (username, ))
+            await cur.execute(query, (username,))
             results = await cur.fetchone()
             if results:
                 inventory_items = []
@@ -163,7 +163,7 @@ async def get_user_inventory(username: str) -> dict:
                         "startdate": int(row[8]),
                         "leasing_seconds": int(row[9]),
                         "price": int(row[10]),  # TODO: used?
-                        "price_cash": int(row[11])  # TODO: used?
+                        "price_cash": int(row[11]),  # TODO: used?
                     }
                     inventory_items.append(inventory_item)
                 return results
@@ -199,7 +199,7 @@ async def get_user_inventory_and_equipment(username: str) -> dict:
                     "medic": results[0][1],
                     "sniper": results[0][2],
                     "assault": results[0][3],
-                    "heavy_trooper": results[0][4]
+                    "heavy_trooper": results[0][4],
                 }
 
                 inventory_items = []
@@ -211,14 +211,11 @@ async def get_user_inventory_and_equipment(username: str) -> dict:
                         "startdate": int(row[8]),
                         "leasing_seconds": int(row[9]),
                         "price": int(row[10]),  # TODO: used?
-                        "price_cash": int(row[11])  # TODO: used?
+                        "price_cash": int(row[11]),  # TODO: used?
                     }
                     inventory_items.append(inventory_item)
 
-                return {
-                    "loadout": loadout,
-                    "inventory": inventory_items
-                }
+                return {"loadout": loadout, "inventory": inventory_items}
             else:
                 return None
 
@@ -232,15 +229,19 @@ async def set_inventory_items_expired(items: list) -> bool:
             SET expired = 1
             WHERE (id, code) IN (%s)
             """
-            item_pairs = ', '.join(['(%s, %s)'] * len(items))
+            item_pairs = ", ".join(["(%s, %s)"] * len(items))
             query = query % item_pairs
-            params = [item for item in items for item in (item.database_id, item.item_code)]
+            params = [
+                item for item in items for item in (item.database_id, item.item_code)
+            ]
             await cur.execute(query, params)
             await connection.commit()
             return cur.rowcount > 0
 
 
-async def update_user_equipment(username: str, target_class: str, new_loadout: str) -> bool:
+async def update_user_equipment(
+    username: str, target_class: str, new_loadout: str
+) -> bool:
     valid_branches = {"engineer", "medic", "sniper", "assault", "heavy_trooper"}
     if target_class not in valid_branches:
         raise ValueError(f"Invalid column name: {target_class}")
@@ -256,7 +257,9 @@ async def update_user_equipment(username: str, target_class: str, new_loadout: s
             """
             await cur.execute(query, (new_loadout, username))
             await connection.commit()
-            return cur.rowcount > 0  # Returns True if a row was updated, False otherwise
+            return (
+                cur.rowcount > 0
+            )  # Returns True if a row was updated, False otherwise
 
 
 async def add_user_inventory(
@@ -266,7 +269,7 @@ async def add_user_inventory(
     leasing_seconds: int,
     price: int,
     retail: bool = False,
-    price_cash: int = 0
+    price_cash: int = 0,
 ) -> bool:
     async with pool.acquire() as connection:
         await connection.select_db(settings().database_name)
@@ -293,10 +296,20 @@ async def add_user_inventory(
             """
             await cur.execute(
                 insert_query,
-                (user_id, inventory_code, retail, startdate, leasing_seconds, price, price_cash)
+                (
+                    user_id,
+                    inventory_code,
+                    retail,
+                    startdate,
+                    leasing_seconds,
+                    price,
+                    price_cash,
+                ),
             )
             await connection.commit()
-            return cur.rowcount > 0  # Returns True if a row was inserted, False otherwise
+            return (
+                cur.rowcount > 0
+            )  # Returns True if a row was inserted, False otherwise
 
 
 async def extend_leasing_time(username: str, item_code: str, leasing_time: int) -> bool:
@@ -342,7 +355,9 @@ async def extend_leasing_time(username: str, item_code: str, leasing_time: int) 
             """
             await cur.execute(update_query, (new_leasing_seconds, inventory_id))
             await connection.commit()
-            return cur.rowcount > 0  # Returns True if a row was updated, False otherwise
+            return (
+                cur.rowcount > 0
+            )  # Returns True if a row was updated, False otherwise
 
 
 async def update_user_money(username: str, new_money: int) -> bool:
@@ -441,6 +456,35 @@ async def remove_item_for_user(username: str, item_code: str) -> bool:
             """
             await cur.execute(update_query, (user_id, item_code))
             await connection.commit()
-            
+
             # Check if any rows were affected
+            return cur.rowcount > 0
+
+
+async def update_user_details(user) -> bool:
+    async with pool.acquire() as connection:
+        await connection.select_db(settings().database_name)
+        async with connection.cursor() as cur:
+            update_query = """
+            UPDATE users u
+            JOIN user_stats s ON u.id = s.id
+            SET 
+                u.xp = %s,
+                u.money = %s,
+                s.kills = %s,
+                s.deaths = %s
+            WHERE 
+                u.username = %s
+            """
+            await cur.execute(
+                update_query,
+                (
+                    user.xp,
+                    user.money,
+                    user.stats.kills,
+                    user.stats.deaths,
+                    user.username,
+                ),
+            )
+            await connection.commit()
             return cur.rowcount > 0

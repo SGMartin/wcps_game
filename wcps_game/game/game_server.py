@@ -13,7 +13,7 @@ from wcps_core.constants import Ports, ServerTypes, InternalKeys
 from wcps_core.packets import OutPacket
 
 from wcps_game.config import settings
-from wcps_game.database import get_user_details_and_stats, update_user_money
+from wcps_game.database import get_user_details_and_stats, update_user_money, update_user_details
 from wcps_game.game.constants import Premium, ChannelType, get_level_for_exp
 from wcps_game.game.channels import Channel
 from wcps_game.game.user_stats import UserStats
@@ -133,7 +133,7 @@ class User(NetworkEntity):
     async def send_ping(self):
         if not self.is_updated_ping:
             # await self.disconnect()
-            print("SHOULD DISCONNECT?")
+            # TODO: Have a retry mechanism here before disconnecting
             logging.error(f"Could not send ping to {self.username}")
         else:
             self.is_updated_ping = False
@@ -190,6 +190,9 @@ class User(NetworkEntity):
             await self.send(level_up.build())
 
         self.money = self.money + money_earned
+
+        # Save everything to the database
+        await update_user_details(self)
 
     def set_room(self, room: "Room", room_slot: int):
         self.room = room
