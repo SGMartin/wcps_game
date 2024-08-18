@@ -114,6 +114,14 @@ class Room:
         self.id = room_id
         self.room_page = round(math.floor(self.id / 8))
 
+    def update_rounds_from_settings(self, settings: int):
+        self.rounds = gconstants.ROUND_LIMITS[settings]
+        self.rounds_setting = settings
+
+    def update_tickets_from_settings(self, settings: int):
+        self.tdm_tickets = gconstants.TDM_LIMITS[settings]
+        self.tickets_setting = settings
+
     def get_player_count_in_team(self, team_to_count) -> int:
         player_count = 0
 

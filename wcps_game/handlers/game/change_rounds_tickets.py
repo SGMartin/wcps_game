@@ -20,11 +20,12 @@ class ChangeRoundsHandler(GameProcessHandler):
 
         target_rounds = int(self.get_block(2))
 
-        if target_rounds in range(0, len(ROUND_LIMITS)):
-            self.room.rounds_setting = target_rounds
-        else:
-            self.room.rounds_setting = 0
+        if target_rounds not in range(0, len(ROUND_LIMITS)):
+            target_rounds = 0
 
+        self.room.update_rounds_from_settings(
+            settings=target_rounds
+            )
         self.set_block(2, self.room.rounds_setting)
 
         self.update_lobby = True
