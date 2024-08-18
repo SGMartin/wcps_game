@@ -88,6 +88,11 @@ class Player:
         self.vehicle_seat - 1
         await self.user.stats.update_deaths(deaths=1)
 
+    async def add_assists(self, assists: int):
+        self.assists += assists
+        self.points = self.points + assists * 2
+        # TODO: update user stats
+
     async def end_game(self):
         self.vehicle_id = -1
         self.vehicle_seat = -1
