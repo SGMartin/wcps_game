@@ -28,10 +28,10 @@ class HealPlayerHandler(GameProcessHandler):
             return
 
         if target.team != self.player.team:
-            if self.room.game_mode == GameMode.FFA:
-                target = self.player
-            else:
-                return
+            return
+
+        if self.room.game_mode == GameMode.FFA:
+            target = self.player
 
         if target != self.player:
             self.player.add_assists(assists=1)
@@ -39,12 +39,15 @@ class HealPlayerHandler(GameProcessHandler):
         if is_healing_post:
             hp_to_heal += 400
         else:
-            if self.player.weapon == 82 and self.player.health < 400:  # adrenaline special shit
+            if self.player.weapon == 65 and self.player.health < 400:  # adrenaline special shit
                 hp_to_heal = 400 - self.player.health
             else:
                 hp_to_heal = HealingPower.HEALING_POWER[self.player.weapon]
 
         target.health = target.health + hp_to_heal
+
+        if target.health > 1000:
+            target.health = 1000
 
         self.set_block(3, target.health)
         self.answer = True

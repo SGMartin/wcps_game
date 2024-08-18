@@ -370,9 +370,9 @@ class RoomMaximumPlayers:
 
 class HealingPower:
     HEALING_POWER = {
-        77: 300,  # Medic Kit 1
-        78: 450,  # Medic Kit 2
-        79: 600,  # Medic kit 3
-        82: 100,  # Adrenaline
+        60: 300,  # Medic Kit 1
+        61: 450,  # Medic Kit 2
+        62: 600,  # Medic kit 3
+        65: 100,  # Adrenaline
         85: 200   # hp kit
     }
