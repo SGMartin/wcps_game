@@ -38,6 +38,9 @@ class PacketList:
     # Game packets
     DO_GAME_PROCESS = 0x7530
     DO_GAME_UPDATE_CLOCK = 0x7540
+    DO_GAME_SCORE = 0x7550
+    DO_GAME_RESULT = 0x7560
+    DO_PROMOTION_OLD = 0x8200
 
     # Subpackets of DO_GAME_PROCESS
     # Lobby related #
@@ -53,7 +56,12 @@ class PacketList:
     DO_HOLD_CLICK = 0x3A
     DO_AUTOSTART_CLICK = 0x3E
     # In game subpackets
+    DO_BACK_TO_LOBBY = 0x9  # ID by DarkRaptor
     DO_REQUEST_MISSION = 0x192  # ID by darkraptor
     DO_GO = 0x193
     DO_BRANCH_CLICK = 0x64
+    DO_HEALING_PLAYER = 0x65
+    DO_DAMAGED_PLAYER = 0x67
     DO_PLAYER_REGEN = 0x96
+    DO_PLAYER_DIE = 0x98
+    DO_CHANGE_WEAPONS = 0x9B

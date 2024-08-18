@@ -24,7 +24,9 @@ class ChangeKillsTicketsHandler(GameProcessHandler):
         if target_tickets > max_tickets:
             target_tickets = 0
 
-        self.room.tdm_tickets = target_tickets
+        self.room.update_tickets_from_settings(
+            settings=target_tickets
+        )
 
         self.set_block(2, target_tickets)
         self.update_lobby = True

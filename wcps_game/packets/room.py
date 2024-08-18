@@ -1,6 +1,7 @@
 import random
 import socket
 import struct
+import logging
 
 from typing import TYPE_CHECKING
 
@@ -164,7 +165,7 @@ def add_room_info_to_packet(packet: OutPacket, room):
 
 
 def ip_string_to_long(ip_addr: str):
-    # Convert IP address to long (32-bit integer)
-    ip_as_long = struct.unpack("!I", socket.inet_aton(ip_addr))[0]
-    print(f"Converted {ip_addr} to {ip_as_long}")
+    packed_ip = socket.inet_aton(ip_addr)
+    ip_as_long = struct.unpack("<I", packed_ip)[0]
+    logging.info(f"Converted {ip_addr} to {ip_as_long}")
     return ip_as_long

@@ -77,8 +77,32 @@ class ChatHandler(PacketHandler):
                 await user.this_server.broadcast_packet_to_lobby(this_packet.build())
 
             if message_channel == ChatChannel.ROOM2TEAM:
-                logging.info("ROOMS NOT YET IMPLEMENTED")
-                return
+                this_packet = PacketFactory.create_packet(
+                    packet_id=PacketList.CHAT,
+                    error_code=1,
+                    user=user,
+                    chat_type=message_channel,
+                    receiver_id=receiver_id,
+                    receiver_username=receiver_name,
+                    message=real_message
+                )
+                if user.room is None:
+                    return
+
+                if user.room.state != RoomStatus.PLAYING:
+                    return
+
+                this_user_team = user.room.get_player_team(user.room_slot)
+
+                if this_user_team is None:
+                    return
+
+                room_players = user.room.get_all_players()
+
+                for player in room_players:
+                    if player.team == this_user_team:
+                        await player.user.send(this_packet.build())
+
             if message_channel == ChatChannel.ROOM2ALL:
                 if user.room is not None:
                     if user.room.state == RoomStatus.WAITING and user.room.master == user and user.room.supermaster:

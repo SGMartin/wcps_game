@@ -14,6 +14,8 @@ from wcps_core.constants import ErrorCodes as corerr
 from wcps_game.game import constants as gconstants
 from wcps_game.game.player import Player
 
+from wcps_game.game.game_modes.ffa import FFA
+
 from wcps_game.packets.packet_list import PacketList
 from wcps_game.packets.packet_factory import PacketFactory
 
@@ -61,6 +63,8 @@ class Room:
             self.channel.type
         ][max_players]
 
+        self.running = False
+
         # Auto/default settings on room creating
         self.state = gconstants.RoomStatus.WAITING
         self.rounds_setting = 3  # Packet specific
@@ -86,6 +90,7 @@ class Room:
         }
 
         self.game_mode = default_modes[self.channel.type]
+        self.current_game_mode = None  # This will hold a reference for the actual game mode
         self.ping_limit = gconstants.RoomPingLimit.GREEN
 
         # Set the user who sent the packet as the default master
@@ -108,6 +113,14 @@ class Room:
     def authorize(self, room_id: int):
         self.id = room_id
         self.room_page = round(math.floor(self.id / 8))
+
+    def update_rounds_from_settings(self, settings: int):
+        self.rounds = gconstants.ROUND_LIMITS[settings]
+        self.rounds_setting = settings
+
+    def update_tickets_from_settings(self, settings: int):
+        self.tdm_tickets = gconstants.TDM_LIMITS[settings]
+        self.tickets_setting = settings
 
     def get_player_count_in_team(self, team_to_count) -> int:
         player_count = 0
@@ -147,6 +160,9 @@ class Room:
 
     def get_all_players(self) -> list:
         return [player for player in self.players.values() if player is not None]
+
+    def get_player_team(self, player_slot: int) -> int:
+        return self.players[player_slot].team
 
     async def add_player(self, user: "User") -> Player:
 
@@ -384,24 +400,87 @@ class Room:
         self.down_ticks = 1800000
         self.last_tick = -1
 
-        for player in self.players.values():
+        for player in self.get_all_players():
             player.reset_game_state()
             player.round_start()
 
-    # EXPERIMENTAL
+        # Initialize the game modes
+        game_modes = {
+            gconstants.GameMode.FFA: FFA,
+            gconstants.GameMode.TDM: FFA  # test distances
+        }
+
+        self.current_game_mode = game_modes[self.game_mode]()
+        self.current_game_mode.initialize(self)
+
+    async def end_game(self, winner_team: gconstants.Team):
+        if self.state != gconstants.RoomStatus.PLAYING:
+            return
+
+        players = self.get_all_players()
+
+        # TODO: send the statistics here
+        for player in players:
+            await player.end_game()
+
+        end_game = PacketFactory.create_packet(
+            packet_id=PacketList.DO_GAME_RESULT,
+            room=self,
+            players=self.get_all_players(),
+            winner_team=self.current_game_mode.winner()
+        )
+        await self.send(end_game.build())
+
+        self.current_game_mode = None
+        self.state = gconstants.RoomStatus.WAITING
+
     async def run(self):
-        self.UpTick = 0
-        self.DownTick = 1800000
-        self.LastTick = -1
+        try:
+            last_tick_time = datetime.now()
 
-        while self.state == gconstants.RoomStatus.PLAYING:
-            self.UpTick += 1000
-            self.DownTick -= 1000
-            self.LastTick = datetime.now().second
+            while self.state == gconstants.RoomStatus.PLAYING:
+                if self.current_game_mode is not None and self.current_game_mode.initialized:
 
-            clock_packet = PacketFactory.create_packet(
-                packet_id=PacketList.DO_GAME_UPDATE_CLOCK, room=self
-            )
-            await self.send(clock_packet.build())
+                    if self.current_game_mode.is_goal_reached():  # Game ended
+                        await self.end_game(self.current_game_mode.winner())
+                        break  # TODO: check if we should actually do this
 
-            await asyncio.sleep(1)  # In seconds
+                    if self.current_game_mode.freeze_tick:
+                        self.last_tick = -1
+                    else:
+                        # Call the game mode routine here
+                        await self.current_game_mode.process()
+
+                        current_time = datetime.now()
+                        elapsed_time = (current_time - last_tick_time).total_seconds()
+
+                        if elapsed_time >= 1:
+                            self.up_ticks += 1000
+                            self.down_ticks -= 1000
+                            self.last_tick = current_time.second
+
+                            # Create and send clock packet
+                            clock_packet = PacketFactory.create_packet(
+                                packet_id=PacketList.DO_GAME_UPDATE_CLOCK, room=self
+                            )
+                            await self.send(clock_packet.build())
+                            await self.update_spawn_protection()
+
+                            # Reset the last_tick_time
+                            last_tick_time = current_time
+
+                # Sleep for a short interval to allow for precise timing
+                await asyncio.sleep(0.01)
+
+        except Exception as e:
+            logging.error(f"Error in core room loop {e}", exc_info=True)
+
+    async def update_spawn_protection(self):
+        room_players = self.get_all_players()
+
+        for player in room_players:
+            if player.alive and player.spawn_protection_ticks > 0:
+                player.spawn_protection_ticks -= 1000
+
+            if player.spawn_protection_ticks < 0:
+                player.spawn_protection_ticks = 0

@@ -2,6 +2,8 @@ import logging
 from pathlib import Path
 import pandas as pd
 
+from wcps_game.game.constants import DamageTypes
+
 
 class ItemDatabase:
     _instance = None
@@ -84,3 +86,25 @@ class ItemDatabase:
             return cost_list
 
         return []
+
+    def is_weapon(self, code: str) -> bool:
+        return self._weapons["code"].eq(code).any()
+
+    def get_weapon_power(self, code: str) -> int:
+        return self._weapons.loc[self._weapons["code"] == code, "power"].values[0]
+
+    def get_weapon_damage_class(self, code: str, damage_class: DamageTypes):
+        columns_to_look = {
+            DamageTypes.INFANTRY: "personal",
+            DamageTypes.GROUND: "surface",
+            DamageTypes.AIRCRAFT: "air",
+            DamageTypes.SHIP: "ship"
+        }
+        column_to_look = columns_to_look[damage_class]
+
+        if self.item_exists(code=code) and self.is_weapon(code=code):
+            damages = self._weapons.loc[self._weapons["code"] == code, column_to_look].values[0]
+            damages = [int(d) for d in damages.split(",")]
+            return damages
+        else:
+            return None

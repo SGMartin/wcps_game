@@ -366,3 +366,13 @@ class RoomMaximumPlayers:
         ChannelType.URBANOPS: [8, 16, 20, 24],
         ChannelType.BATTLEGROUP: [8, 16, 20, 24, 32]
     }
+
+
+class HealingPower:
+    HEALING_POWER = {
+        60: 300,  # Medic Kit 1
+        61: 450,  # Medic Kit 2
+        62: 600,  # Medic kit 3
+        65: 100,  # Adrenaline
+        85: 200   # hp kit
+    }

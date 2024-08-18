@@ -25,6 +25,10 @@ from wcps_game.packets.room import (
     RoomPlayers,
 )
 from wcps_game.packets.game_process import GameProcess
+from wcps_game.packets.game_clock import GameUpdateClock
+from wcps_game.packets.scoreboard import ScoreBoard
+from wcps_game.packets.end_game import EndGame
+from wcps_game.packets.promotion import Promotion
 
 
 class PacketFactory:
@@ -55,7 +59,11 @@ class PacketFactory:
         PacketList.DO_JOIN_ROOM: RoomJoin,
         PacketList.DO_GAME_USER_LIST: RoomPlayers,
         # Game
-        PacketList.DO_GAME_PROCESS: GameProcess
+        PacketList.DO_GAME_PROCESS: GameProcess,
+        PacketList.DO_GAME_UPDATE_CLOCK: GameUpdateClock,
+        PacketList.DO_GAME_SCORE: ScoreBoard,
+        PacketList.DO_GAME_RESULT: EndGame,
+        PacketList.DO_PROMOTION_OLD: Promotion
     }
 
     @staticmethod
