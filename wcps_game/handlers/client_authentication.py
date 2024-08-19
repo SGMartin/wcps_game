@@ -8,6 +8,7 @@ from wcps_game.handlers.packet_handler import PacketHandler
 from wcps_game.packets.packet_list import PacketList
 from wcps_game.packets.packet_factory import PacketFactory
 from wcps_game.packets.error_codes import PlayerAuthorizationError
+
 # Instead of authorizing and moving on to the equipment packet,
 # we will instead send an internal authentication packet to the auth
 # and in that handler we will send the equipment packet if everything is ok
@@ -25,8 +26,8 @@ class ClientAuthenticationHandler(PacketHandler):
 
         if reported_client_session not in range(-32767, 32768):
             error_packet = PacketFactory.create_packet(
-                PacketList.INTERNAL_PLAYER_AUTHENTICATION,
-                PlayerAuthorizationError.INVALID_PACKET
+                packet_id=PacketList.PLAYER_AUTHORIZATION,
+                error_code=PlayerAuthorizationError.INVALID_PACKET
                 )
             await u.send(error_packet.build())
             await u.disconnect()
@@ -35,8 +36,8 @@ class ClientAuthenticationHandler(PacketHandler):
         # Banned player?
         if reported_access_level <= 0:
             error_packet = PacketFactory.create_packet(
-                PacketList.INTERNAL_PLAYER_AUTHENTICATION,
-                PlayerAuthorizationError.NOT_ACCESIBLE
+                packet_id=PacketList.PLAYER_AUTHORIZATION,
+                error_code=PlayerAuthorizationError.NOT_ACCESIBLE
                 )
             await u.send(error_packet.build())
             await u.disconnect()
@@ -45,9 +46,19 @@ class ClientAuthenticationHandler(PacketHandler):
         # Session exists already
         if await u.this_server.is_online(reported_client_session):
             error_packet = PacketFactory.create_packet(
-                PacketList.INTERNAL_PLAYER_AUTHENTICATION,
-                PlayerAuthorizationError.IDIN_USE
+                packet_id=PacketList.PLAYER_AUTHORIZATION,
+                error_code=PlayerAuthorizationError.IDIN_USE
                 )
+            await u.send(error_packet.build())
+            await u.disconnect()
+            return
+
+        # Server reached maximum capacity
+        if u.this_server.get_player_count() >= u.this_server.max_players:
+            error_packet = PacketFactory.create_packet(
+                packet_id=PacketList.PLAYER_AUTHORIZATION,
+                error_code=PlayerAuthorizationError.SERVER_FULL
+            )
             await u.send(error_packet.build())
             await u.disconnect()
             return
@@ -71,7 +82,10 @@ class ClientAuthenticationHandler(PacketHandler):
             )
             await u.this_server.send(internal_auth_packet.build())
         else:
-            error_packet = PacketFactory.create_packet(PlayerAuthorizationError.NICKNAME_TOO_SHORT)
+            error_packet = PacketFactory.create_packet(
+                packet_id=PacketList.PLAYER_AUTHORIZATION,
+                error_code=PlayerAuthorizationError.NICKNAME_TOO_SHORT
+                )
             await u.send(error_packet.build())
             await u.disconnect()
 
