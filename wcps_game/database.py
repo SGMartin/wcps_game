@@ -495,3 +495,28 @@ async def update_user_details(user) -> bool:
 
             # Check if both updates affected rows
             return cur.rowcount > 0
+
+
+async def update_user_stats(user) -> bool:
+    async with pool.acquire() as connection:
+        await connection.select_db(settings().database_name)
+        async with connection.cursor() as cur:
+            # Update the 'user_stats' table
+            update_stats_query = """
+            UPDATE user_stats s
+            JOIN users u ON u.id = s.id
+            SET 
+                s.kills = %s,
+                s.deaths = %s
+            WHERE 
+                u.username = %s
+            """
+            await cur.execute(
+                update_stats_query, (user.stats.kills, user.stats.deaths, user.username)
+            )
+
+            # Commit the transaction to save the changes
+            await connection.commit()
+
+            # Check if the update affected any rows
+            return cur.rowcount > 0

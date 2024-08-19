@@ -13,7 +13,12 @@ from wcps_core.constants import Ports, ServerTypes, InternalKeys
 from wcps_core.packets import OutPacket
 
 from wcps_game.config import settings
-from wcps_game.database import get_user_details_and_stats, update_user_money, update_user_details
+from wcps_game.database import (
+    get_user_details_and_stats,
+    update_user_money,
+    update_user_details,
+    update_user_stats
+)
 from wcps_game.game.constants import Premium, ChannelType, get_level_for_exp
 from wcps_game.game.channels import Channel
 from wcps_game.game.user_stats import UserStats
@@ -194,9 +199,13 @@ class User(NetworkEntity):
         # Save everything to the database
         await update_user_details(self)
 
+    async def update_stats(self):
+        # Call database method
+        await update_user_stats(user=self)
+
     def set_room(self, room: "Room", room_slot: int):
         self.room = room
-        self.room_slot = room_slot  # TODO: check to see If we can remove this one
+        self.room_slot = room_slot
         # reset room and user list page
         self.room_page = 0
         self.userlist_page = 0

@@ -297,7 +297,9 @@ class Room:
 
             # Release the slot and set the player room slot to 0
             self.players[user.room_slot] = None
+            # Set the room to none and ask to update k/d as vanilla warrock did
             user.set_room(None, 0)
+            await user.update_stats()
 
             if self.get_player_count() == 0:  # Empty room, destroy it
                 await self.destroy()
