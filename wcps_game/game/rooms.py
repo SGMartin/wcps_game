@@ -402,8 +402,10 @@ class Room:
 
         self.current_game_mode = game_modes[self.game_mode]()
         self.current_game_mode.initialize(self)
+        logging.info(f"Room {self.id} started")
 
     async def end_game(self, winner_team: gconstants.Team):
+        logging.info(f"Current game state is {self.state}")
         if self.state != gconstants.RoomStatus.PLAYING:
             return
 
@@ -413,16 +415,17 @@ class Room:
         for player in players:
             await player.end_game()
 
-        end_game = PacketFactory.create_packet(
+        end_game_packet = PacketFactory.create_packet(
             packet_id=PacketList.DO_GAME_RESULT,
             room=self,
             players=self.get_all_players(),
             winner_team=winner_team
         )
-        await self.send(end_game.build())
+        await self.send(end_game_packet.build())
 
         self.current_game_mode = None
         self.state = gconstants.RoomStatus.WAITING
+        self.running = False
 
         # Send a new room update packet so that k/d stats are updated
         room_players = PacketFactory.create_packet(
@@ -430,6 +433,8 @@ class Room:
             player_list=self.get_all_players()
         )
         await self.send(room_players.build())
+
+        logging.info(f"Room {self.id} ended")
 
     async def run(self):
         try:
