@@ -15,9 +15,11 @@ class GameSetupHandler(GameProcessHandler):
         self.set_block(4, 0)  # unknown
         self.set_block(5, 1)  # is this the team?
 
+        # Each player in the room will trigger this handler
+        # So do not create the room task twice
         if not self.room.running:
             self.room.running = True
+            asyncio.create_task(self.room.run())
 
-        asyncio.create_task(self.room.run())
         self.self_target = True
         self.answer = True

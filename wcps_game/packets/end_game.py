@@ -1,5 +1,3 @@
-import logging
-
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -20,14 +18,8 @@ class EndGame(OutPacket):
         )
 
         self.append(ErrorCodes.SUCCESS)
-
-        if room.current_game_mode is not None:
-            self.append(room.current_game_mode.current_round_derbaran())
-            self.append(room.current_game_mode.current_round_niu())
-        else:
-            # FFA CRASH. TODO: INVESTIGATE IF IT HAPPENS
-            self.fill(0, 2)
-            logging.info(f"WARNING: FFA CRASH FOR ROOM {room.id}")
+        self.append(room.current_game_mode.current_round_derbaran())
+        self.append(room.current_game_mode.current_round_niu())
 
         derbaran_kills = 0
         niu_kills = 0
