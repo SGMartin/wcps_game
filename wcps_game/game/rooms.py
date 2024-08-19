@@ -195,13 +195,6 @@ class Room:
                         user=user, slot=requested_slot, team=player_team
                     )
 
-                    # Send the update to the room
-                    player_update = PacketFactory.create_packet(
-                        packet_id=PacketList.DO_GAME_USER_LIST,
-                        player_list=[this_player],
-                    )
-                    await self.send(player_update.build())
-
                     # Send the incoming user the room join packet
                     join_packet = PacketFactory.create_packet(
                         packet_id=PacketList.DO_JOIN_ROOM,
@@ -213,16 +206,14 @@ class Room:
                     user.set_room(room=self, room_slot=requested_slot)
                     await user.send(join_packet.build())
 
-                    # Send the incoming user the room players packet
-                    # he cannot be in the packet lol
-                    room_players_packet = PacketFactory.create_packet(
-                        packet_id=PacketList.DO_GAME_USER_LIST,
-                        player_list=self.get_all_players(),
-                    )
-                    await user.send(room_players_packet.build())
-
                     # Now add the player to the list of players
                     self.players[requested_slot] = this_player
+
+                    room_players_packet = PacketFactory.create_packet(
+                        packet_id=PacketList.DO_GAME_USER_LIST,
+                        player_list=self.get_all_players()
+                    )
+                    await self.send(room_players_packet.build())
 
                     # Send an update to the lobby
                     channel_users = await self.channel.get_users()
@@ -235,7 +226,6 @@ class Room:
                                 update_type=gconstants.RoomUpdateType.UPDATE,
                             )
                             await user.send(room_update.build())
-                    print("Lobby notify")
                     break
 
         return this_player
@@ -427,12 +417,19 @@ class Room:
             packet_id=PacketList.DO_GAME_RESULT,
             room=self,
             players=self.get_all_players(),
-            winner_team=self.current_game_mode.winner()
+            winner_team=winner_team
         )
         await self.send(end_game.build())
 
         self.current_game_mode = None
         self.state = gconstants.RoomStatus.WAITING
+
+        # Send a new room update packet so that k/d stats are updated
+        room_players = PacketFactory.create_packet(
+            packet_id=PacketList.DO_GAME_USER_LIST,
+            player_list=self.get_all_players()
+        )
+        await self.send(room_players.build())
 
     async def run(self):
         try:
