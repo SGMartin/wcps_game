@@ -299,6 +299,7 @@ class Room:
             self.players[user.room_slot] = None
             # Set the room to none and ask to update k/d as vanilla warrock did
             user.set_room(None, 0)
+            # TODO: should we call this ONLY if there were changes to the player stats?
             await user.update_stats()
 
             if self.get_player_count() == 0:  # Empty room, destroy it

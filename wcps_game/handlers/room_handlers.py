@@ -110,6 +110,14 @@ class RoomCreateHandler(PacketHandler):
         # The master user has been notified
         await user.send(room_create_packet.build())
 
+        # Send the master their own updated room data (k:d, endpoint)
+        # The master is always the 0 slot when the room is just created
+        room_players = PacketFactory.create_packet(
+            packet_id=PacketList.DO_GAME_USER_LIST,
+            player_list=[new_room.players[0]]
+        )
+        await user.send(room_players.build())
+
         # Notify the rest of the lobby
         channel_users = await user.this_server.channels[user.channel].get_users()
 
@@ -236,7 +244,11 @@ class RoomLeaveHandler(PacketHandler):
 
             # Send the user the room list
             all_rooms = await user.this_server.channels[user.channel].get_all_rooms()
-            rooms_to_send = [room for room in all_rooms.values() if room.room_page == user.room_page]
+            rooms_to_send = [
+                room
+                for room in all_rooms.values()
+                if room.room_page == user.room_page
+                ]
 
             new_room_list = PacketFactory.create_packet(
                 packet_id=PacketList.DO_ROOM_LIST,
