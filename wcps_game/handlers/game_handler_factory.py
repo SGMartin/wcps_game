@@ -20,6 +20,7 @@ from wcps_game.handlers.game.ingame.player_damage import PlayerDamageHandler
 from wcps_game.handlers.game.ingame.switch_weapon import SwitchWeaponHandler
 from wcps_game.handlers.game.ingame.back_to_lobby import BackToLobbyHandler
 from wcps_game.handlers.game.ingame.heal import HealPlayerHandler
+from wcps_game.handlers.game.ingame.AmmoRechargeHandler import AmmoRechargeHandler
 
 # from wcps_game.handlers.game.ingame.test import TestHandler
 
@@ -44,7 +45,8 @@ HANDLER_MAP = {
     PacketList.DO_DAMAGED_PLAYER: PlayerDamageHandler,
     PacketList.DO_HEALING_PLAYER: HealPlayerHandler,
     PacketList.DO_CHANGE_WEAPONS: SwitchWeaponHandler,
-    PacketList.DO_BACK_TO_LOBBY: BackToLobbyHandler
+    PacketList.DO_BACK_TO_LOBBY: BackToLobbyHandler,
+    PacketList.DO_RELOAD_PLAYER: AmmoRechargeHandler
 
 }
 
