@@ -13,6 +13,7 @@ from wcps_core.constants import ErrorCodes as corerr
 
 from wcps_game.game import constants as gconstants
 from wcps_game.game.player import Player
+from wcps_game.game.ground_item import GroundItem
 
 from wcps_game.game.game_modes.ffa import FFA
 
@@ -73,6 +74,7 @@ class Room:
         self.tdm_tickets = gconstants.TDM_LIMITS[self.tickets_setting]  # Actual setting
         self.autostart = False
         self.user_limit = False
+        self.ground_items = []
 
         # Set a default map for each mode
         map_defaults = {
@@ -109,6 +111,7 @@ class Room:
         self.players[0] = this_player
 
         self._players_lock = asyncio.Lock()
+        self._items_lock = asyncio.Lock()
 
     def authorize(self, room_id: int):
         self.id = room_id
@@ -347,6 +350,12 @@ class Room:
             # Send it to the rest of the room
             await self.send(room_leave.build())
 
+    async def add_item(self, owner: Player, code: str):
+        async with self._items_lock:
+            new_item = GroundItem(owner=owner, code=code)
+            new_item.place(room_id=len(self.ground_items) + 1)
+            self.ground_items.append(new_item)
+    
     async def destroy(self):
         # Get the users in the channel
         channel_users = await self.channel.get_users()

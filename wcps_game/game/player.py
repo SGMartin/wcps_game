@@ -34,6 +34,7 @@ class Player:
         self.branch = gconstants.Classes.ENGINEER  # Eng, medic etc
         self.vehicle_id = -1
         self.vehicle_seat = -1
+        self.items_planted = 0
         self.alive = True
 
         # game stats
@@ -58,6 +59,7 @@ class Player:
         self.alive = True
         self.vehicle_id = -1
         self.vehicle_seat = -1
+        self.items_planted = 0
 
     def spawn(self, this_branch: gconstants.Classes):
         self.health = 1000
@@ -65,6 +67,7 @@ class Player:
         self.branch = this_branch
         self.vehicle_id = -1
         self.vehicle_seat = -1
+        self.items_planted = 0  # TODO: CHECK this. Maybe these do not reset on spawn?
 
         if self.user.room.game_mode == gconstants.GameMode.EXPLOSIVE:
             self.can_spawn = False

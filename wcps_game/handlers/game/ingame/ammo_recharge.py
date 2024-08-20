@@ -4,6 +4,8 @@ from wcps_game.game.constants import RoomStatus
 
 class AmmoRechargeHandler(GameProcessHandler):
     async def handle(self):
+        if not self.player.user.authorized:
+            return
 
         if self.room.state == RoomStatus.WAITING:
             return
