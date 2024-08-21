@@ -68,3 +68,5 @@ class PacketList:
     DO_CHANGE_WEAPONS = 0x9B
     DO_ITEM_DROP = 0x190
     DO_ITEM_PICKUP = 0x191
+    DO_CRASH_OBJECT = 0x1F4
+    DO_SUICIDE = 0x9D

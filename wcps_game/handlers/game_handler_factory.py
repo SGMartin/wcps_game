@@ -23,6 +23,7 @@ from wcps_game.handlers.game.ingame.heal import HealPlayerHandler
 from wcps_game.handlers.game.ingame.ammo_recharge import AmmoRechargeHandler
 from wcps_game.handlers.game.ingame.place_items_on_ground import PlaceGroundItemHandler
 from wcps_game.handlers.game.ingame.use_items_on_ground import UseGroundItemHandler
+from wcps_game.handlers.game.ingame.collision_damage import CollisionDamageHandler
 
 # from wcps_game.handlers.game.ingame.test import TestHandler
 
@@ -50,7 +51,8 @@ HANDLER_MAP = {
     PacketList.DO_BACK_TO_LOBBY: BackToLobbyHandler,
     PacketList.DO_RELOAD_PLAYER: AmmoRechargeHandler,
     PacketList.DO_ITEM_DROP: PlaceGroundItemHandler,
-    PacketList.DO_ITEM_PICKUP: UseGroundItemHandler
+    PacketList.DO_ITEM_PICKUP: UseGroundItemHandler,
+    PacketList.DO_CRASH_OBJECT: CollisionDamageHandler
 
 }
 
