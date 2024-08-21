@@ -96,6 +96,10 @@ class Player:
         self.points = self.points + assists * 2
         # TODO: update user stats
 
+    async def add_flags(self):
+        self.flags_taken += 1
+        self.points += 7
+
     async def end_game(self):
         self.vehicle_id = -1
         self.vehicle_seat = -1

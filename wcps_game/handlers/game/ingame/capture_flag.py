@@ -34,4 +34,5 @@ class CaptureFlagHandler(GameProcessHandler):
         self.set_block(3, self.room.flags[captured_flag_id])
         self.answer = True
 
-        # TODO: add flags captured and call OnFlagCaptured here
+        # TODO: call OnFlagCaptured here
+        await self.player.add_flags()
