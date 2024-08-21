@@ -22,7 +22,7 @@ class PlaceGroundItemHandler(GameProcessHandler):
         if self.player.items_planted >= 7:
             return
 
-        await self.room.add_item(owner=self.player, code=item)
+        item_id = await self.room.add_item(owner=self.player, code=item)
         self.player.items_planted += 1
-        self.set_block(4, len(self.room.ground_items))
+        self.set_block(4, item_id)
         self.answer = True

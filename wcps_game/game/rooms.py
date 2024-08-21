@@ -353,8 +353,13 @@ class Room:
     async def add_item(self, owner: Player, code: str):
         async with self._items_lock:
             new_item = GroundItem(owner=owner, code=code)
-            await new_item.place(room_id=len(self.ground_items) + 1)
+            # WarRock CP1 glitches if the first id is 0. It won't even send activate packets
+            # Until the client is restarted
+            new_id = len(self.ground_items) + 1
+            await new_item.place(room_id=new_id)
             self.ground_items[new_item.id] = new_item
+
+            return new_id
 
     async def destroy(self):
         # Get the users in the channel
