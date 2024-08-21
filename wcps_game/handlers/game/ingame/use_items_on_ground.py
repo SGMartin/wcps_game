@@ -31,7 +31,6 @@ class UseGroundItemHandler(GameProcessHandler):
 
         # No FF for flash or land but it should be possible lol >)
         if (self_target or self_team) and this_item.code in ["DU02", "DS05"]:
-            print("NOPE")
             return
 
         if this_item.code == "DU01" and not self_target and self_team:
