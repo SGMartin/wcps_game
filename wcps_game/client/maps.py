@@ -32,7 +32,9 @@ class MapDatabase:
                 "ffa": "int",
                 "conquest": "bool",
                 "premium": "str",
-                "active": "bool"
+                "active": "bool",
+                "flags": "int",
+                "spawn_flags": "str"
             }
             self._maps = pd.read_csv(f"{self._runtime_dir}/maps.csv", dtype=dtypes)
 
@@ -132,3 +134,25 @@ class MapDatabase:
             ].sort_values(ascending=True).iloc[0]
 
         return available_maps
+
+    def get_spawn_flags(self, map_id: int) -> dict:
+        flags = {
+            constants.Team.DERBARAN: None,
+            constants.Team.NIU: None
+        }
+        if map_id in self._maps.index:
+            spawn_flags = self._maps.loc[self._maps["map_id"] == map_id, "spawn_flags"].values[0]
+            spawn_flags = spawn_flags.split(",")
+
+            flags[constants.Team.DERBARAN] = int(spawn_flags[0])
+            flags[constants.Team.NIU] = int(spawn_flags[1])
+
+        return flags
+
+    def get_flag_number(self, map_id: int) -> int:
+        max_flags = None
+
+        if map_id in self._maps.index:
+            max_flags = self._maps.loc[self._maps["map_id"] == map_id, "flags"].values[0]
+
+        return max_flags
