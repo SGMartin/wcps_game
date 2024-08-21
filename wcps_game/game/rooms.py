@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 from wcps_core.constants import ErrorCodes as corerr
 
+from wcps_game.client.maps import MapDatabase
 from wcps_game.game import constants as gconstants
 from wcps_game.game.player import Player
 from wcps_game.game.ground_item import GroundItem
@@ -75,6 +76,8 @@ class Room:
         self.autostart = False
         self.user_limit = False
         self.ground_items = {}
+        self.flags = {}
+        self.spawn_flags = {}
 
         # Set a default map for each mode
         map_defaults = {
@@ -418,8 +421,24 @@ class Room:
         }
 
         self.ground_items = {}  # Empty the ground items dictionary
+
+        # Populate the flags dictionaries
+        map_database = MapDatabase()
+        this_map_flags = map_database.get_flag_number(map_id=self.current_map)
+        default_team_flags = map_database.get_spawn_flags(map_id=self.current_map)
+
+        self.flags = dict.fromkeys(range(0, this_map_flags), -1)
+        self.spawn_flags = default_team_flags
+
+        # By default, set the derbaran spawn flag as team derbaran and the niu spawn flag as niu
+        # Remember that in conquest we flush spawn flags so this better be ready
+        self.flags[self.spawn_flags[gconstants.Team.DERBARAN]] = gconstants.Team.DERBARAN
+        self.flags[self.spawn_flags[gconstants.Team.NIU]] = gconstants.Team.NIU
+
+        # Initialize game mode
         self.current_game_mode = game_modes[self.game_mode]()
         self.current_game_mode.initialize(self)
+
         logging.info(f"Room {self.id} started")
 
     async def end_game(self, winner_team: gconstants.Team):
@@ -441,6 +460,13 @@ class Room:
         )
         await self.send(end_game_packet.build())
 
+        # Flush flag status
+        self.flags = {}
+        self.spawn_flags = {}
+        # Empty game items
+        self.ground_items = {}
+
+        # Reset game mode
         self.current_game_mode = None
         self.state = gconstants.RoomStatus.WAITING
         self.running = False
