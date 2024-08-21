@@ -74,7 +74,7 @@ class Room:
         self.tdm_tickets = gconstants.TDM_LIMITS[self.tickets_setting]  # Actual setting
         self.autostart = False
         self.user_limit = False
-        self.ground_items = []
+        self.ground_items = {}
 
         # Set a default map for each mode
         map_defaults = {
@@ -354,8 +354,8 @@ class Room:
         async with self._items_lock:
             new_item = GroundItem(owner=owner, code=code)
             new_item.place(room_id=len(self.ground_items) + 1)
-            self.ground_items.append(new_item)
-    
+            self.ground_items[new_item.id] = new_item
+
     async def destroy(self):
         # Get the users in the channel
         channel_users = await self.channel.get_users()
@@ -412,6 +412,7 @@ class Room:
             gconstants.GameMode.TDM: FFA  # test distances
         }
 
+        self.ground_items = {}  # Empty the ground items dictionary
         self.current_game_mode = game_modes[self.game_mode]()
         self.current_game_mode.initialize(self)
         logging.info(f"Room {self.id} started")
