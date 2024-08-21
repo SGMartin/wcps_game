@@ -79,3 +79,9 @@ class FFA(BaseGameMode):
 
             if self.current_winner_kills >= self.max_kills:
                 await self.room.end_game(gconstants.Team.NONE)
+
+    async def on_flag_capture(self, player, flag_status):
+        raise NotImplementedError
+
+    async def on_player_suicide(self, player):
+        raise NotImplementedError

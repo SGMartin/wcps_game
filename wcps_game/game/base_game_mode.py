@@ -61,6 +61,14 @@ class BaseGameMode(ABC):
     async def on_death(self, killer, victim):
         pass
 
+    @abstractmethod
+    async def on_suicide(self, player):
+        pass
+
+    @abstractmethod
+    async def on_flag_capture(self, player, flag_status):
+        pass
+
     def get_spawn_id(self) -> int:
         return 0
 
