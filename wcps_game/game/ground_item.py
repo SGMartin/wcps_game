@@ -1,3 +1,5 @@
+import asyncio
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -10,13 +12,14 @@ class GroundItem():
         self.owner = owner
         self.code = code
         self.used = False
+        self._lock = asyncio.Lock()
 
-    def place(self, room_id: int):
+    async def place(self, room_id: int):
         self.id = room_id
 
-    def activate(self):
-        if not self.used:
-            self.used = True
-
-    def can_activate(self):
-        return not self.used
+    async def activate(self):
+        async with self._lock:
+            if not self.used:
+                self.used = True
+                return True  # Indicating successful activation
+            return False  # Already activated
