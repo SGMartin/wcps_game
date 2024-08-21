@@ -353,7 +353,7 @@ class Room:
     async def add_item(self, owner: Player, code: str):
         async with self._items_lock:
             new_item = GroundItem(owner=owner, code=code)
-            new_item.place(room_id=len(self.ground_items) + 1)
+            await new_item.place(room_id=len(self.ground_items) + 1)
             self.ground_items[new_item.id] = new_item
 
     async def destroy(self):
