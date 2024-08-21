@@ -26,8 +26,15 @@ class UseGroundItemHandler(GameProcessHandler):
         if not success:  # Possible concurrent access or lag. Do nothing
             return
 
-        if this_item.code in ["DS05", "DU01"]:  # flash mine and ammo box
-            print("Mine")
+        self_target = self.player == this_item.owner
+        self_team = self.player.team == this_item.owner.team
+
+        # No FF for flash or land but it should be possible lol >)
+        if self_target or self_team and this_item.code in ["DU01", "DS05"]:
+            return
+
+        if this_item.code == "DU01" and not self_target and self_team:
+            this_item.owner.add_assists(assists=3)
 
         if this_item.code == "DU02":  # land mine M14
             if self.player.health >= 500:
@@ -35,11 +42,16 @@ class UseGroundItemHandler(GameProcessHandler):
             else:
                 self.player.health = 200  # Land mines cannot kill you
 
+            this_item.owner.add_assists(assists=5)
+
         if this_item.code == "DV01":  # Medic box
             self.player.health += 400
 
             if self.player.health >= 1000:
                 self.player.health = 1000
+
+            if self.player != this_item.owner:
+                this_item.owner.add_assists(assists=3)
 
         self.set_block(6, self.player.health)
         self.answer = True
