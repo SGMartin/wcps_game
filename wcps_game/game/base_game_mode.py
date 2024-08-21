@@ -69,7 +69,7 @@ class BaseGameMode(ABC):
     async def on_flag_capture(self, player, flag_status):
         pass
 
-    def get_spawn_id(self) -> int:
+    async def get_spawn_id(self) -> int:
         return 0
 
     async def on_damage(self, damage_handler: "GameProcessHandler"):

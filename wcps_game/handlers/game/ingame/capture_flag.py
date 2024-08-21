@@ -34,5 +34,8 @@ class CaptureFlagHandler(GameProcessHandler):
         self.set_block(3, self.room.flags[captured_flag_id])
         self.answer = True
 
-        # TODO: call OnFlagCaptured here
         await self.player.add_flags()
+        await self.room.current_game_mode.on_flag_capture(
+            player=self.player,
+            flag_status=self.room.flags[captured_flag_id]
+            )

@@ -33,11 +33,10 @@ class CollisionDamageHandler(GameProcessHandler):
             if self.player.health < 0:
                 self.player.health = 0
                 await self.player.add_deaths()
+                await self.room.current_game_mode.on_player_suicide(player=self.player)
 
                 self.set_block(2, self.player.id)
                 self.sub_packet = PacketList.DO_SUICIDE
-
-                # TODO: call OnPlayerSuicide here
 
             self.set_block(7, damage_sustained)
             self.set_block(8, self.player.health)

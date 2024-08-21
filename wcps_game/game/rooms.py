@@ -17,6 +17,7 @@ from wcps_game.game.player import Player
 from wcps_game.game.ground_item import GroundItem
 
 from wcps_game.game.game_modes.ffa import FFA
+from wcps_game.game.game_modes.tdm import TDM
 
 from wcps_game.packets.packet_list import PacketList
 from wcps_game.packets.packet_factory import PacketFactory
@@ -417,7 +418,7 @@ class Room:
         # Initialize the game modes
         game_modes = {
             gconstants.GameMode.FFA: FFA,
-            gconstants.GameMode.TDM: FFA  # test distances
+            gconstants.GameMode.TDM: TDM
         }
 
         self.ground_items = {}  # Empty the ground items dictionary
