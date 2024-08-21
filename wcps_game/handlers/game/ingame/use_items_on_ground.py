@@ -30,7 +30,8 @@ class UseGroundItemHandler(GameProcessHandler):
         self_team = self.player.team == this_item.owner.team
 
         # No FF for flash or land but it should be possible lol >)
-        if self_target or self_team and this_item.code in ["DU01", "DS05"]:
+        if (self_target or self_team) and this_item.code in ["DU02", "DS05"]:
+            print("NOPE")
             return
 
         if this_item.code == "DU01" and not self_target and self_team:
@@ -50,8 +51,9 @@ class UseGroundItemHandler(GameProcessHandler):
             if self.player.health >= 1000:
                 self.player.health = 1000
 
-            if self.player != this_item.owner:
+            if not self_target and self_team:
                 this_item.owner.add_assists(assists=3)
 
+        print("ANSWERED")
         self.set_block(6, self.player.health)
         self.answer = True
