@@ -53,6 +53,5 @@ class UseGroundItemHandler(GameProcessHandler):
             if not self_target and self_team:
                 this_item.owner.add_assists(assists=3)
 
-        print("ANSWERED")
         self.set_block(6, self.player.health)
         self.answer = True
