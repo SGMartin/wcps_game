@@ -26,7 +26,7 @@ class CaptureFlagHandler(GameProcessHandler):
         old_flag_team = self.room.flags[captured_flag_id]
 
         if old_flag_team == -1:
-            self.room.flags[captured_flag_id] = self.player.Team
+            self.room.flags[captured_flag_id] = self.player.team
         else:
             self.room.flags[captured_flag_id] = -1
 
