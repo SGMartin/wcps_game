@@ -25,6 +25,7 @@ from wcps_game.handlers.game.ingame.place_items_on_ground import PlaceGroundItem
 from wcps_game.handlers.game.ingame.use_items_on_ground import UseGroundItemHandler
 from wcps_game.handlers.game.ingame.collision_damage import CollisionDamageHandler
 from wcps_game.handlers.game.ingame.capture_flag import CaptureFlagHandler
+from wcps_game.handlers.game.ingame.artillery import CallArtilleryHandler
 
 # from wcps_game.handlers.game.ingame.test import TestHandler
 
@@ -54,7 +55,8 @@ HANDLER_MAP = {
     PacketList.DO_ITEM_DROP: PlaceGroundItemHandler,
     PacketList.DO_ITEM_PICKUP: UseGroundItemHandler,
     PacketList.DO_CRASH_OBJECT: CollisionDamageHandler,
-    PacketList.DO_CONQUEST_CAMP: CaptureFlagHandler
+    PacketList.DO_CONQUEST_CAMP: CaptureFlagHandler,
+    PacketList.DO_FIRE_ARTILLERY: CallArtilleryHandler
 
 }
 

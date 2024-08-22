@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import logging
 
 from typing import TYPE_CHECKING
 
@@ -7,6 +8,7 @@ if TYPE_CHECKING:
     from wcps_game.game.player import Player
 
 from wcps_game.game.constants import (
+    Classes,
     GameMode,
     HitboxBone,
     DamageTypes,
@@ -91,7 +93,7 @@ class BaseGameMode(ABC):
             return
 
         if not is_player:
-            print("OBJECT DAMAGE NOT IMPLEMENTED YET")
+            await self.on_vehicle_damage(handler=damage_handler, attacker=attacker, victim=victim)
             return
 
         # Validate the weapon
@@ -145,6 +147,42 @@ class BaseGameMode(ABC):
             damage=damage_taken,
             is_headshot=is_headshot,
         )
+
+    async def on_vehicle_damage(self, handler: "GameProcessHandler", attacker: "Player", victim: "Player"):
+        vehicle_code = handler.get_block(22)
+
+        # Temporarily code artillery this way. When vehicles are up and running, remember
+        # that it's technically a veh. too
+        if vehicle_code == "FG02":
+            if not attacker.user.inventory.has_item("DX01"):
+                return
+            if not attacker.branch == Classes.SNIPER:
+                return
+
+            if not self.can_be_damaged(attacker=attacker, victim=victim):
+                return
+
+            damage_radius = int(handler.get_block(11))
+            # TODO: CHANGE THIS ONCE WE HAVE THE VEH TABLE FOR VEH WEAPONS
+            # damage_taken = self.damage_calculator(
+            #     weapon="FG02",
+            #     damage_type=DamageTypes.INFANTRY,
+            #     hitbox=None,
+            #     distance=0,  # TODO
+            #     radius=damage_radius
+            # )
+
+            await self.damage_player(
+                handler=handler,
+                attacker=attacker,
+                victim=victim,
+                damage=1500,
+                is_headshot=False
+            )
+
+        else:
+            logging.info("Vehicle damaged is not yet implemented")
+
 
     async def damage_player(
         self,
