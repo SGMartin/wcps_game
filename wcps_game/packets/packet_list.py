@@ -36,6 +36,7 @@ class PacketList:
     DO_GAME_USER_LIST = 0x7500
 
     # Game packets
+    DO_VEHICLE_LEAVE_WORLD = 0x7511  # Named by DarkRaptor. Present in older sources. Maybe it moved
     DO_GAME_PROCESS = 0x7530
     DO_GAME_UPDATE_CLOCK = 0x7540
     DO_GAME_SCORE = 0x7550
@@ -73,3 +74,6 @@ class PacketList:
     DO_CONQUEST_CAMP = 0x9C
     DO_SUICIDE = 0x9D
     DO_FIRE_ARTILLERY = 0x9F
+    DO_OBJECT_RIDE = 0xC8
+    DO_OBJECT_CHANGE_SEAT = 0xC9
+    DO_OBJECT_ALIGHT = 0xCA

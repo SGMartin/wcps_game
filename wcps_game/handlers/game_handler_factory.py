@@ -26,6 +26,9 @@ from wcps_game.handlers.game.ingame.use_items_on_ground import UseGroundItemHand
 from wcps_game.handlers.game.ingame.collision_damage import CollisionDamageHandler
 from wcps_game.handlers.game.ingame.capture_flag import CaptureFlagHandler
 from wcps_game.handlers.game.ingame.artillery import CallArtilleryHandler
+from wcps_game.handlers.game.ingame.vehicle_join import JoinVehicleHandler
+from wcps_game.handlers.game.ingame.vehicle_leave import LeaveVehicleHandler
+from wcps_game.handlers.game.ingame.vehicle_switch_seat import SwitchVehicleSeatHandler
 
 # from wcps_game.handlers.game.ingame.test import TestHandler
 
@@ -56,7 +59,10 @@ HANDLER_MAP = {
     PacketList.DO_ITEM_PICKUP: UseGroundItemHandler,
     PacketList.DO_CRASH_OBJECT: CollisionDamageHandler,
     PacketList.DO_CONQUEST_CAMP: CaptureFlagHandler,
-    PacketList.DO_FIRE_ARTILLERY: CallArtilleryHandler
+    PacketList.DO_FIRE_ARTILLERY: CallArtilleryHandler,
+    PacketList.DO_OBJECT_RIDE: JoinVehicleHandler,
+    PacketList.DO_OBJECT_ALIGHT: LeaveVehicleHandler,
+    PacketList.DO_OBJECT_CHANGE_SEAT: SwitchVehicleSeatHandler
 
 }
 

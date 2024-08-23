@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from wcps_game.game.game_server import User
+
 import wcps_game.game.constants as gconstants
 
 
@@ -67,12 +68,20 @@ class Player:
         self.branch = this_branch
         self.vehicle_id = -1
         self.vehicle_seat = -1
-        self.items_planted = 0  # TODO: CHECK this. Maybe these do not reset on spawn?
+        self.items_planted = 0
 
         if self.user.room.game_mode == gconstants.GameMode.EXPLOSIVE:
             self.can_spawn = False
 
         self.spawn_protection_ticks = 3000
+
+    def enter_vehicle(self, vehicle_id: int, seat_id: int):
+        self.vehicle_id = vehicle_id
+        self.vehicle_seat = seat_id
+
+    def leave_vehicle(self):
+        self.vehicle_id = -1
+        self.vehicle_seat = -1
 
     async def add_kills(self, headshot: bool = False):
         self.kills += 1

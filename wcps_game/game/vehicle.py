@@ -20,6 +20,13 @@ class Vehicle():
         self.X = 0
         self.Y = 0
         self.Z = 0
+        # Euler
+        self.angular_X = 0
+        self.angular_Y = 0
+        self.angular_Z = 0
+        # WarRock client stuff. It changes when a player leaves the veh. and we update the
+        # position and euler
+        self.update_string = ""
 
         self._vehicle_lock = asyncio.Lock()
 
@@ -37,6 +44,11 @@ class Vehicle():
         self.Y = coords["Y"]
         self.Z = coords["Z"]
 
+    def update_angles(self, euler: dict):
+        self.angular_X = euler["X"]
+        self.angular_Y = euler["Y"]
+        self.angular_Z = euler["Z"]
+
     async def join_vehicle(self, new_pilot) -> bool:
         async with self._vehicle_lock:
             if new_pilot.team != self.team and self.team != Team.NONE:
@@ -48,6 +60,43 @@ class Vehicle():
                     self.set_team(new_team=new_pilot.team)
                     return True
 
+            return False
+
+    def get_player_seat(self, player_id: int):
+        for seat_id, seat in self.seats.items():
+            if seat.player_id == player_id:
+                return seat_id
+        return None
+
+    async def switch_seat(self, player, target_seat_id: int) -> bool:
+        async with self._vehicle_lock:
+            # Find the current seat of the player
+            current_seat_id = self.get_player_seat(player.id)
+            if current_seat_id is None:
+                # Player is not in any seat
+                return False
+
+            # Check if the target seat exists and is empty
+            if target_seat_id not in self.seats:
+                return False
+
+            target_seat = self.seats[target_seat_id]
+            current_seat = self.seats[current_seat_id]
+
+            if not target_seat.can_seat():
+                # Target seat is not empty
+                return False
+
+            # Remove player from the current seat
+            await current_seat.remove_player(player)
+
+            # Add player to the target seat
+            success = await target_seat.add_player(player)
+            if success:
+                return True
+
+            # Re-add player to the original seat if switching failed
+            await current_seat.add_player(player)
             return False
 
 
@@ -123,6 +172,6 @@ class VehicleSeat():
 
     async def remove_player(self, player):
         async with self._seat_lock:
-            if self.player is not None:
+            if self.player_id == player.id:
                 self.player = None
                 self.player_id = -1
