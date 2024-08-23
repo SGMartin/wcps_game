@@ -1,5 +1,5 @@
 import asyncio
-
+import logging
 from wcps_game.game.constants import Team, VehicleClass
 
 
@@ -65,18 +65,23 @@ class Vehicle():
 
     async def leave_vehicle(self, old_pilot) -> bool:
         async with self._vehicle_lock:
+            # Get the seat the player is currently occupying
             seat = self.seats.get(old_pilot.vehicle_seat)
 
             if seat is not None:
+                # Remove the player from the seat
                 await seat.remove_player(old_pilot)
 
             # Check if the vehicle is now empty
-            for seat in self.seats.values():
-                if seat.player is not None:
-                    self.team == Team.NONE
-                    print("VEHICLE IS NOW EMPTY AND TEAMLESS")
-                    return
+            vehicle_empty = all(seat.player is None for seat in self.seats.values())
 
+            if vehicle_empty:
+                # If all seats are empty, set the team to NONE
+                self.team = Team.NONE
+                logging.info("VEHICLE IS NOW EMPTY AND TEAMLESS")
+                return True
+        
+            return False
 
     def get_player_seat(self, player_id: int):
         for seat_id, seat in self.seats.items():

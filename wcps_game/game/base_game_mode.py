@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import asyncio
 import logging
 
 from typing import TYPE_CHECKING
@@ -15,8 +16,10 @@ from wcps_game.game.constants import (
     DamageMultipliers,
     DamageDistances,
     DefaultWeapon,
+    Team
 )
 from wcps_game.client.items import ItemDatabase
+from wcps_game.handlers.game_handler_factory import get_subhandler_for_packet
 from wcps_game.packets.packet_list import PacketList
 
 
@@ -92,8 +95,9 @@ class BaseGameMode(ABC):
         if victim is None:
             return
 
+        # Artillery or vehicle attack
         if not is_player:
-            await self.on_vehicle_damage(handler=damage_handler, attacker=attacker, victim=victim)
+            await self.on_object_attack(handler=damage_handler, attacker=attacker, victim=victim)
             return
 
         # Validate the weapon
@@ -147,42 +151,96 @@ class BaseGameMode(ABC):
             damage=damage_taken,
             is_headshot=is_headshot,
         )
+    
+    async def on_object_attack(self, handler: "GameProcessHandler"):
+        pass
 
-    async def on_vehicle_damage(self, handler: "GameProcessHandler", attacker: "Player", victim: "Player"):
-        vehicle_code = handler.get_block(22)
+    async def on_object_damage(self, handler: "GameProcessHandler"):
 
-        # Temporarily code artillery this way. When vehicles are up and running, remember
-        # that it's technically a veh. too
-        if vehicle_code == "FG02":
-            if not attacker.user.inventory.has_item("DX01"):
+        # it may be another vehicle
+        is_player_attacker = bool(int(handler.get_block(2)))
+        # id of the attacked object/vehicle
+        object_id = int(handler.get_block(3))
+
+        # slot_id = int(handler.get_block(4)) Unused, we use our own data
+        is_sub_weapon = bool(int(handler.get_block(9)))
+        # is_radius_weapon = bool(int(handler.get_block(10))) Unused
+        radius = int(handler.get_block(11))
+
+        weapon_code = handler.get_block(22)
+
+        attacker = handler.player
+        vehicle = handler.room.vehicles.get(object_id)
+
+        if not vehicle:
+            return
+
+        if not self.can_be_damaged(attacker=attacker, victim=vehicle):
+            return
+
+        # Define the vehicle type of the victim
+        damage_taken = 0
+        vehicle_class = vehicle.type
+
+        # Player using weapon to attack vehicle
+        if is_player_attacker:
+            if not attacker.user.inventory.has_item(weapon_code) and weapon_code not in DefaultWeapon.DEFAULTS:
                 return
-            if not attacker.branch == Classes.SNIPER:
-                return
+            damage_taken = self.damage_calculator(
+                weapon=weapon_code,
+                damage_type=vehicle_class,
+                hitbox=0,  # Vehicles do not have a hitbox AFAIK
+                distance=0,  # TODO
+                radius=radius
+                )
+        else:  # Vehicle - vehicle combat
+            if attacker.vehicle_id == -1:  # artillery strike
 
-            if not self.can_be_damaged(attacker=attacker, victim=victim):
-                return
+                if not weapon_code == "FG02":  # Some other environment damage
+                    print(f"UNRECOGNIZED ENVIRONMENT DAMAGE {weapon_code}")
+                    return
+                # Artillery requires binoculars
+                if not attacker.user.inventory.has_item("DX01"):
+                    return
+                # And sniper class
+                if not attacker.branch == Classes.SNIPER:
+                    return
 
-            damage_radius = int(handler.get_block(11))
-            # TODO: CHANGE THIS ONCE WE HAVE THE VEH TABLE FOR VEH WEAPONS
-            # damage_taken = self.damage_calculator(
-            #     weapon="FG02",
-            #     damage_type=DamageTypes.INFANTRY,
-            #     hitbox=None,
-            #     distance=0,  # TODO
-            #     radius=damage_radius
-            # )
+                damage_taken = self.damage_calculator(
+                    weapon="FG02",
+                    damage_type=vehicle_class,
+                    hitbox=None,
+                    distance=0,  # TODO
+                    radius=radius
+                )
+            else:
+                attacker_vehicle = handler.room.vehicles.get(attacker.vehicle_id)
 
-            await self.damage_player(
-                handler=handler,
-                attacker=attacker,
-                victim=victim,
-                damage=1500,
-                is_headshot=False
+                if not attacker_vehicle.code == weapon_code:
+                    print(f"Suspicious missmatch in vehicle codes {attacker_vehicle.code}-{weapon_code}")
+                    return
+
+                # we need the actual weapon code of the vehicle in this case
+                # Ignore the reported vehicle seat, we stored our own anyway
+                if is_sub_weapon:
+                    weapon_code = attacker_vehicle.seats[attacker.vehicle_seat].sub_weapon_code
+                else:
+                    weapon_code = attacker_vehicle.seats[attacker.vehicle_seat].main_weapon_code
+
+                damage_taken = self.damage_calculator(
+                    weapon=weapon_code,
+                    damage_type=vehicle_class,
+                    hitbox=None,
+                    distance=0,  # TODO
+                    radius=radius
+                )
+
+        await self.damage_vehicle(
+            handler=handler,
+            attacker=attacker,
+            vehicle=vehicle,
+            damage_taken=damage_taken
             )
-
-        else:
-            logging.info("Vehicle damaged is not yet implemented")
-
 
     async def damage_player(
         self,
@@ -213,16 +271,57 @@ class BaseGameMode(ABC):
         handler.set_block(13, current_victim_health)
         handler.answer = True
 
+    async def damage_vehicle(self, handler: "GameProcessHandler", attacker, vehicle, damage_taken):
+
+        vehicle.health -= damage_taken
+
+        # Vehicle alive
+        if vehicle.health > 0:
+            handler.sub_packet = PacketList.DO_DAMAGED_UNIT
+            handler.set_block(12, vehicle.health)
+            handler.set_block(13, damage_taken)
+
+            handler.answer = True
+        else:
+
+            if vehicle.team != Team.NONE:  # Someone was in the vehicle. We have to kill them
+
+                for seat in vehicle.seats.values():
+                    if seat.player is not None:
+
+                        # Maybe dead from AW50F and failed to update?
+                        if seat.player.health <= 0:
+                            continue
+
+                        death_handler = get_subhandler_for_packet(
+                            subpacket_id=PacketList.DO_PLAYER_DIE
+                            )
+
+                        # Create a new coroutine to process this player death
+                        asyncio.create_task(
+                            death_handler.process(seat.player.user, in_packet=handler.packet)
+                            )
+
+                        await seat.player.add_deaths()
+                        await attacker.add_kills()
+                        await self.on_death(killer=attacker, victim=seat.player)
+
+            # Finally, destroy the vehicle
+            handler.sub_packet = PacketList.DO_UNIT_DIE
+            handler.set_block(12, vehicle.health)
+            handler.set_block(13, damage_taken)
+            handler.answer = True
+
     def can_be_damaged(self, attacker: "Player", victim: "Player"):
         can_be_damaged = False
 
         if victim.spawn_protection_ticks > 0:
             return can_be_damaged
 
-        if not attacker.alive or attacker.health <= 0:
+        if attacker.health <= 0:
             return can_be_damaged
 
-        if not victim.alive or victim.health <= 0:
+        if victim.health <= 0:
             return can_be_damaged
 
         if attacker.team == victim.team and self.room.game_mode != GameMode.FFA:
@@ -235,21 +334,22 @@ class BaseGameMode(ABC):
         self, weapon: str, damage_type: int, hitbox: int, distance: int, radius: int
     ):
         item_database = ItemDatabase()
+        is_vehicle_weapon = weapon[0] == "F"  # items settings in items-bin defines this
 
         damage_taken = 0
 
         # This is the raw power of the weapon
-        weapon_power = item_database.get_weapon_power(code=weapon)
+        weapon_power = item_database.get_weapon_power(code=weapon, is_vehicle=is_vehicle_weapon)
         # A list of coefs. for personal/surface/air/ship etc.
         damage_type_coefs = item_database.get_weapon_damage_class(
-            code=weapon, damage_class=damage_type
+            code=weapon, damage_class=damage_type, is_vehicle=is_vehicle_weapon
         )
         # Distance can only be short / mid / long
         damage_type = (
             damage_type_coefs[DamageDistances.SHORT] / 100
         )  # TODO: DISTANCE HERE
 
-        if radius > 0:  # Then it is a radius damage
+        if radius > 0 or not hitbox:  # Then it is a radius damage
             radius_coef = radius / 100
             damage_taken = weapon_power * radius_coef * damage_type
         else:

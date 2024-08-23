@@ -40,6 +40,7 @@ class PacketHandler(abc.ABC):
 class GameProcessHandler(abc.ABC):
     def __init__(self):
 
+        # A reference of the original packet
         self.packet = None
         self.error_code = 1
         self.lock = asyncio.Lock()
@@ -58,7 +59,7 @@ class GameProcessHandler(abc.ABC):
         self.self_target = False
         # Are we sending map data
         self.map_data = False
-        # The full packet
+        # The full packet for processing
         self.blocks = []
 
     @abc.abstractmethod
