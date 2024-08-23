@@ -44,8 +44,8 @@ class LeaveVehicleHandler(GameProcessHandler):
         target_vehicle.seats[self.player.id].sub_weapon_magazine = sub_weapon_current_magazine
 
         # Vacant seat
+        await target_vehicle.leave_vehicle(self.player)
         self.player.leave_vehicle()
-        await target_vehicle.seats[this_seat.id].remove_player(self.player)
 
         self.set_block(2, target_vehicle.id)
         self.set_block(3, this_seat.id)

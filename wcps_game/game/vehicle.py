@@ -10,6 +10,7 @@ class Vehicle():
         self.seats = {}
         self.code = code
         self.max_health = self.health = health
+        self.spawn_protection_ticks = 0
 
         # The ID of the vehicle (set by map)
         self.id = None
@@ -61,6 +62,21 @@ class Vehicle():
                     return True
 
             return False
+
+    async def leave_vehicle(self, old_pilot) -> bool:
+        async with self._vehicle_lock:
+            seat = self.seats.get(old_pilot.vehicle_seat)
+
+            if seat is not None:
+                await seat.remove_player(old_pilot)
+
+            # Check if the vehicle is now empty
+            for seat in self.seats.values():
+                if seat.player is not None:
+                    self.team == Team.NONE
+                    print("VEHICLE IS NOW EMPTY AND TEAMLESS")
+                    return
+
 
     def get_player_seat(self, player_id: int):
         for seat_id, seat in self.seats.items():
