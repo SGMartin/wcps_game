@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 from wcps_core.constants import ErrorCodes as corerr
 
 from wcps_game.client.maps import MapDatabase
+from wcps_game.client.vehicle_catalogue import VehicleCatalogue
 from wcps_game.game import constants as gconstants
 from wcps_game.game.player import Player
 from wcps_game.game.ground_item import GroundItem
@@ -79,6 +80,7 @@ class Room:
         self.ground_items = {}
         self.flags = {}
         self.spawn_flags = {}
+        self.vehicles = {}
 
         # Set a default map for each mode
         map_defaults = {
@@ -436,6 +438,10 @@ class Room:
         self.flags[self.spawn_flags[gconstants.Team.DERBARAN]] = gconstants.Team.DERBARAN
         self.flags[self.spawn_flags[gconstants.Team.NIU]] = gconstants.Team.NIU
 
+        # Populate the vehicle dictionary if needed
+        vehicle_catalogue = VehicleCatalogue()
+        self.vehicles = vehicle_catalogue.get_vehicles_for_map(map_id=self.current_map)
+
         # Initialize game mode
         self.current_game_mode = game_modes[self.game_mode]()
         self.current_game_mode.initialize(self)
@@ -462,11 +468,12 @@ class Room:
         await self.send(end_game_packet.build())
 
         # Flush flag status
-        self.flags = {}
-        self.spawn_flags = {}
+        self.flags.clear()
+        self.spawn_flags.clear()
         # Empty game items
-        self.ground_items = {}
-
+        self.ground_items.clear()
+        # Empty all of the vehicle references
+        self.vehicles.clear()
         # Reset game mode
         self.current_game_mode = None
         self.state = gconstants.RoomStatus.WAITING
