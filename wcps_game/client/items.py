@@ -24,6 +24,9 @@ class ItemDatabase:
             self._items = pd.read_csv(f"{self._runtime_dir}/items.csv")
             self._item_shop = pd.read_csv(f"{self._runtime_dir}/item_shop.csv")
             self._weapons = pd.read_csv(f"{self._runtime_dir}/weapon_damage.csv")
+            self._vehicle_weapons = pd.read_csv(
+                f"{self._runtime_dir}/vehicle_weapon_damage.csv"
+            )
             logging.info("Client data files loaded!")
         except FileNotFoundError as e:
             raise RuntimeError(
@@ -90,21 +93,40 @@ class ItemDatabase:
     def is_weapon(self, code: str) -> bool:
         return self._weapons["code"].eq(code).any()
 
-    def get_weapon_power(self, code: str) -> int:
-        return self._weapons.loc[self._weapons["code"] == code, "power"].values[0]
+    def get_weapon_power(self, code: str, is_vehicle: bool = False) -> int:
+        if not is_vehicle:
+            return self._weapons.loc[self._weapons["code"] == code, "power"].values[0]
+        else:
+            return self._vehicle_weapons.loc[
+                self._vehicle_weapons["code"] == code, "power"
+            ].values[0]
 
-    def get_weapon_damage_class(self, code: str, damage_class: DamageTypes):
+    def get_weapon_damage_class(
+        self, code: str, damage_class: DamageTypes, is_vehicle: bool = False
+    ):
+
         columns_to_look = {
             DamageTypes.INFANTRY: "personal",
             DamageTypes.GROUND: "surface",
             DamageTypes.AIRCRAFT: "air",
-            DamageTypes.SHIP: "ship"
+            DamageTypes.SHIP: "ship",
         }
+
         column_to_look = columns_to_look[damage_class]
 
-        if self.item_exists(code=code) and self.is_weapon(code=code):
-            damages = self._weapons.loc[self._weapons["code"] == code, column_to_look].values[0]
-            damages = [int(d) for d in damages.split(",")]
-            return damages
+        if not is_vehicle:
+            if self.item_exists(code=code) and self.is_weapon(code=code):
+                damages = self._weapons.loc[
+                    self._weapons["code"] == code, column_to_look
+                ].values[0]
+                damages = [int(d) for d in damages.split(",")]
+                return damages
         else:
-            return None
+            if not self._vehicle_weapons["code"].eq(code).any():
+                return None
+            else:
+                damages = self._vehicle_weapons.loc[
+                    self._vehicle_weapons["code"] == code, column_to_look
+                ].values[0]
+                damages = [int(d) for d in damages.split(",")]
+                return damages
