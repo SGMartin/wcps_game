@@ -83,5 +83,5 @@ class FFA(BaseGameMode):
     async def on_flag_capture(self, player, flag_status):
         raise NotImplementedError
 
-    async def on_player_suicide(self, player):
+    async def on_suicide(self, player):
         raise NotImplementedError
