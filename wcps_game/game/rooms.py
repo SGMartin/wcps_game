@@ -304,6 +304,16 @@ class Room:
 
             old_player = self.players[user.room_slot]
 
+            # Are we playing and is he in a vehicle?
+            if old_player.vehicle_id != -1:
+                this_vehicle = self.vehicles.get(old_player.vehicle_id)
+
+                if this_vehicle is not None:
+                    result = await this_vehicle.leave_vehicle(old_player)
+
+                    if not result:
+                        logging.error(f"Could not leave {this_vehicle.id} for {old_player.id}")
+
             # Release the slot and set the player room slot to 0
             self.players[user.room_slot] = None
             # Set the room to none and ask to update k/d as vanilla warrock did
