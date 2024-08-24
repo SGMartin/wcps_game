@@ -96,9 +96,12 @@ class Player:
         self.deaths += 1
         self.health = 0
         self.alive = False
-        self.vehicle_id = -1
-        self.vehicle_seat - 1
         await self.user.stats.update_deaths(deaths=1)
+
+    # TODO: We can reset more stuff here. Called on confirm death
+    async def reset_vehicle_status(self):
+        self.vehicle_id = -1
+        self.vehicle_seat = -1
 
     async def suicide(self):
         self.points -= 6

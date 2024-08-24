@@ -15,7 +15,6 @@ class LeaveVehicleHandler(GameProcessHandler):
 
         # NOTE: this packet is also sent when you are killed in a vehicle (think AW50F)
         # SO do not return on player status
-
         if self.player.vehicle_id == -1 or self.player.vehicle_seat == -1:
             return
 

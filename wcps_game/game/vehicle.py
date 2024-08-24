@@ -80,7 +80,7 @@ class Vehicle():
                 self.team = Team.NONE
                 logging.info("VEHICLE IS NOW EMPTY AND TEAMLESS")
                 return True
-        
+
             return False
 
     def get_player_seat(self, player_id: int):
