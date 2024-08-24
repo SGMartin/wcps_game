@@ -33,6 +33,7 @@ from wcps_game.handlers.game.ingame.vehicle_switch_seat import SwitchVehicleSeat
 from wcps_game.handlers.game.ingame.suicide import SuicideHandler
 from wcps_game.handlers.game.ingame.player_death import PlayerDeathHandler
 from wcps_game.handlers.game.ingame.confirm_death import ConfirmDeathHandler
+from wcps_game.handlers.game.ingame.vehicle_repair import RepairVehicleHandler
 
 
 # from wcps_game.handlers.game.ingame.test import TestHandler
@@ -58,6 +59,7 @@ HANDLER_MAP = {
     PacketList.DO_DAMAGED_PLAYER: PlayerDamageHandler,
     PacketList.DO_DAMAGED_UNIT: ObjectDamageHandler,
     PacketList.DO_HEALING_PLAYER: HealPlayerHandler,
+    PacketList.DO_HEALING_UNIT: RepairVehicleHandler,
     PacketList.DO_CHANGE_WEAPONS: SwitchWeaponHandler,
     PacketList.DO_BACK_TO_LOBBY: BackToLobbyHandler,
     PacketList.DO_RELOAD_PLAYER: AmmoRechargeHandler,

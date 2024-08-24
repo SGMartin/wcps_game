@@ -116,8 +116,9 @@ class RoomPlayers(OutPacket):
             self.append(1)  # Unknown
             self.append(0)  # Unknown
             self.append(910)  # Unknown. The client send this on request time. Client ver???
+            # 910 (Always)? Send From Login (910 G1, 410 NX , 300 KR , 100 PH, INVALID TW)
             self.append(player.user.premium)
-            self.append(-1)  # Unknown
+            self.append(-1)  # Unknown? Possible smile badge
             self.append(player.user.stats.kills)
             self.append(player.user.stats.deaths)
             self.append(random.randint(0, 149))  # random [0, 149] unknown
