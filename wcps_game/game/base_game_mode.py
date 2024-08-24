@@ -152,8 +152,50 @@ class BaseGameMode(ABC):
             is_headshot=is_headshot,
         )
 
-    async def on_object_attack(self, handler: "GameProcessHandler"):
-        pass
+    async def on_object_attack(self, handler: "GameProcessHandler", attacker, victim):
+        vehicle_code = handler.get_block(22)
+
+        # We could probably get the vehicle id from the packet, but don't trust the client
+        attacker_vehicle = handler.room.vehicles.get(attacker.vehicle_id)
+
+        if attacker_vehicle is None or attacker_vehicle.code != vehicle_code:
+            return
+
+        # I could check vehicle health but what about rogue cannon projectiles?
+        if not self.can_be_damaged(attacker, victim):
+            return
+
+        is_sub_weapon = bool(int(handler.get_block(9)))
+
+        if is_sub_weapon:
+            weapon_code = attacker_vehicle.seats[attacker.vehicle_seat].sub_weapon_code
+        else:
+            weapon_code = attacker_vehicle.seats[attacker.vehicle_seat].main_weapon_code
+
+        # most vehicles use radius calc. even for machine guns but just in case handle everything
+        damage_taken = 0
+
+        # is_radius = bool(int(handler.get_block(10)))
+
+        # Vehicles do not use bones, but may set is_radius to FALSE. Use a default bone
+        radius = int(handler.get_block(11))
+        bone_id = HitboxBone.TORSOLIMBS
+
+        # If radius is 0, it will use the bone_id
+        damage_taken = self.damage_calculator(
+            weapon=weapon_code,
+            damage_type=DamageTypes.INFANTRY,
+            hitbox=bone_id,
+            distance=0,  # TODO
+            radius=radius
+        )
+        await self.damage_player(
+            handler=handler,
+            attacker=attacker,
+            victim=victim,
+            damage=damage_taken,
+            is_headshot=False  # TODO: Even if we do not display icon we should check this
+        )
 
     async def on_object_damage(self, handler: "GameProcessHandler"):
 
@@ -360,7 +402,6 @@ class BaseGameMode(ABC):
                 HitboxBone.TORSOLIMBS: DamageMultipliers.TORSOLIMBS,
                 HitboxBone.FEETHANDS: DamageMultipliers.FEETHANDS,
             }
-
             bone_coef = bone_multipliers[hitbox] / 100
             damage_taken = weapon_power * damage_type * bone_coef
 
