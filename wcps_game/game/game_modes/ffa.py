@@ -84,4 +84,4 @@ class FFA(BaseGameMode):
         raise NotImplementedError
 
     async def on_suicide(self, player):
-        raise NotImplementedError
+        pass
