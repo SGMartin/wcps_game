@@ -38,10 +38,10 @@ class LeaveVehicleHandler(GameProcessHandler):
             return
 
         # Update weapons
-        target_vehicle.seats[self.player.id].main_weapon_ammo = main_weapon_current_ammo
-        target_vehicle.seats[self.player.id].sub_weapon_ammo = sub_weapon_current_ammo
-        target_vehicle.seats[self.player.id].main_weapon_magazine = main_weapon_current_magazine
-        target_vehicle.seats[self.player.id].sub_weapon_magazine = sub_weapon_current_magazine
+        target_vehicle.seats[self.player.vehicle_seat].main_weapon_ammo = main_weapon_current_ammo
+        target_vehicle.seats[self.player.vehicle_seat].sub_weapon_ammo = sub_weapon_current_ammo
+        target_vehicle.seats[self.player.vehicle_seat].main_weapon_magazine = main_weapon_current_magazine
+        target_vehicle.seats[self.player.vehicle_seat].sub_weapon_magazine = sub_weapon_current_magazine
 
         # Vacant seat
         await target_vehicle.leave_vehicle(self.player)
