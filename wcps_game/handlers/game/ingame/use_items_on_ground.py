@@ -34,7 +34,7 @@ class UseGroundItemHandler(GameProcessHandler):
             return
 
         if this_item.code == "DU01" and not self_target and self_team:
-            this_item.owner.add_assists(assists=3)
+            await this_item.owner.add_assists(assists=3)
 
         if this_item.code == "DU02":  # land mine M14
             if self.player.health >= 500:
@@ -42,7 +42,7 @@ class UseGroundItemHandler(GameProcessHandler):
             else:
                 self.player.health = 200  # Land mines cannot kill you
 
-            this_item.owner.add_assists(assists=5)
+            await this_item.owner.add_assists(assists=5)
 
         if this_item.code == "DV01":  # Medic box
             self.player.health += 400
@@ -51,7 +51,7 @@ class UseGroundItemHandler(GameProcessHandler):
                 self.player.health = 1000
 
             if not self_target and self_team:
-                this_item.owner.add_assists(assists=3)
+                await this_item.owner.add_assists(assists=3)
 
         self.set_block(6, self.player.health)
         self.answer = True
