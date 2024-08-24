@@ -100,6 +100,10 @@ class Player:
         self.vehicle_seat - 1
         await self.user.stats.update_deaths(deaths=1)
 
+    async def suicide(self):
+        self.points -= 6
+        await self.add_deaths()
+
     async def add_assists(self, assists: int):
         self.assists += assists
         self.points = self.points + assists * 2

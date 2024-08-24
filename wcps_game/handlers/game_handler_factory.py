@@ -30,6 +30,7 @@ from wcps_game.handlers.game.ingame.artillery import CallArtilleryHandler
 from wcps_game.handlers.game.ingame.vehicle_join import JoinVehicleHandler
 from wcps_game.handlers.game.ingame.vehicle_leave import LeaveVehicleHandler
 from wcps_game.handlers.game.ingame.vehicle_switch_seat import SwitchVehicleSeatHandler
+from wcps_game.handlers.game.ingame.suicide import SuicideHandler
 
 # from wcps_game.handlers.game.ingame.test import TestHandler
 
@@ -64,7 +65,8 @@ HANDLER_MAP = {
     PacketList.DO_FIRE_ARTILLERY: CallArtilleryHandler,
     PacketList.DO_OBJECT_RIDE: JoinVehicleHandler,
     PacketList.DO_OBJECT_ALIGHT: LeaveVehicleHandler,
-    PacketList.DO_OBJECT_CHANGE_SEAT: SwitchVehicleSeatHandler
+    PacketList.DO_OBJECT_CHANGE_SEAT: SwitchVehicleSeatHandler,
+    PacketList.DO_SUICIDE: SuicideHandler
 
 }
 
