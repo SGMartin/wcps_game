@@ -19,8 +19,8 @@ from wcps_game.game.constants import (
     Team
 )
 from wcps_game.client.items import ItemDatabase
-from wcps_game.handlers.game_handler_factory import get_subhandler_for_packet
 from wcps_game.packets.packet_list import PacketList
+from wcps_game.packets.game_process import GameProcess
 
 
 class BaseGameMode(ABC):
@@ -151,7 +151,7 @@ class BaseGameMode(ABC):
             damage=damage_taken,
             is_headshot=is_headshot,
         )
-    
+
     async def on_object_attack(self, handler: "GameProcessHandler"):
         pass
 
@@ -283,8 +283,10 @@ class BaseGameMode(ABC):
 
             handler.answer = True
         else:
-
+            vehicle.health = 0
             if vehicle.team != Team.NONE:  # Someone was in the vehicle. We have to kill them
+                # avoid circular import
+                from wcps_game.handlers.game_handler_factory import get_subhandler_for_packet
 
                 for seat in vehicle.seats.values():
                     if seat.player is not None:
@@ -297,12 +299,11 @@ class BaseGameMode(ABC):
                             subpacket_id=PacketList.DO_PLAYER_DIE
                             )
 
-                        # Create a new coroutine to process this player death
-                        asyncio.create_task(
-                            death_handler.process(seat.player.user, in_packet=handler.packet)
+                        asyncio.create_task(death_handler.process(
+                            user=seat.player.user,
+                            in_packet=handler.packet
                             )
-
-                        await seat.player.add_deaths()
+                        )
                         await attacker.add_kills()
                         await self.on_death(killer=attacker, victim=seat.player)
 
