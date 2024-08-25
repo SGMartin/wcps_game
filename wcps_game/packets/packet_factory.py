@@ -30,6 +30,7 @@ from wcps_game.packets.scoreboard import ScoreBoard
 from wcps_game.packets.end_game import EndGame
 from wcps_game.packets.promotion import Promotion
 from wcps_game.packets.vehicle_spawn import VehicleSpawn
+from wcps_game.packets.manual_vehicle_explosion import ManualVehicleExplosion
 
 
 class PacketFactory:
@@ -68,7 +69,8 @@ class PacketFactory:
 
         # Adding a specific game packet I need to call here
         # TODO: Add player suicide and vehicle explosion packets here
-        PacketList.DO_UNIT_REGEN: VehicleSpawn
+        PacketList.DO_UNIT_REGEN: VehicleSpawn,
+        PacketList.DO_UNIT_DIE: ManualVehicleExplosion
     }
 
     @staticmethod

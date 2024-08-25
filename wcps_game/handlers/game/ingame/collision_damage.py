@@ -2,7 +2,7 @@ from wcps_game.game.constants import RoomStatus
 from wcps_game.handlers.packet_handler import GameProcessHandler
 from wcps_game.packets.packet_list import PacketList
 from wcps_game.packets.game_process import GameProcess
-from wcps_game.packets.manual_vehicle_explosion import ManualVehicleExplosion
+from wcps_game.packets.packet_factory import PacketFactory
 
 
 class CollisionDamageHandler(GameProcessHandler):
@@ -61,7 +61,8 @@ class CollisionDamageHandler(GameProcessHandler):
                     await self.room.send(GameProcess(packet_buffer).build())
 
                 # Finally, destroy the vehicle
-                vehicle_explosion = ManualVehicleExplosion(
+                vehicle_explosion = PacketFactory.create_packet(
+                    packet_id=PacketList.DO_UNIT_DIE,
                     room=self.room,
                     target_vehicle=target_vehicle
                     )

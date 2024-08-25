@@ -530,6 +530,7 @@ class Room:
                             await self.send(clock_packet.build())
                             await self.update_spawn_protection()
                             await self.update_vehicle_spawn()
+                            await self.update_vehicle_unused_time()
 
                             # Reset the last_tick_time
                             last_tick_time = current_time
@@ -568,3 +569,25 @@ class Room:
                 await self.send(spawn_packet.build())
             else:
                 vehicle.broken_time += 1000
+
+    async def update_vehicle_unused_time(self):
+        if len(self.vehicles) == 0:
+            return
+
+        for vehicle in self.vehicles.values():
+            if vehicle.health <= 0 or vehicle.team != gconstants.Team.NONE:
+                continue
+
+            if vehicle.update_string == "":  # Vehicle spawned but never used
+                continue
+
+            if vehicle.unused_time <= 600000:  # 10 minutes afk time. TODO: configure this
+                vehicle.unused_time += 1000
+            else:
+                vehicle.health = 0
+                vehicle_explosion = PacketFactory.create_packet(
+                    packet_id=PacketList.DO_UNIT_DIE,
+                    room=self,
+                    target_vehicle=vehicle
+                )
+                await self.send(vehicle_explosion.build())

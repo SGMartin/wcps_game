@@ -23,6 +23,7 @@ class Vehicle():
         self.spawn_X = self.X = 0
         self.spawn_Y = self.Y = 0
         self.spawn_Z = self.Z = 0
+        self.turret_angle = 0  # Unused?
 
         # Euler
         # TODO: get default euler from file
@@ -72,6 +73,7 @@ class Vehicle():
         self.X = self.spawn_X
         self.Y = self.spawn_Y
         self.Z = self.spawn_Z
+        self.turret_angle = 0
 
         # Empty seats and recharge weapons
         for seat in self.seats.values():
@@ -88,6 +90,7 @@ class Vehicle():
             for seat in self.seats.values():
                 if await seat.add_player(new_pilot):
                     self.set_team(new_team=new_pilot.team)
+                    self.unused_time = 0  # RESET the unused time since someone joined
                     return True
 
             return False

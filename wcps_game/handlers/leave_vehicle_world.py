@@ -1,3 +1,4 @@
+import logging
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -41,7 +42,7 @@ class LeaveVehicleHandler(PacketHandler):
         target_vehicle = user.room.vehicles.get(vehicle_id)
 
         if target_vehicle is None:
-            print(f"Failed to get coords for vehicle {target_vehicle}")
+            logging.error(f"Failed to get coords for vehicle {target_vehicle}")
 
         target_vehicle.update_position({"X": coord_X, "Y": coord_Y, "Z": coord_Z})
         target_vehicle.update_angles({"X": angle_X, "Y": angle_Y, "Z": angle_Z})
