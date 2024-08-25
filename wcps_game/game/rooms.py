@@ -529,6 +529,7 @@ class Room:
                             )
                             await self.send(clock_packet.build())
                             await self.update_spawn_protection()
+                            await self.update_vehicle_spawn()
 
                             # Reset the last_tick_time
                             last_tick_time = current_time
@@ -548,3 +549,22 @@ class Room:
 
             if player.spawn_protection_ticks < 0:
                 player.spawn_protection_ticks = 0
+
+    async def update_vehicle_spawn(self):
+        if len(self.vehicles) == 0:
+            return
+        for vehicle in self.vehicles.values():
+            if vehicle.health > 0:
+                continue
+
+            # TODO: spawned vehicles should be protected by spawn protection?
+            if vehicle.broken_time >= vehicle.spawn_time:
+                await vehicle.reset()
+                spawn_packet = PacketFactory.create_packet(
+                    packet_id=PacketList.DO_UNIT_REGEN,
+                    room=self,
+                    target_vehicle=vehicle
+                )
+                await self.send(spawn_packet.build())
+            else:
+                vehicle.broken_time += 1000

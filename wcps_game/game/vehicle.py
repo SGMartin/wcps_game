@@ -11,6 +11,8 @@ class Vehicle():
         self.code = code
         self.max_health = self.health = health
         self.spawn_protection_ticks = 0
+        self.broken_time = 0  # Keep track of how much time has passed since the vehicle broke
+        self.unused_time = 0  # Counter to keep track of unused time for destroy/spawn cycle
 
         # The ID of the vehicle (set by map)
         self.id = None
@@ -18,10 +20,12 @@ class Vehicle():
         self.team = Team.NONE
 
         # Coordinates for the vehicle position
-        self.X = 0
-        self.Y = 0
-        self.Z = 0
+        self.spawn_X = self.X = 0
+        self.spawn_Y = self.Y = 0
+        self.spawn_Z = self.Z = 0
+
         # Euler
+        # TODO: get default euler from file
         self.angular_X = 0
         self.angular_Y = 0
         self.angular_Z = 0
@@ -40,6 +44,11 @@ class Vehicle():
     def set_spawn_time(self, spawn_time: int):
         self.spawn_time = spawn_time
 
+    def set_default_position(self, coords: dict):
+        self.spawn_X = coords["X"]
+        self.spawn_Y = coords["Y"]
+        self.spawn_Z = coords["Z"]
+
     def update_position(self, coords: dict):
         self.X = coords["X"]
         self.Y = coords["Y"]
@@ -49,6 +58,26 @@ class Vehicle():
         self.angular_X = euler["X"]
         self.angular_Y = euler["Y"]
         self.angular_Z = euler["Z"]
+
+    async def reset(self):
+        self.health = self.max_health
+
+        self.team = Team.NONE
+        self.broken_time = 0
+        self.unused_time = 0
+
+        self.update_string = ""
+
+        # TODO: euler to default also
+        self.X = self.spawn_X
+        self.Y = self.spawn_Y
+        self.Z = self.spawn_Z
+
+        # Empty seats and recharge weapons
+        for seat in self.seats.values():
+            seat.rechage_weapons()
+            if seat.player is not None:
+                await seat.remove_player(seat.player)
 
     async def join_vehicle(self, new_pilot) -> bool:
         async with self._vehicle_lock:

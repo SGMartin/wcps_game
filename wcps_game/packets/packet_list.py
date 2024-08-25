@@ -67,6 +67,7 @@ class PacketList:
     DO_DAMAGED_UNIT = 0x68
     DO_RELOAD_PLAYER = 0x69
     DO_PLAYER_REGEN = 0x96
+    DO_UNIT_REGEN = 0x97
     DO_PLAYER_DIE = 0x98
     DO_UNIT_DIE = 0x99
     DO_PLAYER_DENY = 0x9A

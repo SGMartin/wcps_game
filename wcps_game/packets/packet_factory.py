@@ -29,6 +29,7 @@ from wcps_game.packets.game_clock import GameUpdateClock
 from wcps_game.packets.scoreboard import ScoreBoard
 from wcps_game.packets.end_game import EndGame
 from wcps_game.packets.promotion import Promotion
+from wcps_game.packets.vehicle_spawn import VehicleSpawn
 
 
 class PacketFactory:
@@ -63,7 +64,11 @@ class PacketFactory:
         PacketList.DO_GAME_UPDATE_CLOCK: GameUpdateClock,
         PacketList.DO_GAME_SCORE: ScoreBoard,
         PacketList.DO_GAME_RESULT: EndGame,
-        PacketList.DO_PROMOTION_OLD: Promotion
+        PacketList.DO_PROMOTION_OLD: Promotion,
+
+        # Adding a specific game packet I need to call here
+        # TODO: Add player suicide and vehicle explosion packets here
+        PacketList.DO_UNIT_REGEN: VehicleSpawn
     }
 
     @staticmethod

@@ -123,7 +123,7 @@ class VehicleCatalogue:
                     )
                     x, y, z = 0.0, 0.0, 0.0
 
-                vehicle.update_position({"X": x, "Y": y, "Z": z})
+                vehicle.set_default_position({"X": x, "Y": y, "Z": z})
                 vehicle.set_spawn_time(row["spawn_interval"])
 
                 # Store the vehicle in the dictionary with its map ID
