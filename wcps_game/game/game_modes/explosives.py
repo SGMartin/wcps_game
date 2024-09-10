@@ -34,7 +34,7 @@ class Explosive(BaseGameMode):
         self.alive_players = {gconstants.Team.DERBARAN: 0, gconstants.Team.NIU: 0}
 
     async def initialize(self, room: "Room"):
-        super().initialize(room)
+        await super().initialize(room)
 
         self.rounds_limit = room.rounds
         self.initialized = True

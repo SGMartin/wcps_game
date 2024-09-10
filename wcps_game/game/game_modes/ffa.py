@@ -26,7 +26,7 @@ class FFA(BaseGameMode):
         self._spawn_lock = asyncio.Lock()
 
     async def initialize(self, room: "Room"):
-        super().initialize(room)
+        await super().initialize(room)
 
         self.max_kills = 10 + (room.tickets_setting * 5)
         self.room.down_tick = 3600000  # TODO: this should be configurable

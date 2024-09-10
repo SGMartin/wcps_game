@@ -21,7 +21,7 @@ class TDM(BaseGameMode):
         self._spawn_lock = asyncio.Lock()
 
     async def initialize(self, room: "Room"):
-        super().initialize(room)
+        await super().initialize(room)
 
         self.derbaran_tickets = self.niu_tickets = self.room.tdm_tickets
 
