@@ -25,6 +25,7 @@ from wcps_game.handlers.room_handlers import (
 from wcps_game.handlers.game_proccess import GameProcessHandler
 from wcps_game.handlers.scoreboard import ScoreBoardHandler
 from wcps_game.handlers.leave_vehicle_world import LeaveVehicleHandler
+from wcps_game.handlers.explosives import ExplosivesHandler
 
 # Dictionary to map packet IDs to handler classes
 HANDLER_MAP = {
@@ -51,6 +52,7 @@ HANDLER_MAP = {
     PacketList.DO_JOIN_ROOM: RoomJoinHandler,
     # Game
     PacketList.DO_GAME_PROCESS: GameProcessHandler,
+    PacketList.DO_BOMB_PROCESS: ExplosivesHandler,
     PacketList.DO_GAME_SCORE: ScoreBoardHandler,
     PacketList.DO_VEHICLE_LEAVE_WORLD: LeaveVehicleHandler
 }

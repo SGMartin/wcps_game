@@ -37,6 +37,7 @@ class PacketList:
 
     # Game packets
     DO_VEHICLE_LEAVE_WORLD = 0x7511  # Named by DarkRaptor. Present in older sources. Maybe it moved
+    DO_BOMB_PROCESS = 0x7520
     DO_GAME_PROCESS = 0x7530
     DO_GAME_UPDATE_CLOCK = 0x7540
     DO_GAME_SCORE = 0x7550
