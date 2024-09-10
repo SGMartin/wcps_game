@@ -76,17 +76,17 @@ class Explosive(BaseGameMode):
 
     # TODO: Anything worth doing here?
     # Maybe some stats or background task?
-    async def on_death(self):
+    async def on_death(self, player):
         pass
 
-    async def on_suicide(self):
+    async def on_suicide(self, player):
         pass
 
     async def on_flag_capture(self, player, flag_status):
         raise NotImplementedError
 
     async def process(self):
-        if not self.active_round and self.prepare_round(is_first_round=False):
+        if not self.active_round and await self.prepare_round(is_first_round=False):
             self.active_round = True
 
         if self.active_round:
@@ -104,17 +104,18 @@ class Explosive(BaseGameMode):
             if not self.is_round_running():
                 winner = self.winning_round_team()
 
-                if self.team_rounds[winner] < self.rounds_limit:
-                    await self.end_round(winner_team=winner)
-                else:
-                    self.room.end_game(winner_team=self.winner())
+                # if self.room.get_player_count() <= 1 or self.team_rounds[winner] >= self.rounds_limit:
+                #     await self.room.end_game(winner_team=self.winner())
+                # else:
+                #     await self.end_round(winner_team=winner)
+                print(f"Winner team is {winner}")
+                await self.end_round(winner_team=winner)
 
     async def prepare_round(self, is_first_round: bool = False) -> bool:
 
         milliseconds_elapsed = time.time() - self.round_end_time
         milliseconds_elapsed = milliseconds_elapsed * 1000
 
-        # Let 5 seconds pass for the end round sequence
         # TODO: make this configurable?
         if milliseconds_elapsed >= 5000:
             self.freeze_tick = False
@@ -144,6 +145,10 @@ class Explosive(BaseGameMode):
             if not all_players_ready:
                 return False
 
+            self.room.up_ticks = 0
+            # TODO: round time, make this configurable
+            self.room.down_ticks = 180000
+
             # If any team is empty, end the game now
             # TODO: move to is_goal_reached?
             if (
@@ -156,7 +161,7 @@ class Explosive(BaseGameMode):
                 elif self.alive_players[gconstants.Team.NIU] > 0:
                     winner = gconstants.Team.NIU
 
-                self.room.end_game(winner_team=winner)
+                await self.room.end_game(winner_team=winner)
                 return False
 
             # Should these be sent from here?
@@ -175,7 +180,7 @@ class Explosive(BaseGameMode):
     async def end_round(self, winner_team: gconstants.Team.NONE):
         self.active_round = False
         self.round_end_time = time.time()
-        self.freeze_tick = True
+        # self.freeze_tick = True
 
         players = self.room.get_all_players()
 
@@ -190,6 +195,7 @@ class Explosive(BaseGameMode):
                 room=self.room,
                 winning_team=winner_team,
             )
+            print(f"Sent round end packet to {winner_team}")
             await self.room.send(round_end_packet.build())
 
     def winning_round_team(self):
