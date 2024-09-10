@@ -34,6 +34,7 @@ from wcps_game.packets.manual_vehicle_explosion import ManualVehicleExplosion
 from wcps_game.packets.manual_game_setup import ManualGameSetup
 from wcps_game.packets.manual_round_start import ManualRoundStart
 from wcps_game.packets.manual_round_end import ManualRoundEnd
+from wcps_game.packets.explosives import Explosives
 
 
 class PacketFactory:
@@ -65,6 +66,7 @@ class PacketFactory:
         PacketList.DO_GAME_USER_LIST: RoomPlayers,
         # Game
         PacketList.DO_GAME_PROCESS: GameProcess,
+        PacketList.DO_BOMB_PROCESS: Explosives,
         PacketList.DO_GAME_UPDATE_CLOCK: GameUpdateClock,
         PacketList.DO_GAME_SCORE: ScoreBoard,
         PacketList.DO_GAME_RESULT: EndGame,
