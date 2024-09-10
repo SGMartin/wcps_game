@@ -6,8 +6,6 @@ from wcps_game.packets.packet_list import PacketList
 
 class GameSetupHandler(GameProcessHandler):
     async def handle(self):
-        #  This is just a stub to get the handler ready in the branch
-        #  Complete it when actual game modes are ready
 
         self.sub_packet = PacketList.DO_GO
         self.set_block(2, 3)  # Unknown
