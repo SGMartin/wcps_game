@@ -47,6 +47,8 @@ class PacketList:
     # Lobby related #
     DO_ROOM_START = 0x1  # ID by DarkRaptor
     DO_ROOM_START_CONFIRM = 0x4  # ID by DarkRaptor
+    DO_ROUND_START = 0x5  # ID by darkraptor
+    DO_ROUND_END = 0x6,  # ID by darkraptor
     DO_READY_CLICK = 0x32
     DO_MAP_CLICK = 0x33
     DO_TYPE_CLICK = 0x34

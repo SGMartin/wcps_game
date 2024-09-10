@@ -31,6 +31,9 @@ from wcps_game.packets.end_game import EndGame
 from wcps_game.packets.promotion import Promotion
 from wcps_game.packets.vehicle_spawn import VehicleSpawn
 from wcps_game.packets.manual_vehicle_explosion import ManualVehicleExplosion
+from wcps_game.packets.manual_game_setup import ManualGameSetup
+from wcps_game.packets.manual_round_start import ManualRoundStart
+from wcps_game.packets.manual_round_end import ManualRoundEnd
 
 
 class PacketFactory:
@@ -67,10 +70,12 @@ class PacketFactory:
         PacketList.DO_GAME_RESULT: EndGame,
         PacketList.DO_PROMOTION_OLD: Promotion,
 
-        # Adding a specific game packet I need to call here
-        # TODO: Add player suicide and vehicle explosion packets here
+        # Manual 30000 prebuilt packets
         PacketList.DO_UNIT_REGEN: VehicleSpawn,
-        PacketList.DO_UNIT_DIE: ManualVehicleExplosion
+        PacketList.DO_UNIT_DIE: ManualVehicleExplosion,
+        PacketList.DO_GO: ManualGameSetup,
+        PacketList.DO_ROUND_START: ManualRoundStart,
+        PacketList.DO_ROUND_END: ManualRoundEnd
     }
 
     @staticmethod
