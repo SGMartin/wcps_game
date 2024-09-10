@@ -180,7 +180,7 @@ class Explosive(BaseGameMode):
         players = self.room.get_all_players()
 
         for player in players:
-            player.end_round()
+            await player.end_round()
 
         if winner_team != gconstants.Team.NONE:
             self.team_rounds[winner_team] += 1
@@ -210,7 +210,7 @@ class Explosive(BaseGameMode):
 
     def is_round_running(self):
         # Deb : DEAD + NO BOMB
-        if self.alive_players[gconstants.Team.Derbaran] == 0 and not self.bomb_planted:
+        if self.alive_players[gconstants.Team.DERBARAN] == 0 and not self.bomb_planted:
             return False
 
         # NIU : DEAD
