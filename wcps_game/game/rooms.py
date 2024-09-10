@@ -19,6 +19,7 @@ from wcps_game.game.ground_item import GroundItem
 
 from wcps_game.game.game_modes.ffa import FFA
 from wcps_game.game.game_modes.tdm import TDM
+from wcps_game.game.game_modes.explosives import Explosive
 
 from wcps_game.packets.packet_list import PacketList
 from wcps_game.packets.packet_factory import PacketFactory
@@ -430,7 +431,8 @@ class Room:
         # Initialize the game modes
         game_modes = {
             gconstants.GameMode.FFA: FFA,
-            gconstants.GameMode.TDM: TDM
+            gconstants.GameMode.TDM: TDM,
+            gconstants.GameMode.EXPLOSIVE: Explosive
         }
 
         self.ground_items = {}  # Empty the ground items dictionary
