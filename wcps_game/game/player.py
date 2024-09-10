@@ -37,6 +37,7 @@ class Player:
         self.vehicle_seat = -1
         self.items_planted = 0
         self.alive = True
+        self.round_waiting = False
 
         # game stats
         self.assists = 0
@@ -58,6 +59,7 @@ class Player:
         self.state = gconstants.RoomStatus.PLAYING
         self.health = 1000
         self.alive = True
+        self.round_waiting = False
         self.vehicle_id = -1
         self.vehicle_seat = -1
         self.items_planted = 0
@@ -115,6 +117,10 @@ class Player:
     async def add_flags(self):
         self.flags_taken += 1
         self.points += 7
+
+    async def end_round(self):
+        self.round_waiting = True
+        # TODO: round statistics here
 
     async def end_game(self):
         self.vehicle_id = -1
