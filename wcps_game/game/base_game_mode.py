@@ -31,7 +31,7 @@ class BaseGameMode(ABC):
         self.initialized = False
         self.freeze_tick = False
 
-    def initialize(self, room):
+    async def initialize(self, room):
         self.room = room
 
     @abstractmethod

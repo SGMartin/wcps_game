@@ -20,7 +20,7 @@ class TDM(BaseGameMode):
         # Initialize an asyncio Lock object for thread safety
         self._spawn_lock = asyncio.Lock()
 
-    def initialize(self, room: "Room"):
+    async def initialize(self, room: "Room"):
         super().initialize(room)
 
         self.derbaran_tickets = self.niu_tickets = self.room.tdm_tickets

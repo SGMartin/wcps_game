@@ -33,12 +33,12 @@ class Explosive(BaseGameMode):
 
         self.alive_players = {gconstants.Team.DERBARAN: 0, gconstants.Team.NIU: 0}
 
-    def initialize(self, room: "Room"):
+    async def initialize(self, room: "Room"):
         super().initialize(room)
 
         self.rounds_limit = room.rounds
         self.initialized = True
-        self.prepare_round(is_first_round=True)
+        await self.prepare_round(is_first_round=True)
         self.active_round = True
 
     def winner(self):
@@ -105,11 +105,11 @@ class Explosive(BaseGameMode):
                 winner = self.winning_round_team()
 
                 if self.team_rounds[winner] < self.rounds_limit:
-                    self.end_round(winner_team=winner)
+                    await self.end_round(winner_team=winner)
                 else:
                     self.room.end_game(winner_team=self.winner())
 
-    def prepare_round(self, is_first_round: bool = False) -> bool:
+    async def prepare_round(self, is_first_round: bool = False) -> bool:
 
         milliseconds_elapsed = time.time() - self.round_end_time
         milliseconds_elapsed = milliseconds_elapsed * 1000
@@ -172,7 +172,7 @@ class Explosive(BaseGameMode):
 
         return False
 
-    def end_round(self, winner_team: gconstants.Team.NONE):
+    async def end_round(self, winner_team: gconstants.Team.NONE):
         self.active_round = False
         self.round_end_time = time.time()
         self.freeze_tick = True

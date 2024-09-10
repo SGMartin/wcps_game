@@ -25,7 +25,7 @@ class FFA(BaseGameMode):
         # Initialize an asyncio Lock object for thread safety
         self._spawn_lock = asyncio.Lock()
 
-    def initialize(self, room: "Room"):
+    async def initialize(self, room: "Room"):
         super().initialize(room)
 
         self.max_kills = 10 + (room.tickets_setting * 5)

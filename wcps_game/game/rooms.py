@@ -456,7 +456,7 @@ class Room:
 
         # Initialize game mode
         self.current_game_mode = game_modes[self.game_mode]()
-        self.current_game_mode.initialize(self)
+        await self.current_game_mode.initialize(self)
 
         logging.info(f"Room {self.id} started")
 
