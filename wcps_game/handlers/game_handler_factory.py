@@ -34,6 +34,7 @@ from wcps_game.handlers.game.ingame.suicide import SuicideHandler
 from wcps_game.handlers.game.ingame.player_death import PlayerDeathHandler
 from wcps_game.handlers.game.ingame.confirm_death import ConfirmDeathHandler
 from wcps_game.handlers.game.ingame.vehicle_repair import RepairVehicleHandler
+from wcps_game.handlers.game.ingame.round_start import ConfirmRoundStart
 
 
 # from wcps_game.handlers.game.ingame.test import TestHandler
@@ -73,7 +74,8 @@ HANDLER_MAP = {
     PacketList.DO_OBJECT_CHANGE_SEAT: SwitchVehicleSeatHandler,
     PacketList.DO_SUICIDE: SuicideHandler,
     PacketList.DO_PLAYER_DIE: PlayerDeathHandler,
-    PacketList.DO_PLAYER_DENY: ConfirmDeathHandler
+    PacketList.DO_PLAYER_DENY: ConfirmDeathHandler,
+    PacketList.DO_ROUND_START_CONFIRM: ConfirmRoundStart
 
 
 }

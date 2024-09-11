@@ -48,8 +48,6 @@ class PacketList:
     # Lobby related #
     DO_ROOM_START = 0x1  # ID by DarkRaptor
     DO_ROOM_START_CONFIRM = 0x4  # ID by DarkRaptor
-    DO_ROUND_START = 0x5  # ID by darkraptor
-    DO_ROUND_END = 0x6,  # ID by darkraptor
     DO_READY_CLICK = 0x32
     DO_MAP_CLICK = 0x33
     DO_TYPE_CLICK = 0x34
@@ -59,7 +57,10 @@ class PacketList:
     DO_PING_CLICK = 0x3B
     DO_HOLD_CLICK = 0x3A
     DO_AUTOSTART_CLICK = 0x3E
-    # In game subpackets
+    # Ingame subpackets
+    DO_ROUND_START = 0x5  # ID by darkraptor
+    DO_ROUND_END = 0x6    # ID by darkraptor
+    DO_ROUND_START_CONFIRM = 0x7  # ID by darkraptor
     DO_BACK_TO_LOBBY = 0x9  # ID by DarkRaptor
     DO_REQUEST_MISSION = 0x192  # ID by darkraptor
     DO_GO = 0x193
