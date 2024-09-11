@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 import asyncio
-import logging
 
 from typing import TYPE_CHECKING
 
@@ -20,7 +19,6 @@ from wcps_game.game.constants import (
 )
 from wcps_game.client.items import ItemDatabase
 from wcps_game.packets.packet_list import PacketList
-from wcps_game.packets.game_process import GameProcess
 
 
 class BaseGameMode(ABC):
@@ -73,6 +71,9 @@ class BaseGameMode(ABC):
     @abstractmethod
     async def on_flag_capture(self, player, flag_status):
         pass
+
+    async def handle_explosives(self, player) -> bool:
+        return False
 
     async def get_spawn_id(self) -> int:
         return 0

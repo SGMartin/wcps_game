@@ -85,6 +85,30 @@ class Explosive(BaseGameMode):
     async def on_flag_capture(self, player, flag_status):
         raise NotImplementedError
 
+    async def handle_explosives(self, player) -> bool:
+
+        if player.team == gconstants.Team.DERBARAN:
+            # TODO: statistics here
+            player.bombs_planted += 1
+            self.bomb_planted = True
+
+            # TODO: make this configurable
+            self.room.down_ticks = 40000
+            return True
+        else:
+            if self.bomb_planted:
+                player.bombs_defused += 1
+                self.bomb_defused = True
+                return True
+            else:
+                return False
+
+
+
+
+
+
+
     async def process(self):
         if not self.active_round and await self.prepare_round(is_first_round=False):
             self.active_round = True
@@ -148,6 +172,8 @@ class Explosive(BaseGameMode):
             self.room.up_ticks = 0
             # TODO: round time, make this configurable
             self.room.down_ticks = 180000
+            self.bomb_planted = False
+            self.bomb_defused = False
 
             # If any team is empty, end the game now
             # TODO: move to is_goal_reached?
@@ -232,6 +258,3 @@ class Explosive(BaseGameMode):
             return False
 
         return True
-
-    def handle_explosives():
-        pass
