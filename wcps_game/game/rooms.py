@@ -511,12 +511,12 @@ class Room:
                         await self.end_game(self.current_game_mode.winner())
                         break  # TODO: check if we should actually do this
 
+                    # If not goal reached, call process routine
+                    await self.current_game_mode.process()
+
                     if self.current_game_mode.freeze_tick:
                         self.last_tick = -1
                     else:
-                        # Call the game mode routine here
-                        await self.current_game_mode.process()
-
                         current_time = datetime.now()
                         elapsed_time = (current_time - last_tick_time).total_seconds()
 
