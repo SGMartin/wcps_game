@@ -93,7 +93,7 @@ class Explosive(BaseGameMode):
             self.bomb_planted = True
 
             # TODO: make this configurable
-            self.room.down_ticks = 40000
+            self.room.down_ticks = 10000
             return True
         else:
             if self.bomb_planted:
@@ -102,12 +102,6 @@ class Explosive(BaseGameMode):
                 return True
             else:
                 return False
-
-
-
-
-
-
 
     async def process(self):
         if not self.active_round and await self.prepare_round(is_first_round=False):
@@ -132,7 +126,6 @@ class Explosive(BaseGameMode):
                 #     await self.room.end_game(winner_team=self.winner())
                 # else:
                 #     await self.end_round(winner_team=winner)
-                print(f"Winner team is {winner}")
                 await self.end_round(winner_team=winner)
 
     async def prepare_round(self, is_first_round: bool = False) -> bool:
@@ -141,11 +134,24 @@ class Explosive(BaseGameMode):
         milliseconds_elapsed = milliseconds_elapsed * 1000
 
         # TODO: make this configurable?
-        if milliseconds_elapsed >= 5000:
-            self.freeze_tick = False
+        if not milliseconds_elapsed >= 5000:
+            return False
+
+        # let the clock tick again after the 5 seconds of elapsed time have passed
+        self.freeze_tick = False
 
         # Clear ground items dictionary at the start of each round
         self.room.ground_items.clear()
+        self.room.up_ticks = 0
+
+        # TODO: round time, make this configurable
+        self.room.down_ticks = 180000
+        self.bomb_planted = False
+        self.bomb_defused = False
+
+        # Nothing left to do here
+        if is_first_round:
+            return False
 
         players = self.room.get_all_players()
         all_players_ready = True
@@ -163,50 +169,41 @@ class Explosive(BaseGameMode):
                 else:
                     self.alive_players[gconstants.Team.NIU] += 1
 
-        if not is_first_round:
-            self.rounds_passed += 1
+        self.rounds_passed += 1
 
-            if not all_players_ready:
-                return False
+        if not all_players_ready:
+            return False
 
-            self.room.up_ticks = 0
-            # TODO: round time, make this configurable
-            self.room.down_ticks = 180000
-            self.bomb_planted = False
-            self.bomb_defused = False
+        # If any team is empty, end the game now
+        # TODO: move to is_goal_reached?
+        if (
+            self.alive_players[gconstants.Team.DERBARAN] == 0
+            or self.alive_players[gconstants.Team.NIU] # TODO: add back NIU check after testing
+        ):
+            winner = gconstants.Team.NONE
+            if self.alive_players[gconstants.Team.DERBARAN] > 0:
+                winner = gconstants.Team.DERBARAN
+            elif self.alive_players[gconstants.Team.NIU] > 0:
+                winner = gconstants.Team.NIU
 
-            # If any team is empty, end the game now
-            # TODO: move to is_goal_reached?
-            if (
-                self.alive_players[gconstants.Team.DERBARAN] == 0
-                or self.alive_players[gconstants.Team.NIU]
-            ):
-                winner = gconstants.Team.NONE
-                if self.alive_players[gconstants.Team.DERBARAN] > 0:
-                    winner = gconstants.Team.DERBARAN
-                elif self.alive_players[gconstants.Team.NIU] > 0:
-                    winner = gconstants.Team.NIU
+            await self.room.end_game(winner_team=winner)
+            return False
 
-                await self.room.end_game(winner_team=winner)
-                return False
-
-            # Should these be sent from here?
-            mission_packet = PacketFactory.create_packet(
-                packet_id=PacketList.DO_GO, room=self.room
-            )
-            round_start_packet = PacketFactory.create_packet(
-                packet_id=PacketList.DO_ROUND_START, room=self.room
-            )
-            await self.room.send(mission_packet.build())
-            await self.room.send(round_start_packet.build())
-            return True
-
-        return False
+        # Should these be sent from here?
+        mission_packet = PacketFactory.create_packet(
+            packet_id=PacketList.DO_GO, room=self.room
+        )
+        round_start_packet = PacketFactory.create_packet(
+            packet_id=PacketList.DO_ROUND_START, room=self.room
+        )
+        await self.room.send(mission_packet.build())
+        await self.room.send(round_start_packet.build())
+        return True
 
     async def end_round(self, winner_team: gconstants.Team.NONE):
         self.active_round = False
         self.round_end_time = time.time()
-        # self.freeze_tick = True
+        self.freeze_tick = True
 
         players = self.room.get_all_players()
 
@@ -221,7 +218,6 @@ class Explosive(BaseGameMode):
                 room=self.room,
                 winning_team=winner_team,
             )
-            print(f"Sent round end packet to {winner_team}")
             await self.room.send(round_end_packet.build())
 
     def winning_round_team(self):
@@ -246,8 +242,8 @@ class Explosive(BaseGameMode):
             return False
 
         # NIU : DEAD
-        if self.alive_players[gconstants.Team.NIU] == 0:
-            return False
+        # if self.alive_players[gconstants.Team.NIU] == 0:
+        #     return False
 
         # Bomb = Defused
         if self.bomb_planted and self.bomb_defused:
