@@ -66,13 +66,12 @@ class Explosive(BaseGameMode):
     def current_round_niu(self):
         return self.team_rounds[gconstants.Team.NIU]
 
-    # Unused in explosives
+    # Used to show alive players in each team
     def scoreboard_derbaran(self):
-        return 0
+        return self.alive_players[gconstants.Team.DERBARAN]
 
-    # Unused in explosives
     def scoreboard_niu(self):
-        return 0
+        return self.alive_players[gconstants.Team.NIU]
 
     # TODO: Anything worth doing here?
     # Maybe some stats or background task?
@@ -112,12 +111,18 @@ class Explosive(BaseGameMode):
 
             # Update alive players here
             # TODO: extract to func
+            derbaran_alive = 0
+            niu_alive = 0
             for player in players:
                 if player.health > 0 and player.alive:
                     if player.team == gconstants.Team.DERBARAN:
-                        self.alive_players[gconstants.Team.DERBARAN] += 1
+                        derbaran_alive += 1
                     else:
-                        self.alive_players[gconstants.Team.NIU] += 1
+                        niu_alive += 1
+
+            # Update alive players count
+            self.alive_players[gconstants.Team.DERBARAN] = derbaran_alive
+            self.alive_players[gconstants.Team.NIU] = niu_alive
 
             if not self.is_round_running():
                 winner = self.winning_round_team()
@@ -156,6 +161,9 @@ class Explosive(BaseGameMode):
         players = self.room.get_all_players()
         all_players_ready = True
 
+        alive_derbaran = 0
+        alive_niu = 0
+
         for player in players:
 
             # If any player is still waiting, set the
@@ -165,9 +173,13 @@ class Explosive(BaseGameMode):
 
             if player.health > 0 and player.alive:
                 if player.team == gconstants.Team.DERBARAN:
-                    self.alive_players[gconstants.Team.DERBARAN] += 1
+                    alive_derbaran += 1
                 else:
-                    self.alive_players[gconstants.Team.NIU] += 1
+                    alive_niu += 1
+
+        # Update alive players counter
+        self.alive_players[gconstants.Team.DERBARAN] = alive_derbaran
+        self.alive_players[gconstants.Team.NIU] = alive_niu
 
         self.rounds_passed += 1
 
@@ -178,7 +190,9 @@ class Explosive(BaseGameMode):
         # TODO: move to is_goal_reached?
         if (
             self.alive_players[gconstants.Team.DERBARAN] == 0
-            or self.alive_players[gconstants.Team.NIU] # TODO: add back NIU check after testing
+            or self.alive_players[
+                gconstants.Team.NIU
+            ]    # TODO: add back NIU check after testing
         ):
             winner = gconstants.Team.NONE
             if self.alive_players[gconstants.Team.DERBARAN] > 0:
