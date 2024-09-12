@@ -72,6 +72,6 @@ class RoomJoinError:
 
 
 class RoomInvitationError:
-    GENERIC = 93010
-    INVITED = 93020
+    INVITED = 93010
+    GENERIC = 93020
     ALREADY_IN_ROOM = 93030

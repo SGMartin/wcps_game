@@ -1,3 +1,4 @@
+import random
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -11,7 +12,11 @@ from wcps_game.game.rooms import Room
 from wcps_game.handlers.packet_handler import PacketHandler
 from wcps_game.packets.packet_list import PacketList
 from wcps_game.packets.packet_factory import PacketFactory
-from wcps_game.packets.error_codes import RoomCreateError, RoomJoinError
+from wcps_game.packets.error_codes import (
+    RoomCreateError,
+    RoomJoinError,
+    RoomInvitationError,
+)
 
 
 class RoomCreateHandler(PacketHandler):
@@ -34,14 +39,16 @@ class RoomCreateHandler(PacketHandler):
         votekick_enabled = bool(int(self.get_block(10)))
 
         # Start validating the room name
-        default_longest_name = "Let\'s\x1dplay\x1dWarRock\x1dtoday!!!"
+        default_longest_name = "Let's\x1dplay\x1dWarRock\x1dtoday!!!"
 
         if len(room_name) not in range(0, 26) and room_name != default_longest_name:
             await self.send_generic_error(user)
             return
 
         # Validate password
-        if has_password and (len(input_password) not in range(1, 11) or input_password == "NULL"):
+        if has_password and (
+            len(input_password) not in range(1, 11) or input_password == "NULL"
+        ):
             await self.send_generic_error(user)
             return
 
@@ -49,7 +56,9 @@ class RoomCreateHandler(PacketHandler):
         # 8/16/20/24/32 in CP 1 :)
         # 0/1/2/3/4
 
-        max_players_for_room = len(gconstants.RoomMaximumPlayers.MAXIMUM_PLAYERS[user.channel])
+        max_players_for_room = len(
+            gconstants.RoomMaximumPlayers.MAXIMUM_PLAYERS[user.channel]
+        )
 
         if player_limit > max_players_for_room:
             await self.send_generic_error(user)
@@ -57,12 +66,14 @@ class RoomCreateHandler(PacketHandler):
 
         # Validate minimum level requirements
         this_player_level = gconstants.get_level_for_exp(user.xp)
-        requested_limit = gconstants.RoomLevelLimits.MIN_LEVEL_REQUIREMENTS.get(level_limit)
+        requested_limit = gconstants.RoomLevelLimits.MIN_LEVEL_REQUIREMENTS.get(
+            level_limit
+        )
 
         if requested_limit is None or this_player_level not in requested_limit:
             level_error = PacketFactory.create_packet(
                 packet_id=PacketList.ROOM_CREATE,
-                error_code=RoomCreateError.UNSUITABLE_LEVEL
+                error_code=RoomCreateError.UNSUITABLE_LEVEL,
             )
             await user.send(level_error.build())
             return
@@ -85,7 +96,7 @@ class RoomCreateHandler(PacketHandler):
             level_limit=level_limit,
             premium_only=premium_only,
             vote_kick=votekick_enabled,
-            is_clanwar=False  # TODO: investigate it in the future
+            is_clanwar=False,  # TODO: investigate it in the future
         )
 
         this_channel = user.this_server.channels[user.channel]
@@ -94,7 +105,7 @@ class RoomCreateHandler(PacketHandler):
         if new_room_id is None:
             too_many_rooms = PacketFactory.create_packet(
                 packet_id=PacketList.ROOM_CREATE,
-                error_code=RoomCreateError.MAX_ROOM_LIMIT
+                error_code=RoomCreateError.MAX_ROOM_LIMIT,
             )
             await user.send(too_many_rooms.build())
             return
@@ -104,7 +115,7 @@ class RoomCreateHandler(PacketHandler):
         room_create_packet = PacketFactory.create_packet(
             packet_id=PacketList.ROOM_CREATE,
             error_code=corerr.SUCCESS,
-            new_room=new_room
+            new_room=new_room,
         )
 
         # The master user has been notified
@@ -113,8 +124,7 @@ class RoomCreateHandler(PacketHandler):
         # Send the master their own updated room data (k:d, endpoint)
         # The master is always the 0 slot when the room is just created
         room_players = PacketFactory.create_packet(
-            packet_id=PacketList.DO_GAME_USER_LIST,
-            player_list=[new_room.players[0]]
+            packet_id=PacketList.DO_GAME_USER_LIST, player_list=[new_room.players[0]]
         )
         await user.send(room_players.build())
 
@@ -126,14 +136,13 @@ class RoomCreateHandler(PacketHandler):
                 update_packet = PacketFactory.create_packet(
                     packet_id=PacketList.DO_ROOM_INFO_CHANGE,
                     room_to_update=new_room,
-                    update_type=gconstants.RoomUpdateType.CREATE
+                    update_type=gconstants.RoomUpdateType.CREATE,
                 )
                 await user_to_update.send(update_packet.build())
 
     async def send_generic_error(user: "User"):
         error_packet = PacketFactory.create_packet(
-            packet_id=PacketList.ROOM_CREATE,
-            error_code=RoomCreateError.GENERIC
+            packet_id=PacketList.ROOM_CREATE, error_code=RoomCreateError.GENERIC
         )
         await user.send(error_packet.build())
 
@@ -154,7 +163,7 @@ class RoomJoinHandler(PacketHandler):
             generic_err = PacketFactory.create_packet(
                 packet_id=PacketList.DO_JOIN_ROOM,
                 error_code=RoomJoinError.GENERIC,
-                room_to_join=None
+                room_to_join=None,
             )
             await user.send(generic_err.build())
             return
@@ -166,8 +175,7 @@ class RoomJoinHandler(PacketHandler):
             password_incorrect = PacketFactory.create_packet(
                 packet_id=PacketList.DO_JOIN_ROOM,
                 error_code=RoomJoinError.INVALID_PASSWORD,
-                room_to_join=None
-
+                room_to_join=None,
             )
             await user.send(password_incorrect.build())
             return
@@ -176,7 +184,7 @@ class RoomJoinHandler(PacketHandler):
             not_premium = PacketFactory.create_packet(
                 packet_id=PacketList.DO_JOIN_ROOM,
                 error_code=RoomJoinError.PREMIUM_ONLY,
-                room_to_join=None
+                room_to_join=None,
             )
             await user.send(not_premium.build())
             return
@@ -185,13 +193,13 @@ class RoomJoinHandler(PacketHandler):
         this_player_level = gconstants.get_level_for_exp(user.xp)
         level_required = gconstants.RoomLevelLimits.MIN_LEVEL_REQUIREMENTS.get(
             this_room.level_limit
-            )
+        )
 
         if this_player_level not in level_required:
             bad_level_error = PacketFactory.create_packet(
                 packet_id=PacketList.DO_JOIN_ROOM,
                 error_code=RoomJoinError.UNSUITABLE_LEVEL,
-                room_to_join=None
+                room_to_join=None,
             )
             await user.send(bad_level_error.build())
             return
@@ -204,14 +212,14 @@ class RoomJoinHandler(PacketHandler):
                 cannot_join_error = PacketFactory.create_packet(
                     packet_id=PacketList.DO_JOIN_ROOM,
                     error_code=RoomJoinError.MAX_USERS,
-                    room_to_join=None
+                    room_to_join=None,
                 )
                 await user.send(cannot_join_error.build())
             else:
                 room_full_error = PacketFactory.create_packet(
                     packet_id=PacketList.DO_JOIN_ROOM,
                     error_code=RoomJoinError.ROOM_FULL,
-                    room_to_join=None
+                    room_to_join=None,
                 )
                 await user.send(room_full_error.build())
         else:
@@ -238,22 +246,20 @@ class RoomLeaveHandler(PacketHandler):
             user_list_full = PacketFactory.create_packet(
                 packet_id=PacketList.USERLIST,
                 lobby_user_list=channel_users,
-                target_page=user.userlist_page
+                target_page=user.userlist_page,
             )
             await user.send(user_list_full.build())
 
             # Send the user the room list
             all_rooms = await user.this_server.channels[user.channel].get_all_rooms()
             rooms_to_send = [
-                room
-                for room in all_rooms.values()
-                if room.room_page == user.room_page
-                ]
+                room for room in all_rooms.values() if room.room_page == user.room_page
+            ]
 
             new_room_list = PacketFactory.create_packet(
                 packet_id=PacketList.DO_ROOM_LIST,
                 room_page=user.room_page,
-                room_list=rooms_to_send
+                room_list=rooms_to_send,
             )
             await user.send(new_room_list.build())
 
@@ -265,7 +271,7 @@ class RoomLeaveHandler(PacketHandler):
                     this_user_update = PacketFactory.create_packet(
                         packet_id=PacketList.USERLIST,
                         lobby_user_list=channel_users,
-                        target_page=c_user.userlist_page
+                        target_page=c_user.userlist_page,
                     )
                     await c_user.send(this_user_update.build())
 
@@ -274,7 +280,7 @@ class RoomLeaveHandler(PacketHandler):
                         room_update = PacketFactory.create_packet(
                             packet_id=PacketList.DO_ROOM_INFO_CHANGE,
                             room_to_update=room_left,
-                            update_type=gconstants.RoomUpdateType.UPDATE
+                            update_type=gconstants.RoomUpdateType.UPDATE,
                         )
                         await c_user.send(room_update.build())
 
@@ -299,7 +305,9 @@ class RoomListHandler(PacketHandler):
         if user.room_page < 0:
             user.room_page = 0
 
-        all_channel_rooms = await user.this_server.channels[user.channel].get_all_rooms()
+        all_channel_rooms = await user.this_server.channels[
+            user.channel
+        ].get_all_rooms()
         last_waiting_rooms = []
         last_rooms = []
 
@@ -318,7 +326,79 @@ class RoomListHandler(PacketHandler):
         room_packet = PacketFactory.create_packet(
             packet_id=PacketList.DO_ROOM_LIST,
             room_page=user.room_page,
-            room_list=rooms_to_send
+            room_list=rooms_to_send,
         )
         # TODO: recheck filtering step of waiting rooms
         await user.send(room_packet.build())
+
+
+class RoomInviteHandler(PacketHandler):
+    async def process(self, user: "User"):
+
+        if not user.authorized:
+            return
+
+        if user.room is None or user.room.state == gconstants.RoomStatus.PLAYING:
+            return
+
+        # Check if the room is full
+        if len(user.room.get_all_players()) >= user.room.max_players:
+            # TODO: Handle the "room is full" error
+            return
+
+        user_to_invite = self.get_block(0)
+        message = self.get_block(1)
+
+        # Get the channel of the player who's inviting
+        this_channel = user.this_server.channels[user.channel]
+
+        player_pool = [
+            cuser for cuser in await this_channel.get_users() if cuser.room is None
+        ]
+
+        if user_to_invite == "NULL":
+            # Randomly invite a user from the pool
+            if not player_pool:
+                await self.send_error(user, RoomInvitationError.GENERIC)
+            else:
+                target_user = random.choice(player_pool)
+                await self.send_invitation(user, target_user, message)
+        else:
+            # Invite a specific user by displayname
+            target_user = next(
+                (
+                    u
+                    for u in await this_channel.get_users()
+                    if u.displayname == user_to_invite
+                ),
+                None
+            )
+
+            if target_user and target_user.room is None:
+                await self.send_invitation(user, target_user, message)
+            else:
+                error_code = (
+                    RoomInvitationError.ALREADY_IN_ROOM
+                    if target_user and target_user.room is not None
+                    else RoomInvitationError.GENERIC
+                )
+                await self.send_error(user, error_code)
+
+    async def send_invitation(self, inviter: "User", invitee: "User", message: str):
+        invite_packet = PacketFactory.create_packet(
+            packet_id=PacketList.DO_INVITATION,
+            error_code=1,
+            user=inviter,
+            message=message,
+        )
+        invite_confirm = PacketFactory.create_packet(
+            packet_id=PacketList.DO_INVITATION, error_code=RoomInvitationError.INVITED
+        )
+        await inviter.send(invite_confirm.build())
+        await invitee.send(invite_packet.build())
+
+    async def send_error(self, user: "User", error_code):
+        error_packet = PacketFactory.create_packet(
+            packet_id=PacketList.DO_INVITATION, error_code=error_code
+        )
+        await user.send(error_packet.build())

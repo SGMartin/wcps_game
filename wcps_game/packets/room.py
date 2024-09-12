@@ -13,7 +13,7 @@ from wcps_core.packets import OutPacket
 
 from wcps_game.game.constants import GameMode, RoomUpdateType
 from wcps_game.packets.packet_list import PacketList, ClientXorKeys
-from wcps_game.packets.error_codes import RoomCreateError, RoomJoinError
+from wcps_game.packets.error_codes import RoomCreateError, RoomJoinError, RoomInvitationError
 
 
 class RoomCreate(OutPacket):
@@ -90,6 +90,33 @@ class RoomJoin(OutPacket):
             self.append(corerr.SUCCESS)
             self.append(player_slot)
             add_room_info_to_packet(self, room_to_join)
+
+
+class RoomInvite(OutPacket):
+    def __init__(self, error_code: RoomInvitationError, user: "User" = None, message: str = ""):
+        super().__init__(
+            packet_id=PacketList.DO_INVITATION,
+            xor_key=ClientXorKeys.SEND
+        )
+        if error_code != corerr.SUCCESS or user is None:
+            self.append(error_code)
+        else:
+            self.append(corerr.SUCCESS)
+            self.append(0)
+            self.append(-1)
+            self.append(user.session_id)
+            self.append(user.session_id)  # ping?
+            self.append(user.displayname)
+            self.fill(-1, 4)  # Clan blocks
+            self.append(1)
+            self.append(18)
+            self.append(user.xp)
+            self.append(3)  # ??
+            self.append(0)
+            self.append(-1)
+            self.append(message)
+            self.append(user.room.id)
+            self.append(user.room.password)
 
 
 class RoomPlayers(OutPacket):

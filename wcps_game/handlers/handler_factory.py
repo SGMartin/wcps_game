@@ -21,6 +21,7 @@ from wcps_game.handlers.room_handlers import (
     RoomJoinHandler,
     RoomLeaveHandler,
     RoomListHandler,
+    RoomInviteHandler
 )
 from wcps_game.handlers.game_proccess import GameProcessHandler
 from wcps_game.handlers.scoreboard import ScoreBoardHandler
@@ -50,6 +51,7 @@ HANDLER_MAP = {
     PacketList.DO_ROOM_LIST: RoomListHandler,
     PacketList.DO_EXIT_ROOM: RoomLeaveHandler,
     PacketList.DO_JOIN_ROOM: RoomJoinHandler,
+    PacketList.DO_INVITATION: RoomInviteHandler,
     # Game
     PacketList.DO_GAME_PROCESS: GameProcessHandler,
     PacketList.DO_BOMB_PROCESS: ExplosivesHandler,

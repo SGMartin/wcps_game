@@ -29,10 +29,11 @@ class PacketList:
 
     # Room
     DO_ROOM_LIST = 0x7200
+    DO_ROOM_INFO_CHANGE = 0x7210
     ROOM_CREATE = 0x7300
     DO_JOIN_ROOM = 0x7310
     DO_EXIT_ROOM = 0x7340
-    DO_ROOM_INFO_CHANGE = 0x7210
+    DO_INVITATION = 0x7350
     DO_GAME_USER_LIST = 0x7500
 
     # Game packets
