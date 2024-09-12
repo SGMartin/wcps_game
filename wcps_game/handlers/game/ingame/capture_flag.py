@@ -37,5 +37,5 @@ class CaptureFlagHandler(GameProcessHandler):
         await self.player.add_flags()
         await self.room.current_game_mode.on_flag_capture(
             player=self.player,
-            flag_status=self.room.flags[captured_flag_id]
+            flag_status=old_flag_team
             )
