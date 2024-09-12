@@ -25,7 +25,7 @@ class TDM(BaseGameMode):
 
         self.derbaran_tickets = self.niu_tickets = self.room.tdm_tickets
 
-        self.room.down_tick = 3600000  # TODO: this should be configurable
+        self.room.down_ticks = 3600000  # TODO: this should be configurable
         self.initialized = True
         self.freeze_tick = False
 
