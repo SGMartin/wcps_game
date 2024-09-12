@@ -42,14 +42,16 @@ class Explosive(BaseGameMode):
         self.active_round = True
 
     def winner(self):
-        derb_rounds = self.team_rounds[gconstants.Team.DERBARAN]
-        niu_rounds = self.team_rounds[gconstants.Team.NIU]
-
-        # No ties possible
-        if derb_rounds > niu_rounds:
-            return gconstants.Team.DERBARAN
-        else:
-            return gconstants.Team.NONE
+        rounds = {
+            gconstants.Team.DERBARAN: self.team_rounds.get(gconstants.Team.DERBARAN, 0),
+            gconstants.Team.NIU: self.team_rounds.get(gconstants.Team.NIU, 0),
+        }
+        winning_team = max(rounds, key=rounds.get)
+        return (
+            winning_team
+            if rounds[gconstants.Team.DERBARAN] != rounds[gconstants.Team.NIU]
+            else gconstants.Team.NONE
+        )
 
     def is_goal_reached(self):
         derb_rounds = self.team_rounds[gconstants.Team.DERBARAN]
@@ -127,7 +129,10 @@ class Explosive(BaseGameMode):
             if not self.is_round_running():
                 winner = self.winning_round_team()
 
-                if self.room.get_player_count() <= 1 or self.team_rounds[winner] >= self.rounds_limit:
+                if (
+                    self.room.get_player_count() <= 1
+                    or self.team_rounds[winner] >= self.rounds_limit
+                ):
                     await self.room.end_game(winner_team=self.winner())
                 else:
                     await self.end_round(winner_team=winner)
@@ -187,9 +192,7 @@ class Explosive(BaseGameMode):
 
         if (
             self.alive_players[gconstants.Team.DERBARAN] == 0
-            or self.alive_players[
-                gconstants.Team.NIU
-            ] == 0
+            or self.alive_players[gconstants.Team.NIU] == 0
         ):
             winner = gconstants.Team.NONE
             if self.alive_players[gconstants.Team.DERBARAN] > 0:
