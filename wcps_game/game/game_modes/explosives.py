@@ -92,7 +92,7 @@ class Explosive(BaseGameMode):
             self.bomb_planted = True
 
             # TODO: make this configurable
-            self.room.down_ticks = 10000
+            self.room.down_ticks = 42000
             return True
         else:
             if self.bomb_planted:
@@ -127,11 +127,10 @@ class Explosive(BaseGameMode):
             if not self.is_round_running():
                 winner = self.winning_round_team()
 
-                # if self.room.get_player_count() <= 1 or self.team_rounds[winner] >= self.rounds_limit:
-                #     await self.room.end_game(winner_team=self.winner())
-                # else:
-                #     await self.end_round(winner_team=winner)
-                await self.end_round(winner_team=winner)
+                if self.room.get_player_count() <= 1 or self.team_rounds[winner] >= self.rounds_limit:
+                    await self.room.end_game(winner_team=self.winner())
+                else:
+                    await self.end_round(winner_team=winner)
 
     async def prepare_round(self, is_first_round: bool = False) -> bool:
 
@@ -186,13 +185,11 @@ class Explosive(BaseGameMode):
         if not all_players_ready:
             return False
 
-        # If any team is empty, end the game now
-        # TODO: move to is_goal_reached?
         if (
             self.alive_players[gconstants.Team.DERBARAN] == 0
             or self.alive_players[
                 gconstants.Team.NIU
-            ]    # TODO: add back NIU check after testing
+            ] == 0
         ):
             winner = gconstants.Team.NONE
             if self.alive_players[gconstants.Team.DERBARAN] > 0:
@@ -256,8 +253,8 @@ class Explosive(BaseGameMode):
             return False
 
         # NIU : DEAD
-        # if self.alive_players[gconstants.Team.NIU] == 0:
-        #     return False
+        if self.alive_players[gconstants.Team.NIU] == 0:
+            return False
 
         # Bomb = Defused
         if self.bomb_planted and self.bomb_defused:
