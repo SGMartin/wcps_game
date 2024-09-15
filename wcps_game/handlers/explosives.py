@@ -45,9 +45,6 @@ class ExplosivesHandler(PacketHandler):
 
         # Actual CQC bomb
         if action_type == 0:
-            # TODO: validate C4 and items
-            # print(f"Item id is {item_id}")
-
             if user.room.game_mode != GameMode.EXPLOSIVE:
                 return
 
@@ -62,7 +59,6 @@ class ExplosivesHandler(PacketHandler):
                 await user.room.send(explosives.build())
 
         # TMA bomb placement
-        # TODO: check if TMA id is 59
         elif action_type == 2 and not is_exploding and this_player.branch == Classes.HEAVY:
             item_id = await user.room.add_item(
                 owner=this_player,
