@@ -463,7 +463,6 @@ class Room:
         logging.info(f"Room {self.id} started")
 
     async def end_game(self, winner_team: gconstants.Team):
-        logging.info(f"Current game state is {self.state}")
         if self.state != gconstants.RoomStatus.PLAYING:
             return
 
