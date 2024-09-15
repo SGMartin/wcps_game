@@ -515,7 +515,8 @@ class Room:
                     # If not goal reached, call process routine
                     await self.current_game_mode.process()
 
-                    if self.current_game_mode.freeze_tick:
+                    # Check again the game mode did not end after process call
+                    if self.current_game_mode and self.current_game_mode.freeze_tick:
                         self.last_tick = -1
                     else:
                         current_time = datetime.now()
