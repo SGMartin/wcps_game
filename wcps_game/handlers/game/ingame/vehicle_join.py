@@ -1,3 +1,5 @@
+import logging
+
 from wcps_game.handlers.packet_handler import GameProcessHandler
 from wcps_game.game.constants import ChannelType, RoomStatus
 
@@ -21,7 +23,7 @@ class JoinVehicleHandler(GameProcessHandler):
         target_vehicle = self.room.vehicles.get(requested_vehicle)
 
         if target_vehicle is None:
-            print(f"Target vehicle {target_vehicle} does not exist")
+            logging.error(f"Target vehicle {target_vehicle} does not exist")
             return
 
         joined = await target_vehicle.join_vehicle(new_pilot=self.player)

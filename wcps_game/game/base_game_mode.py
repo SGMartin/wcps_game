@@ -1,6 +1,7 @@
-from abc import ABC, abstractmethod
 import asyncio
+import logging
 
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -15,7 +16,7 @@ from wcps_game.game.constants import (
     DamageMultipliers,
     DamageDistances,
     DefaultWeapon,
-    Team
+    Team,
 )
 from wcps_game.client.items import ItemDatabase
 from wcps_game.packets.packet_list import PacketList
@@ -98,7 +99,9 @@ class BaseGameMode(ABC):
 
         # Artillery or vehicle attack
         if not is_player:
-            await self.on_object_attack(handler=damage_handler, attacker=attacker, victim=victim)
+            await self.on_object_attack(
+                handler=damage_handler, attacker=attacker, victim=victim
+            )
             return
 
         # Validate the weapon
@@ -106,7 +109,7 @@ class BaseGameMode(ABC):
 
         if not item_database.is_active(weapon_code):
             # TODO: log this? cheater?
-            print(f"Weapon {weapon_code} is not yet implemented")
+            logging.error(f"Weapon {weapon_code} is not yet implemented")
             return
 
         if (
@@ -114,19 +117,19 @@ class BaseGameMode(ABC):
             and weapon_code not in DefaultWeapon.DEFAULTS
         ):
             # TODO: cheater?
-            print(
+            logging.error(
                 f"Weapon {weapon_code} is not in {attacker.user.displayname} inventory"
             )
             return
 
         if not self.can_be_damaged(attacker=attacker, victim=victim):
-            print(
+            logging.info(
                 f"{attacker.user.displayname} cannot damage {victim.user.displayname}"
             )
             return
 
         if not item_database.is_weapon(weapon_code):
-            print(f"{weapon_code} is not a weapon")
+            logging.info(f"{weapon_code} is not a weapon")
             return
 
         # WTF WarRock
@@ -188,14 +191,14 @@ class BaseGameMode(ABC):
             damage_type=DamageTypes.INFANTRY,
             hitbox=bone_id,
             distance=0,  # TODO
-            radius=radius
+            radius=radius,
         )
         await self.damage_player(
             handler=handler,
             attacker=attacker,
             victim=victim,
             damage=damage_taken,
-            is_headshot=False  # TODO: Even if we do not display icon we should check this
+            is_headshot=False,  # TODO: Even if we do not display icon we should check this
         )
 
     async def on_object_damage(self, handler: "GameProcessHandler"):
@@ -227,20 +230,23 @@ class BaseGameMode(ABC):
 
         # Player using weapon to attack vehicle
         if is_player_attacker:
-            if not attacker.user.inventory.has_item(weapon_code) and weapon_code not in DefaultWeapon.DEFAULTS:
+            if (
+                not attacker.user.inventory.has_item(weapon_code)
+                and weapon_code not in DefaultWeapon.DEFAULTS
+            ):
                 return
             damage_taken = self.damage_calculator(
                 weapon=weapon_code,
                 damage_type=vehicle_class,
                 hitbox=0,  # Vehicles do not have a hitbox AFAIK
                 distance=0,  # TODO
-                radius=radius
-                )
+                radius=radius,
+            )
         else:  # Vehicle - vehicle combat
             if attacker.vehicle_id == -1:  # artillery strike
 
                 if not weapon_code == "FG02":  # Some other environment damage
-                    print(f"UNRECOGNIZED ENVIRONMENT DAMAGE {weapon_code}")
+                    logging.error(f"Unrecognized environment damage {weapon_code}")
                     return
                 # Artillery requires binoculars
                 if not attacker.user.inventory.has_item("DX01"):
@@ -254,36 +260,42 @@ class BaseGameMode(ABC):
                     damage_type=vehicle_class,
                     hitbox=None,
                     distance=0,  # TODO
-                    radius=radius
+                    radius=radius,
                 )
             else:
                 attacker_vehicle = handler.room.vehicles.get(attacker.vehicle_id)
 
                 if not attacker_vehicle.code == weapon_code:
-                    print(f"Suspicious missmatch in vehicle codes {attacker_vehicle.code}-{weapon_code}")
+                    logging.error(
+                        f"Missmatch in vehicle codes {attacker_vehicle.code}-{weapon_code}"
+                    )
                     return
 
                 # we need the actual weapon code of the vehicle in this case
                 # Ignore the reported vehicle seat, we stored our own anyway
                 if is_sub_weapon:
-                    weapon_code = attacker_vehicle.seats[attacker.vehicle_seat].sub_weapon_code
+                    weapon_code = attacker_vehicle.seats[
+                        attacker.vehicle_seat
+                    ].sub_weapon_code
                 else:
-                    weapon_code = attacker_vehicle.seats[attacker.vehicle_seat].main_weapon_code
+                    weapon_code = attacker_vehicle.seats[
+                        attacker.vehicle_seat
+                    ].main_weapon_code
 
                 damage_taken = self.damage_calculator(
                     weapon=weapon_code,
                     damage_type=vehicle_class,
                     hitbox=None,
                     distance=0,  # TODO
-                    radius=radius
+                    radius=radius,
                 )
 
         await self.damage_vehicle(
             handler=handler,
             attacker=attacker,
             vehicle=vehicle,
-            damage_taken=damage_taken
-            )
+            damage_taken=damage_taken,
+        )
 
     async def damage_player(
         self,
@@ -314,7 +326,9 @@ class BaseGameMode(ABC):
         handler.set_block(13, current_victim_health)
         handler.answer = True
 
-    async def damage_vehicle(self, handler: "GameProcessHandler", attacker, vehicle, damage_taken):
+    async def damage_vehicle(
+        self, handler: "GameProcessHandler", attacker, vehicle, damage_taken
+    ):
 
         vehicle.health -= damage_taken
 
@@ -327,9 +341,13 @@ class BaseGameMode(ABC):
             handler.answer = True
         else:
             vehicle.health = 0
-            if vehicle.team != Team.NONE:  # Someone was in the vehicle. We have to kill them
+            if (
+                vehicle.team != Team.NONE
+            ):  # Someone was in the vehicle. We have to kill them
                 # avoid circular import
-                from wcps_game.handlers.game_handler_factory import get_subhandler_for_packet
+                from wcps_game.handlers.game_handler_factory import (
+                    get_subhandler_for_packet,
+                )
 
                 for seat in vehicle.seats.values():
                     if seat.player is not None:
@@ -340,11 +358,11 @@ class BaseGameMode(ABC):
 
                         death_handler = get_subhandler_for_packet(
                             subpacket_id=PacketList.DO_PLAYER_DIE
-                            )
+                        )
 
-                        asyncio.create_task(death_handler.process(
-                            user=seat.player.user,
-                            in_packet=handler.packet
+                        asyncio.create_task(
+                            death_handler.process(
+                                user=seat.player.user, in_packet=handler.packet
                             )
                         )
                         await attacker.add_kills()
@@ -383,7 +401,9 @@ class BaseGameMode(ABC):
         damage_taken = 0
 
         # This is the raw power of the weapon
-        weapon_power = item_database.get_weapon_power(code=weapon, is_vehicle=is_vehicle_weapon)
+        weapon_power = item_database.get_weapon_power(
+            code=weapon, is_vehicle=is_vehicle_weapon
+        )
         # A list of coefs. for personal/surface/air/ship etc.
         damage_type_coefs = item_database.get_weapon_damage_class(
             code=weapon, damage_class=damage_type, is_vehicle=is_vehicle_weapon

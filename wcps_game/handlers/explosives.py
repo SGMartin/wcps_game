@@ -46,7 +46,7 @@ class ExplosivesHandler(PacketHandler):
         # Actual CQC bomb
         if action_type == 0:
             # TODO: validate C4 and items
-            print(f"Item id is {item_id}")
+            # print(f"Item id is {item_id}")
 
             if user.room.game_mode != GameMode.EXPLOSIVE:
                 return

@@ -116,7 +116,7 @@ class GameProcessHandler(abc.ABC):
                         game_data_packet = PacketFactory.create_packet(
                             packet_id=PacketList.DO_GAME_PROCESS, blocks=new_packet
                         )
-                        print(f"Final packet {game_data_packet.blocks}")
+                        # print(f"Final packet {game_data_packet.blocks}")
                         if self.error_code > corerr.SUCCESS or self.self_target:
                             await user.send(game_data_packet.build())
                         else:

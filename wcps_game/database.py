@@ -45,7 +45,7 @@ async def get_user_details(username: str) -> dict:
                     return this_user
                 else:
                     # TODO: Improper db format
-                    print("Improper database schema")
+                    logging.error("Improper database schema")
                     return None
             else:
                 return None
@@ -69,7 +69,7 @@ async def get_user_stats(username: str) -> dict:
                     return this_user
                 else:
                     # TODO: Improper db format
-                    print("Improper database schema")
+                    logging.error("Improper database schema")
                     return None
             else:
                 return None

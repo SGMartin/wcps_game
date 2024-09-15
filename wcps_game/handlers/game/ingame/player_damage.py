@@ -1,3 +1,5 @@
+import logging
+
 from wcps_game.handlers.packet_handler import GameProcessHandler
 from wcps_game.game.constants import RoomStatus
 
@@ -8,5 +10,4 @@ class PlayerDamageHandler(GameProcessHandler):
             if len(self.blocks) == 24:
                 await self.room.current_game_mode.on_damage(self)
             else:
-                print("WTF WEAPON LENGTH PACKET")
-                print(len(self.blocks))
+                logging.info(f"Incorrect damage packet length {len(self.blocks)}")

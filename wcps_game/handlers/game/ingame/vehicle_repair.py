@@ -1,3 +1,5 @@
+import logging
+
 from wcps_game.handlers.packet_handler import GameProcessHandler
 from wcps_game.game.constants import ChannelType, RoomStatus, Team
 
@@ -42,12 +44,11 @@ class RepairVehicleHandler(GameProcessHandler):
                 repair_rate = 0.15
             else:
                 repair_rate = 0
-                print(f"Failure to get repair rate for item {self.player.weapon}")
+                logging.error(f"Failure to get repair rate for item {self.player.weapon}")
 
         if repair_rate > 0:
             health_gained = round(target_vehicle.max_health * repair_rate)
             target_vehicle.health += health_gained
-            print(health_gained)
 
             if target_vehicle.health > target_vehicle.max_health:
                 target_vehicle.health = target_vehicle.max_health
