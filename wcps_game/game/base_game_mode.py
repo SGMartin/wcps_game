@@ -377,6 +377,15 @@ class BaseGameMode(ABC):
     def can_be_damaged(self, attacker: "Player", victim: "Player"):
         can_be_damaged = False
 
+        # Make sure no damage can be taken in explosive after the bomb is defused or explodes
+        this_room = attacker.user.room
+
+        if (
+            this_room.game_mode == GameMode.EXPLOSIVE
+            and not this_room.current_game_mode.active_round
+        ):
+            return can_be_damaged
+
         if victim.spawn_protection_ticks > 0:
             return can_be_damaged
 
