@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from wcps_game.game.rooms import Room
 
-from wcps_core.constants import Ports, ServerTypes, InternalKeys
+from wcps_core.constants import Ports, InternalKeys
 from wcps_core.packets import OutPacket
 
 from wcps_game.config import settings
@@ -233,9 +233,9 @@ class GameServer(NetworkEntity):
         self.id = settings().authentication_id
 
         # Game properties
-        self.max_players = 3600
+        self.max_players = settings().maximum_players
         self.current_rooms = 0
-        self.server_type = ServerTypes.ENTIRE
+        self.server_type = settings().server_type
         self.premium_only = False
 
         self.online_users = {}
