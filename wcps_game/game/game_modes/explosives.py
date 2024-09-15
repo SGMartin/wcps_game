@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from wcps_game.game.rooms import Room
 
+from wcps_game.config import settings
 from wcps_game.game.base_game_mode import BaseGameMode
 from wcps_game.packets.packet_list import PacketList
 from wcps_game.packets.packet_factory import PacketFactory
@@ -93,8 +94,7 @@ class Explosive(BaseGameMode):
             player.bombs_planted += 1
             self.bomb_planted = True
 
-            # TODO: make this configurable
-            self.room.down_ticks = 42000
+            self.room.down_ticks = settings().explosive_bomb_time * 1000
             return True
         else:
             if self.bomb_planted:
@@ -142,7 +142,6 @@ class Explosive(BaseGameMode):
         milliseconds_elapsed = time.time() - self.round_end_time
         milliseconds_elapsed = milliseconds_elapsed * 1000
 
-        # TODO: make this configurable?
         if not milliseconds_elapsed >= 5000:
             return False
 
@@ -153,8 +152,7 @@ class Explosive(BaseGameMode):
         self.room.ground_items.clear()
         self.room.up_ticks = 0
 
-        # TODO: round time, make this configurable
-        self.room.down_ticks = 180000
+        self.room.down_ticks = settings().explosive_round_time
         self.bomb_planted = False
         self.bomb_defused = False
 

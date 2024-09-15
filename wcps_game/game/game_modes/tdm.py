@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from wcps_game.game.rooms import Room
 
+from wcps_game.config import settings
 from wcps_game.game.base_game_mode import BaseGameMode
 
 import wcps_game.game.constants as gconstants
@@ -25,7 +26,7 @@ class TDM(BaseGameMode):
 
         self.derbaran_tickets = self.niu_tickets = self.room.tdm_tickets
 
-        self.room.down_ticks = 3600000  # TODO: this should be configurable
+        self.room.down_ticks = settings().game_time_limit * 1000
         self.initialized = True
         self.freeze_tick = False
 

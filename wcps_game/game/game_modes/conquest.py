@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from wcps_game.game.rooms import Room
 
+from wcps_game.config import settings
 from wcps_game.game.base_game_mode import BaseGameMode
 
 import wcps_game.game.constants as gconstants
@@ -42,9 +43,10 @@ class Conquest(BaseGameMode):
         self.derbaran_tickets = self.niu_tickets = 999
         self.derbaran_slowdown = self.niu_slowdown = 0
         self.derbaran_flags = self.niu_flags = 1
+        # This one should not be configured as they added a timer in the client which is
+        # hard set to 5 minutes
         self.main_flag_protection_time = 300000
-
-        self.room.down_ticks = 3600000  # TODO: this should be configurable
+        self.room.down_ticks = settings().game_time_limit * 1000
         self.time_elapsed = self.room.down_ticks
         self.initialized = True
         self.freeze_tick = False
