@@ -151,7 +151,7 @@ class UDPListener:
             elif packet[14] in {0x10, 0x30, 0x31, 0x32, 0x34}:
                 session_id_bytes = packet[4:6][
                     ::-1
-                ]  # Reverse the bytes to match the C# code
+                ]
                 target_id = self.to_ushort(packet, 22)
                 room_id = self.to_ushort(packet, 6)
                 session_id = struct.unpack("<H", session_id_bytes)[0]
@@ -202,12 +202,10 @@ class UDPListener:
         return struct.pack(">I", value)
 
     def to_ip_endpoint(self, data: bytes, offset: int) -> str:
-        # Apply XOR key to the relevant bytes
         decoded_data = bytearray(data)
         for i in range(offset, offset + 6):
             decoded_data[i] ^= self.XOR_SEND_KEY
 
-        # Extract port and IP address after applying XOR key
         port = struct.unpack("<H", decoded_data[offset: offset + 2])[0]
         ip = struct.unpack(">I", decoded_data[offset + 2: offset + 6])[0]
         ip_address = socket.inet_ntoa(struct.pack(">I", ip))
@@ -228,10 +226,8 @@ class UDPListener:
         port_bytes = struct.pack("<H", port)
         value = port_bytes + ip_bytes
 
-        # Reverse the byte order as done in C#
         value = value[::-1]
 
-        # Apply XOR operation
         for i in range(6):
             data[offset + i] = value[i] ^ self.XOR_RECEIVE_KEY
 
