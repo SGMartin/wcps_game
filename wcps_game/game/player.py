@@ -98,6 +98,7 @@ class Player:
         self.deaths += 1
         self.health = 0
         self.alive = False
+        self.points = 1  # Vanilla WR otherwise the scoreboard bugs?
         await self.user.stats.update_deaths(deaths=1)
 
     # TODO: We can reset more stuff here. Called on confirm death
