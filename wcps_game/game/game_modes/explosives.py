@@ -78,7 +78,7 @@ class Explosive(BaseGameMode):
 
     # TODO: Anything worth doing here?
     # Maybe some stats or background task?
-    async def on_death(self, player):
+    async def on_death(self, killer, victim):
         pass
 
     async def on_suicide(self, player):
@@ -152,7 +152,7 @@ class Explosive(BaseGameMode):
         self.room.ground_items.clear()
         self.room.up_ticks = 0
 
-        self.room.down_ticks = settings().explosive_round_time
+        self.room.down_ticks = settings().explosive_round_time * 1000
         self.bomb_planted = False
         self.bomb_defused = False
 
