@@ -23,7 +23,6 @@ class CollisionDamageHandler(GameProcessHandler):
             return
 
         if not is_player:
-            # TODO: vehicles
             target_vehicle = self.room.vehicles.get(target_vehicle)
             if not target_vehicle:
                 return
