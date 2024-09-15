@@ -104,6 +104,13 @@ class User(NetworkEntity):
             self.xp = database_details["xp"]
             self.premium = database_details["premium"]
             self.premium_expire_date = database_details["premium_expiredate"]
+
+            current_time_epoch = int(time.time())
+            premium_time_left = int(self.premium_expire_date - current_time_epoch)
+
+            if premium_time_left <= 0:
+                self.premium = Premium.F2P
+
             await self.stats.update_kills(kills=int(database_details["kills"]))
             await self.stats.update_deaths(deaths=int(database_details["deaths"]))
 
