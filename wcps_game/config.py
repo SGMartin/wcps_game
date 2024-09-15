@@ -16,6 +16,19 @@ class Settings(BaseSettings):
     authentication_server_ip: str = "127.0.0.1"
     authentication_id: int = 0
 
+    # Maximum players allowed in the server. 3600 is the hardcoded client max. value.
+    maximum_players: int = 3600
+    # Experimental, do not touch unless you really know what you are dealing with
+    # ENTIRE = 0 ADULT = 1 CLAN = 2 EMPTY = 3 TEST = 4 DEVELOPMENT = 5 NONE = 6 TRAINEE = 21
+    server_type: int = 0
+    # Duration, in seconds, of explosive round and bombs
+    explosive_round_time: int = 180
+    explosive_bomb_time: int = 45
+    # Default game time limit for TDM, FFA etc.
+    game_time_limit: int = 3600
+    # Time to wait until unused vehicles are killed and reset
+    unused_vehicle_time: int = 600
+
     class Config:
         env_file = ".env"
 
