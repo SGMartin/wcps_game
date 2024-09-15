@@ -30,7 +30,7 @@ class FFA(BaseGameMode):
         await super().initialize(room)
 
         self.max_kills = 10 + (room.tickets_setting * 5)
-        self.room.down_ticks = settings.game_time_limit * 1000
+        self.room.down_ticks = settings().game_time_limit * 1000
         self.initialized = True
         self.freeze_tick = False
         self.bln_first_spawn = True
