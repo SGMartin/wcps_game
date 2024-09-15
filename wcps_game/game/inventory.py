@@ -221,7 +221,6 @@ class Inventory:
             self.available_slots[4] = True
 
         # Check and update slots based on the item presence
-        # TODO: Add logic to enable slots based on px items if needed
         for item, slot in item_slot_mapping.items():
             if self.has_item(item):
                 self.available_slots[slot] = True
