@@ -391,10 +391,8 @@ class RoomInviteHandler(PacketHandler):
             user=inviter,
             message=message,
         )
-        invite_confirm = PacketFactory.create_packet(
-            packet_id=PacketList.DO_INVITATION, error_code=RoomInvitationError.INVITED
-        )
-        await inviter.send(invite_confirm.build())
+        # For the "invitation has been sent" msg, you have to resend the packet again. Yup
+        await inviter.send(invite_packet.build())
         await invitee.send(invite_packet.build())
 
     async def send_error(self, user: "User", error_code):
