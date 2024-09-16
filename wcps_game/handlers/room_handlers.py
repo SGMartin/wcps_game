@@ -420,8 +420,8 @@ class RoomExpelHandler(PacketHandler):
 
         target_player = this_room.players.get(slot_to_kick)
 
-        if target_player is None:
-            print("ERROR CODE HERE")
+        if target_player is None or slot_to_kick == this_room.master_slot:
+            return
         else:
             kick_packet = PacketFactory.create_packet(
                 packet_id=PacketList.DO_EXPEL_PLAYER,
