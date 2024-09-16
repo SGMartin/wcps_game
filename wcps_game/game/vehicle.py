@@ -1,5 +1,4 @@
 import asyncio
-import logging
 from wcps_game.game.constants import Team, VehicleClass
 
 
@@ -110,7 +109,6 @@ class Vehicle():
             if vehicle_empty:
                 # If all seats are empty, set the team to NONE
                 self.team = Team.NONE
-                logging.info("VEHICLE IS NOW EMPTY AND TEAMLESS")
                 return True
 
             return False
