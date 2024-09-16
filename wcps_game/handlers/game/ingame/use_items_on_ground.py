@@ -44,6 +44,9 @@ class UseGroundItemHandler(GameProcessHandler):
 
             await this_item.owner.add_assists(assists=5)
 
+        if this_item.code == "DS05":
+            await this_item.owner.add_assists(assists=5)
+
         if this_item.code == "DV01":  # Medic box
             self.player.health += 400
 
