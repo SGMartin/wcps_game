@@ -27,4 +27,4 @@ class ScoreBoard(OutPacket):
             self.append(player.deaths)
             self.append(player.flags_taken)
             self.append(player.assists + player.points)  # Odd WR stuff
-            self.append(0)  # Everything you set here is set as negative
+            self.append(0)
