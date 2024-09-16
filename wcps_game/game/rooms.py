@@ -536,6 +536,13 @@ class Room:
                             await self.update_vehicle_spawn()
                             await self.update_vehicle_unused_time()
 
+                            # TODO: Verify this does not crash the server
+                            map_update = PacketFactory.create_packet(
+                                packet_id=PacketList.DO_GAME_UPDATE_DATA,
+                                room=self
+                            )
+                            await self.send(map_update.build())
+
                             # Reset the last_tick_time
                             last_tick_time = current_time
 

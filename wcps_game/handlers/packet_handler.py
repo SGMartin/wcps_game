@@ -116,14 +116,23 @@ class GameProcessHandler(abc.ABC):
                         game_data_packet = PacketFactory.create_packet(
                             packet_id=PacketList.DO_GAME_PROCESS, blocks=new_packet
                         )
-                        # print(f"Final packet {game_data_packet.blocks}")
                         if self.error_code > corerr.SUCCESS or self.self_target:
+                            # If we need to send map data, do it first
+                            if self.map_data:
+                                map_data = PacketFactory.create_packet(
+                                    packet_id=PacketList.DO_GDATA_INFO,
+                                    room=self.room
+                                )
+                                players_status = PacketFactory.create_packet(
+                                    packet_id=PacketList.DO_GAME_UPDATE_DATA,
+                                    room=self.room
+                                )
+                                await user.send(map_data.build())
+                                await user.send(players_status.build())
+
                             await user.send(game_data_packet.build())
                         else:
                             await self.room.send(game_data_packet.build())
-
-                        if self.map_data:
-                            logging.info("Implement map data packet here")
 
                         if self.update_lobby:
                             channel_users = await user.this_server.channels[

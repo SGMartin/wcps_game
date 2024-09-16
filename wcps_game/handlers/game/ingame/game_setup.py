@@ -8,7 +8,7 @@ class GameSetupHandler(GameProcessHandler):
     async def handle(self):
 
         self.sub_packet = PacketList.DO_GO
-        self.set_block(2, 3)  # Unknown
+        self.set_block(2, 3)  # 100% sure this is the spawn protection time :)
         self.set_block(3, 500)  # Unknown
         self.set_block(4, 0)  # unknown
         self.set_block(5, 1)  # is this the team?
@@ -19,5 +19,7 @@ class GameSetupHandler(GameProcessHandler):
             self.room.running = True
             asyncio.create_task(self.room.run())
 
+        # Request a mapData update here
+        self.map_data = True
         self.self_target = True
         self.answer = True

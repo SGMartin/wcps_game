@@ -37,10 +37,12 @@ class PacketList:
     DO_GAME_USER_LIST = 0x7500
 
     # Game packets
+    DO_GDATA_INFO = 0x7510
     DO_VEHICLE_LEAVE_WORLD = 0x7511  # Named by DarkRaptor. Present in older sources. Maybe it moved
     DO_BOMB_PROCESS = 0x7520
     DO_GAME_PROCESS = 0x7530
     DO_GAME_UPDATE_CLOCK = 0x7540
+    DO_GAME_UPDATE_DATA = 0x7541
     DO_GAME_SCORE = 0x7550
     DO_GAME_RESULT = 0x7560
     DO_PROMOTION_OLD = 0x8200

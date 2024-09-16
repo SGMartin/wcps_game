@@ -36,6 +36,8 @@ from wcps_game.packets.manual_game_setup import ManualGameSetup
 from wcps_game.packets.manual_round_start import ManualRoundStart
 from wcps_game.packets.manual_round_end import ManualRoundEnd
 from wcps_game.packets.explosives import Explosives
+from wcps_game.packets.update_game_data import UpdateGameData
+from wcps_game.packets.game_data_info import GameDataInfo
 
 
 class PacketFactory:
@@ -70,6 +72,8 @@ class PacketFactory:
         PacketList.DO_GAME_PROCESS: GameProcess,
         PacketList.DO_BOMB_PROCESS: Explosives,
         PacketList.DO_GAME_UPDATE_CLOCK: GameUpdateClock,
+        PacketList.DO_GDATA_INFO: GameDataInfo,
+        PacketList.DO_GAME_UPDATE_DATA: UpdateGameData,
         PacketList.DO_GAME_SCORE: ScoreBoard,
         PacketList.DO_GAME_RESULT: EndGame,
         PacketList.DO_PROMOTION_OLD: Promotion,
