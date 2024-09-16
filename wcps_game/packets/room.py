@@ -119,6 +119,17 @@ class RoomInvite(OutPacket):
             self.append(user.room.password)
 
 
+class RoomKick(OutPacket):
+    def __init__(self, target_player: int):
+        super().__init__(
+            packet_id=PacketList.DO_EXPEL_PLAYER,
+            xor_key=ClientXorKeys.SEND
+        )
+
+        self.append(corerr.SUCCESS)
+        self.append(target_player)
+
+
 class RoomPlayers(OutPacket):
     def __init__(self, player_list: list):
         super().__init__(

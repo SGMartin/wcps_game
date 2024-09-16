@@ -23,6 +23,7 @@ from wcps_game.packets.room import (
     RoomInfoUpdate,
     RoomJoin,
     RoomInvite,
+    RoomKick,
     RoomPlayers
 )
 from wcps_game.packets.game_process import GameProcess
@@ -68,6 +69,8 @@ class PacketFactory:
         PacketList.DO_JOIN_ROOM: RoomJoin,
         PacketList.DO_GAME_USER_LIST: RoomPlayers,
         PacketList.DO_INVITATION: RoomInvite,
+        PacketList.DO_EXPEL_PLAYER: RoomKick,
+
         # Game
         PacketList.DO_GAME_PROCESS: GameProcess,
         PacketList.DO_BOMB_PROCESS: Explosives,

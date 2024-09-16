@@ -400,3 +400,32 @@ class RoomInviteHandler(PacketHandler):
             packet_id=PacketList.DO_INVITATION, error_code=error_code
         )
         await user.send(error_packet.build())
+
+
+class RoomExpelHandler(PacketHandler):
+    async def process(self, user: "User"):
+
+        if not user.authorized:
+            return
+
+        if user.room is None:
+            return
+
+        this_room = user.room
+
+        if this_room.master != user:
+            return
+
+        slot_to_kick = int(self.get_block(0))
+
+        target_player = this_room.players.get(slot_to_kick)
+
+        if target_player is None:
+            print("ERROR CODE HERE")
+        else:
+            kick_packet = PacketFactory.create_packet(
+                packet_id=PacketList.DO_EXPEL_PLAYER,
+                target_player=slot_to_kick
+            )
+
+            await target_player.user.send(kick_packet.build())

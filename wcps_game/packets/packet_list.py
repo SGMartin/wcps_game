@@ -33,6 +33,7 @@ class PacketList:
     ROOM_CREATE = 0x7300
     DO_JOIN_ROOM = 0x7310
     DO_EXIT_ROOM = 0x7340
+    DO_EXPEL_PLAYER = 0x7341
     DO_INVITATION = 0x7350
     DO_GAME_USER_LIST = 0x7500
 
@@ -59,6 +60,7 @@ class PacketList:
     DO_TEAM_CLICK = 0x38
     DO_PING_CLICK = 0x3B
     DO_HOLD_CLICK = 0x3A
+    DO_VOTE_KICK = 0x3D
     DO_AUTOSTART_CLICK = 0x3E
     # Ingame subpackets
     DO_ROUND_START = 0x5  # ID by darkraptor
