@@ -98,7 +98,7 @@ class Player:
         self.deaths += 1
         self.health = 0
         self.alive = False
-        self.points = 1  # Vanilla WR otherwise the scoreboard bugs?
+        self.points += 1  # Vanilla WR otherwise the scoreboard bugs?
         await self.user.stats.update_deaths(deaths=1)
 
     # TODO: We can reset more stuff here. Called on confirm death
@@ -112,8 +112,6 @@ class Player:
 
     async def add_assists(self, assists: int):
         self.assists += assists
-        self.points = self.points + assists * 2
-        # TODO: update user stats
 
     async def add_flags(self):
         self.flags_taken += 1
