@@ -129,9 +129,12 @@ class Player:
         if self.points < 0:
             self.points = 0
 
-        # CQC bonus
+        # CQC bonus for kills
         if self.user.room.game_mode == gconstants.GameMode.EXPLOSIVE:
             self.points = self.points * 2
+
+        # Add the assists as raw points. #TODO: research this
+        self.points = self.points + self.assists
 
         # Premium bonus
         premium_bonus = {
