@@ -52,7 +52,7 @@ class GameDataInfo(OutPacket):
                 self.append(vehicle.angular_X)
                 self.append(vehicle.angular_Y)
                 self.append(vehicle.angular_Z)
-                self.append(vehicle.angular_Z)
+                self.append(vehicle.turret_angle)
                 self.append(vehicle.update_string)
                 self.append(0)
                 self.append(0)
