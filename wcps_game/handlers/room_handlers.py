@@ -199,9 +199,18 @@ class RoomJoinHandler(PacketHandler):
             bad_level_error = PacketFactory.create_packet(
                 packet_id=PacketList.DO_JOIN_ROOM,
                 error_code=RoomJoinError.UNSUITABLE_LEVEL,
-                room_to_join=None,
+                room_to_join=None
             )
             await user.send(bad_level_error.build())
+            return
+
+        if user.username in this_room.votekick.locked_users:
+            voted_out_error = PacketFactory.create_packet(
+                packet_id=PacketList.DO_JOIN_ROOM,
+                error_code=RoomJoinError.GENERIC,
+                room_to_join=None
+            )
+            await user.send(voted_out_error.build())
             return
 
         # If this function does not return none, it will send the room join packet

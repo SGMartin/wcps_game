@@ -36,6 +36,7 @@ from wcps_game.packets.manual_vehicle_explosion import ManualVehicleExplosion
 from wcps_game.packets.manual_game_setup import ManualGameSetup
 from wcps_game.packets.manual_round_start import ManualRoundStart
 from wcps_game.packets.manual_round_end import ManualRoundEnd
+from wcps_game.packets.manual_votekick import ManualVoteKick
 from wcps_game.packets.explosives import Explosives
 from wcps_game.packets.update_game_data import UpdateGameData
 from wcps_game.packets.game_data_info import GameDataInfo
@@ -86,7 +87,8 @@ class PacketFactory:
         PacketList.DO_UNIT_DIE: ManualVehicleExplosion,
         PacketList.DO_GO: ManualGameSetup,
         PacketList.DO_ROUND_START: ManualRoundStart,
-        PacketList.DO_ROUND_END: ManualRoundEnd
+        PacketList.DO_ROUND_END: ManualRoundEnd,
+        PacketList.DO_VOTE_KICK: ManualVoteKick
     }
 
     @staticmethod

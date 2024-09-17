@@ -195,7 +195,7 @@ def add_room_info_to_packet(packet: OutPacket, room):
     packet.append(room.type)  # Unused in Chapter 1
     packet.append(room.level_limit)
     packet.append(room.premium_only)
-    packet.append(room.vote_kick)
+    packet.append(room.enable_votekick)
     packet.append(room.autostart)  # autostart
     packet.append(0)  # average ping before patch G1-17
     packet.append(room.ping_limit)  # ping limit

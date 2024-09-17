@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import math
+import time
 
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -50,7 +51,6 @@ class Room:
         self.type = room_type  # Unused in CP1
         self.level_limit = level_limit
         self.premium_only = premium_only
-        self.vote_kick = vote_kick
         self.is_clanwar = is_clanwar
 
         self.password_protected = password_protected
@@ -79,6 +79,8 @@ class Room:
         self.tdm_tickets = gconstants.TDM_LIMITS[self.tickets_setting]  # Actual setting
         self.autostart = False
         self.user_limit = False
+        self.enable_votekick = vote_kick  # vote kick setting as defined in room creating
+        self.votekick = VoteKick(self)  # always instanciate a new votekick object just in case
         self.ground_items = {}
         self.flags = {}
         self.spawn_flags = {}
@@ -491,6 +493,8 @@ class Room:
         self.current_game_mode = None
         self.state = gconstants.RoomStatus.WAITING
         self.running = False
+        # Reset kicked users set
+        self.votekick.locked_users.clear()
 
         # Send a new room update packet so that k/d stats are updated
         room_players = PacketFactory.create_packet(
@@ -535,6 +539,7 @@ class Room:
                             await self.update_spawn_protection()
                             await self.update_vehicle_spawn()
                             await self.update_vehicle_unused_time()
+                            await self.handle_votekick()
 
                             # TODO: Verify this does not crash the server
                             map_update = PacketFactory.create_packet(
@@ -602,3 +607,93 @@ class Room:
                     target_vehicle=vehicle
                 )
                 await self.send(vehicle_explosion.build())
+
+    async def handle_votekick(self):
+        if not self.votekick.running:
+            return
+
+        votes_to_kick = len(self.votekick.get_positive_votes())
+        # votes_to_save = len(self.votekick.get_negative_votes())
+
+        players_in_team = self.get_player_count_in_team(
+            team_to_count=self.votekick.vote_team
+        )
+        majority = round(players_in_team / 2) + 1
+        should_kick = votes_to_kick >= majority
+
+        if time.time() >= self.votekick.timestamp:
+            await self.votekick.stop_vote(should_kick)
+        elif should_kick:
+            await self.votekick.stop_vote(kicked=True)
+
+
+class VoteKick:
+    def __init__(self, room):
+        self.room = room
+        self.votes = []
+        self.vote_side = -1
+        self.target_id = -1
+        self.running = False
+        self.timestamp = 0
+        self.last_kick_timestamp = 0
+        self.locked_users = set()  # Set of users who have been kicked/locked out
+
+    def start_vote(self, target_slot, side):
+        self.running = True
+        self.target_id = target_slot
+        self.vote_team = side
+        self.timestamp = self.get_timestamp() + 30
+
+    async def stop_vote(self, kicked):
+        # kick the user if needed
+        await self.kick_user(kicked)
+
+        self.running = False
+        self.timestamp = 0
+        self.target_id = -1
+        self.vote_team = -1
+
+        self.last_kick_timestamp = self.get_timestamp()
+        self.votes.clear()  # Clear the list of votes
+
+    def add_user_vote(self, user, kick):
+        # I think only positive votes return a packet, but keep a dict nevertheless just in case
+        vote = {"user": user, "kick": kick}
+        self.votes.append(vote)
+
+    def get_positive_votes(self):
+        return [vote for vote in self.votes if vote["kick"]]
+
+    def get_negative_votes(self):
+        return [vote for vote in self.votes if not vote["kick"]]
+
+    async def kick_user(self, kicked):
+
+        player = self.room.players.get(self.target_id)
+
+        if kicked and player:
+            # Send a kick packet, which in turn will trigger a normal room leave packet
+            # and handler. No need to send lobby updates to the player
+            kick_packet = PacketFactory.create_packet(
+                packet_id=PacketList.DO_EXPEL_PLAYER,
+                target_player=player.id
+            )
+            await player.user.send(kick_packet.build())
+
+            # add the player to the list of kicked players
+            self.locked_users.add(player.user.username)
+            print(self.locked_users)
+
+        kick_notification = PacketFactory.create_packet(
+            packet_id=PacketList.DO_VOTE_KICK,
+            room=self.room,
+            kicked=kicked,
+            voted_player_id=player.id
+        )
+        for remaining_player in self.room.get_all_players():
+            if remaining_player.team == player.team and remaining_player != player:
+                print(kick_notification.blocks)
+                await remaining_player.user.send(kick_notification.build())
+
+    def get_timestamp(self):
+        return int(time.time())
