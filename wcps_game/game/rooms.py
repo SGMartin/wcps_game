@@ -69,6 +69,9 @@ class Room:
             self.channel.type
         ][max_players]
 
+        # TODO: make this configurable
+        self.max_spectators = 4
+
         self.running = False
 
         # Auto/default settings on room creating
@@ -118,6 +121,7 @@ class Room:
 
         # User data for networking
         self.players = dict.fromkeys(range(0, self.max_players))
+        self.spectators = dict.fromkeys(range(32, 32 + self.max_spectators))
         self.players[0] = this_player
 
         self._players_lock = asyncio.Lock()
@@ -242,6 +246,43 @@ class Room:
                     break
 
         return this_player
+
+    # TODO: complete this
+    async def add_spectator(self, spectator: "User"):
+        current_specs = [spec for spec in self.spectators.values() if spec]
+        if len(current_specs) >= self.max_spectators:
+            return None
+        else:
+            slot_to_test = 16
+            self.spectators[slot_to_test] = spectator
+            spectator.set_room(room=self, room_slot=slot_to_test)
+
+            # Spectate packet to join the room
+            spectate_packet = PacketFactory.create_packet(
+                packet_id=PacketList.DO_GUEST_JOIN,
+                room_to_join=self,
+                spectate_slot=slot_to_test
+            )
+            await spectator.send(spectate_packet.build())
+            # Players information and UPP endpoint
+            room_players_packet = PacketFactory.create_packet(
+                        packet_id=PacketList.DO_GAME_USER_LIST,
+                        player_list=self.get_all_players()
+                    )
+
+            await spectator.send(room_players_packet.build())
+
+            # Send players the spectator list?
+            specs_list = PacketFactory.create_packet(
+                packet_id=PacketList.DO_GAME_GUEST_LIST,
+                spec=spectator,
+                slot=slot_to_test
+            )
+            # await self.send(specs_list.build())
+            for player in self.get_all_players():
+                if player is not None:
+                    await player.user.send(specs_list.build())
+            return slot_to_test
 
     async def switch_player_side(self, player_to_switch: Player):
 
@@ -422,6 +463,10 @@ class Room:
             if player is not None:
                 await player.user.send(buffer)
 
+        for spectator in self.spectators.values():
+            if spectator is not None:
+                await spectator.send(buffer)
+
     async def start(self):
         self.up_ticks = 0
         self.down_ticks = 1800000
@@ -508,6 +553,7 @@ class Room:
     async def run(self):
         try:
             last_tick_time = datetime.now()
+            map_update_timer = 0
 
             while self.state == gconstants.RoomStatus.PLAYING:
                 if self.current_game_mode is not None and self.current_game_mode.initialized:
@@ -530,6 +576,7 @@ class Room:
                             self.up_ticks += 1000
                             self.down_ticks -= 1000
                             self.last_tick = current_time.second
+                            map_update_timer += 1
 
                             # Create and send clock packet
                             clock_packet = PacketFactory.create_packet(
@@ -540,13 +587,16 @@ class Room:
                             await self.update_vehicle_spawn()
                             await self.update_vehicle_unused_time()
                             await self.handle_votekick()
+                            await self.handle_bleeding()
 
-                            # TODO: Verify this does not crash the server
-                            map_update = PacketFactory.create_packet(
-                                packet_id=PacketList.DO_GAME_UPDATE_DATA,
-                                room=self
-                            )
-                            await self.send(map_update.build())
+                            # TODO: is 5 seconds ok?
+                            if map_update_timer >= 5:
+                                map_update = PacketFactory.create_packet(
+                                    packet_id=PacketList.DO_GAME_UPDATE_DATA,
+                                    room=self
+                                )
+                                await self.send(map_update.build())
+                                map_update_timer = 0
 
                             # Reset the last_tick_time
                             last_tick_time = current_time
@@ -626,6 +676,41 @@ class Room:
         elif should_kick:
             await self.votekick.stop_vote(kicked=True)
 
+    async def handle_bleeding(self):
+        # No bleeding out in cqc
+        if self.channel.type == gconstants.ChannelType.CQC:
+            return
+
+        for player in self.get_all_players():
+            # Bleeding out threshold is 3 hp
+            if not player.alive or player.health > 300:
+                continue
+
+            # Compressed bandage
+            if player.user.inventory.has_item("CH01"):
+                continue
+
+            # TODO: make this timer configurable and research original settings
+            if player.bleeding_timer < 10:
+                player.bleeding_timer += 1
+            else:
+                player.bleeding_timer = 0
+                # TODO: also make this configurable
+                player.health = player.health - 50
+
+                if player.health <= 0:
+                    suicide_packet = PacketFactory.create_packet(
+                        packet_id=PacketList.DO_SUICIDE,
+                        room=self,
+                        player=player,
+                        suicide_type=1,  # TODO: make enum
+                        out_of_map_limits=False
+                    )
+                    print(f"SUICIDE PACKE {suicide_packet.blocks}")
+                    await player.add_deaths()
+                    await self.current_game_mode.on_suicide(player=player)
+                    await self.send(suicide_packet.build())
+
 
 class VoteKick:
     def __init__(self, room):
@@ -682,7 +767,6 @@ class VoteKick:
 
             # add the player to the list of kicked players
             self.locked_users.add(player.user.username)
-            print(self.locked_users)
 
         kick_notification = PacketFactory.create_packet(
             packet_id=PacketList.DO_VOTE_KICK,
@@ -692,7 +776,6 @@ class VoteKick:
         )
         for remaining_player in self.room.get_all_players():
             if remaining_player.team == player.team and remaining_player != player:
-                print(kick_notification.blocks)
                 await remaining_player.user.send(kick_notification.build())
 
     def get_timestamp(self):

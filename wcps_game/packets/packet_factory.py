@@ -24,7 +24,9 @@ from wcps_game.packets.room import (
     RoomJoin,
     RoomInvite,
     RoomKick,
-    RoomPlayers
+    RoomPlayers,
+    RoomSpectate,
+    RoomSpectators
 )
 from wcps_game.packets.game_process import GameProcess
 from wcps_game.packets.game_clock import GameUpdateClock
@@ -37,6 +39,7 @@ from wcps_game.packets.manual_game_setup import ManualGameSetup
 from wcps_game.packets.manual_round_start import ManualRoundStart
 from wcps_game.packets.manual_round_end import ManualRoundEnd
 from wcps_game.packets.manual_votekick import ManualVoteKick
+from wcps_game.packets.manual_suicide import ManualSuicide
 from wcps_game.packets.explosives import Explosives
 from wcps_game.packets.update_game_data import UpdateGameData
 from wcps_game.packets.game_data_info import GameDataInfo
@@ -68,9 +71,12 @@ class PacketFactory:
         PacketList.DO_EXIT_ROOM: RoomLeave,
         PacketList.DO_ROOM_INFO_CHANGE: RoomInfoUpdate,
         PacketList.DO_JOIN_ROOM: RoomJoin,
+        PacketList.DO_GUEST_JOIN: RoomSpectate,
         PacketList.DO_GAME_USER_LIST: RoomPlayers,
+        PacketList.DO_GAME_GUEST_LIST: RoomSpectators,
         PacketList.DO_INVITATION: RoomInvite,
         PacketList.DO_EXPEL_PLAYER: RoomKick,
+
 
         # Game
         PacketList.DO_GAME_PROCESS: GameProcess,
@@ -88,7 +94,8 @@ class PacketFactory:
         PacketList.DO_GO: ManualGameSetup,
         PacketList.DO_ROUND_START: ManualRoundStart,
         PacketList.DO_ROUND_END: ManualRoundEnd,
-        PacketList.DO_VOTE_KICK: ManualVoteKick
+        PacketList.DO_VOTE_KICK: ManualVoteKick,
+        PacketList.DO_SUICIDE: ManualSuicide
     }
 
     @staticmethod

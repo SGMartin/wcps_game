@@ -36,6 +36,7 @@ class Player:
         self.vehicle_id = -1
         self.vehicle_seat = -1
         self.items_planted = 0
+        self.bleeding_timer = 0
         self.alive = True
         self.round_waiting = False
 
@@ -63,6 +64,7 @@ class Player:
         self.vehicle_id = -1
         self.vehicle_seat = -1
         self.items_planted = 0
+        self.bleeding_timer = 0
 
     def spawn(self, this_branch: gconstants.Classes):
         self.health = 1000
@@ -71,6 +73,7 @@ class Player:
         self.vehicle_id = -1
         self.vehicle_seat = -1
         self.items_planted = 0
+        self.bleeding_timer = 0
 
         if self.user.room.game_mode == gconstants.GameMode.EXPLOSIVE:
             self.can_spawn = False
@@ -99,6 +102,7 @@ class Player:
         self.health = 0
         self.alive = False
         self.points += 1  # Vanilla WR otherwise the scoreboard bugs?
+        self.bleeding_timer = 0
         await self.user.stats.update_deaths(deaths=1)
 
     # TODO: We can reset more stuff here. Called on confirm death

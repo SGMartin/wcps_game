@@ -1,5 +1,6 @@
 from wcps_game.handlers.packet_handler import GameProcessHandler
 from wcps_game.game.constants import GameMode, HealingPower, RoomStatus
+from wcps_game.packets.packet_list import PacketList
 
 
 class HealPlayerHandler(GameProcessHandler):
@@ -13,7 +14,35 @@ class HealPlayerHandler(GameProcessHandler):
 
         target = int(self.get_block(2))
         is_healing_post = bool(int(self.get_block(3)))
-        # should_heal = bool(int(self.get_block(5)))  # TODO: investigate this
+
+        # Drowning sends an empty heal subpacket with this byte set to 1
+        drowning_byte = int(self.get_block(4))
+
+        if drowning_byte == 0 or drowning_byte == 2:
+            should_heal = True
+        else:
+            should_heal = False
+
+        # Let's handle drowning first :)
+        if not should_heal:
+            self.player.health -= 100
+
+            if self.player.health <= 0:
+
+                await self.player.suicide()
+                await self.room.current_game_mode.on_suicide(self.player)
+
+                self.sub_packet = PacketList.DO_SUICIDE
+                self.set_block(2, self.player.id)
+                self.set_block(3, 0)
+                self.answer = True
+
+            else:
+                self.set_block(3, self.player.health)
+                self.answer = True
+
+            return
+
         hp_to_heal = 0
 
         if target not in range(0, self.room.max_players):
