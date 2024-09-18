@@ -37,7 +37,7 @@ HANDLER_MAP = {
     PacketList.INTERNAL_CLIENT_CONNECTION: AuthConnectionHandler,
     PacketList.INTERNAL_PLAYER_AUTHENTICATION: AuthorizeClientHandler,
     # Server - client lobby
-    PacketList.REQUEST_SERVER_TIME: RequestServerTimeHandler,
+    PacketList.DO_SERIAL_GSERV: RequestServerTimeHandler,
     PacketList.PLAYER_AUTHORIZATION: ClientAuthenticationHandler,
     PacketList.LEAVE_SERVER: LeaveServerHandler,
     PacketList.SELECT_CHANNEL: SelectChannelHandler,

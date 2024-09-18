@@ -10,7 +10,7 @@ from wcps_game.packets.packet_list import PacketList, ClientXorKeys
 
 class ServerTime(OutPacket):
     def __init__(self, error_code: ServerTimeError):
-        super().__init__(packet_id=PacketList.REQUEST_SERVER_TIME, xor_key=ClientXorKeys.SEND)
+        super().__init__(packet_id=PacketList.DO_SERIAL_GSERV, xor_key=ClientXorKeys.SEND)
         if error_code != corerr.SUCCESS:
             self.append(error_code)
         else:

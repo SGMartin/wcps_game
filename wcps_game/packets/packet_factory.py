@@ -52,7 +52,7 @@ class PacketFactory:
         PacketList.INTERNAL_GAME_STATUS: GameServerStatus,
         PacketList.INTERNAL_PLAYER_AUTHENTICATION: InternalPlayerAuthorization,
         # Lobby
-        PacketList.REQUEST_SERVER_TIME: ServerTime,
+        PacketList.DO_SERIAL_GSERV: ServerTime,
         PacketList.PLAYER_AUTHORIZATION: PlayerAuthorization,
         PacketList.SELECT_CHANNEL: SelectChannel,
         PacketList.PING: Ping,

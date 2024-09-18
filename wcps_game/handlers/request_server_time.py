@@ -23,7 +23,7 @@ class RequestServerTimeHandler(PacketHandler):
 
         if not client_version.isdigit() or not int(client_version) == 3:
             packet = PacketFactory.create_packet(
-                packet_id=PacketList.REQUEST_SERVER_TIME,
+                packet_id=PacketList.DO_SERIAL_GSERV,
                 error_code=ServerTimeError.CLIENT_VERSION_MISSMATCH
                 )
             await u.send(packet.build())
@@ -41,7 +41,7 @@ class RequestServerTimeHandler(PacketHandler):
             return
 
         success_packet = PacketFactory.create_packet(
-            packet_id=PacketList.REQUEST_SERVER_TIME,
+            packet_id=PacketList.DO_SERIAL_GSERV,
             error_code=corerr.SUCCESS
         )
 
