@@ -706,7 +706,6 @@ class Room:
                         suicide_type=1,  # TODO: make enum
                         out_of_map_limits=False
                     )
-                    print(f"SUICIDE PACKE {suicide_packet.blocks}")
                     await player.add_deaths()
                     await self.current_game_mode.on_suicide(player=player)
                     await self.send(suicide_packet.build())
