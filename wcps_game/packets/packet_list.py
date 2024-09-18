@@ -18,8 +18,8 @@ class PacketList:
     DO_JOIN_SERV = 0x6200
     DO_KEEPALIVE = 0x6400
     DO_SET_CHANNEL = 0x7001
-    USERLIST = 0x7100
-    CHAT = 0x7400
+    DO_USER_LIST = 0x7100
+    DO_CHAT = 0x7400
     # Shop
     EQUIPMENT = 0x7512
     UPDATE_INVENTORY = 0x7900  # Also controls when items expire

@@ -15,7 +15,7 @@ class UserList(OutPacket):
     ]
 
     def __init__(self, lobby_user_list: list, target_page: int):
-        super().__init__(packet_id=PacketList.USERLIST, xor_key=ClientXorKeys.SEND)
+        super().__init__(packet_id=PacketList.DO_USER_LIST, xor_key=ClientXorKeys.SEND)
 
         # User list count. Technically I managed to get to 302 with slider = 1
         # but sometime it crashes going back. 250 ALWAYS work

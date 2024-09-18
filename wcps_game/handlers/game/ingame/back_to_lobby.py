@@ -40,7 +40,7 @@ class BackToLobbyHandler(GameProcessHandler):
                     self.player.user.set_room(None, 0)
 
                     user_list = PacketFactory.create_packet(
-                        packet_id=PacketList.USERLIST,
+                        packet_id=PacketList.DO_USER_LIST,
                         lobby_user_list=channel_users,
                         target_page=self.player.user.userlist_page
                     )

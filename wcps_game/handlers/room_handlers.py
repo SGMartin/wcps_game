@@ -253,7 +253,7 @@ class RoomLeaveHandler(PacketHandler):
 
             # Send the user the userlist
             user_list_full = PacketFactory.create_packet(
-                packet_id=PacketList.USERLIST,
+                packet_id=PacketList.DO_USER_LIST,
                 lobby_user_list=channel_users,
                 target_page=user.userlist_page,
             )
@@ -278,7 +278,7 @@ class RoomLeaveHandler(PacketHandler):
             for c_user in channel_users:
                 if c_user.room is None:
                     this_user_update = PacketFactory.create_packet(
-                        packet_id=PacketList.USERLIST,
+                        packet_id=PacketList.DO_USER_LIST,
                         lobby_user_list=channel_users,
                         target_page=c_user.userlist_page,
                     )

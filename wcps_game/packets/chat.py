@@ -22,7 +22,7 @@ class Chat(OutPacket):
     ):
 
         super().__init__(
-            packet_id=PacketList.CHAT,
+            packet_id=PacketList.DO_CHAT,
             xor_key=ClientXorKeys.SEND
         )
 

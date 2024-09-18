@@ -37,7 +37,7 @@ class SelectChannelHandler(PacketHandler):
                 for channel_member in all_channel_users:
                     if channel_member.room is None:
                         userlist = PacketFactory.create_packet(
-                            packet_id=PacketList.USERLIST,
+                            packet_id=PacketList.DO_USER_LIST,
                             lobby_user_list=all_channel_users,
                             target_page=channel_member.userlist_page
                             )

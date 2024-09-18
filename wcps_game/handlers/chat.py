@@ -53,7 +53,7 @@ class ChatHandler(PacketHandler):
 
             if message_channel == ChatChannel.LOBBY2CHANNEL:  # TODO: check if the user is in a room
                 this_packet = PacketFactory.create_packet(
-                    packet_id=PacketList.CHAT,
+                    packet_id=PacketList.DO_CHAT,
                     error_code=1,
                     user=user,
                     chat_type=message_channel,
@@ -66,7 +66,7 @@ class ChatHandler(PacketHandler):
 
             if message_channel == ChatChannel.LOBBY2ALL:
                 this_packet = PacketFactory.create_packet(
-                    packet_id=PacketList.CHAT,
+                    packet_id=PacketList.DO_CHAT,
                     error_code=1,
                     user=user,
                     chat_type=message_channel,
@@ -78,7 +78,7 @@ class ChatHandler(PacketHandler):
 
             if message_channel == ChatChannel.ROOM2TEAM:
                 this_packet = PacketFactory.create_packet(
-                    packet_id=PacketList.CHAT,
+                    packet_id=PacketList.DO_CHAT,
                     error_code=1,
                     user=user,
                     chat_type=message_channel,
@@ -109,7 +109,7 @@ class ChatHandler(PacketHandler):
                         receiver_id = 998  # Sets text in yellow for supermaster
 
                     this_packet = PacketFactory.create_packet(
-                        packet_id=PacketList.CHAT,
+                        packet_id=PacketList.DO_CHAT,
                         error_code=1,
                         user=user,
                         chat_type=message_channel,
@@ -129,7 +129,7 @@ class ChatHandler(PacketHandler):
                 receiver_name = receiver_name + chr(0x1D)
                 if target_user is not None:
                     sender_packet = PacketFactory.create_packet(
-                        packet_id=PacketList.CHAT,
+                        packet_id=PacketList.DO_CHAT,
                         error_code=1,
                         user=user,
                         chat_type=message_channel,
@@ -144,7 +144,7 @@ class ChatHandler(PacketHandler):
                         await target_user.send(sender_packet.build())
                 else:
                     error_packet = PacketFactory.create_packet(
-                        packet_id=PacketList.CHAT,
+                        packet_id=PacketList.DO_CHAT,
                         user=user,
                         error_code=95040,  # TODO: Move this to an error code?
                         receiver_id=receiver_id,

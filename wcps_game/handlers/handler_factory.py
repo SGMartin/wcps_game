@@ -42,8 +42,8 @@ HANDLER_MAP = {
     PacketList.DO_CLOSE_WARROCK: LeaveServerHandler,
     PacketList.DO_SET_CHANNEL: SelectChannelHandler,
     PacketList.DO_KEEPALIVE: PingHandler,
-    PacketList.USERLIST: UserListHandler,
-    PacketList.CHAT: ChatHandler,
+    PacketList.DO_USER_LIST: UserListHandler,
+    PacketList.DO_CHAT: ChatHandler,
     # Shop
     PacketList.EQUIPMENT: EquipmentHandler,
     PacketList.ITEMSHOP: ItemShopHandler,

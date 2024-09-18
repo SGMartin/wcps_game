@@ -57,8 +57,8 @@ class PacketFactory:
         PacketList.DO_SET_CHANNEL: SelectChannel,
         PacketList.DO_KEEPALIVE: Ping,
         PacketList.DO_CLOSE_WARROCK: LeaveServer,
-        PacketList.USERLIST: UserList,
-        PacketList.CHAT: Chat,
+        PacketList.DO_USER_LIST: UserList,
+        PacketList.DO_CHAT: Chat,
         # Shop
         PacketList.EQUIPMENT: Equipment,
         PacketList.UPDATE_INVENTORY: UpdateInventory,

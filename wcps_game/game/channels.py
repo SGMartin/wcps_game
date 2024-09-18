@@ -55,7 +55,7 @@ class Channel:
         for user in users_left:
             if user.room is None:
                 new_user_list = PacketFactory.create_packet(
-                    packet_id=PacketList.USERLIST,
+                    packet_id=PacketList.DO_USER_LIST,
                     lobby_user_list=users_left,
                     target_page=user.userlist_page
                     )

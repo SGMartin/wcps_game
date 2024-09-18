@@ -29,7 +29,7 @@ class UserListHandler(PacketHandler):
             lobby_users = await u.this_server.channels[u.channel].get_users()
 
             packet = PacketFactory.create_packet(
-                packet_id=PacketList.USERLIST,
+                packet_id=PacketList.DO_USER_LIST,
                 lobby_user_list=lobby_users,
                 target_page=target_userlist_page
                 )
