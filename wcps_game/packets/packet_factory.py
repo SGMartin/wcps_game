@@ -56,7 +56,7 @@ class PacketFactory:
         PacketList.PLAYER_AUTHORIZATION: PlayerAuthorization,
         PacketList.SELECT_CHANNEL: SelectChannel,
         PacketList.PING: Ping,
-        PacketList.LEAVE_SERVER: LeaveServer,
+        PacketList.DO_CLOSE_WARROCK: LeaveServer,
         PacketList.USERLIST: UserList,
         PacketList.CHAT: Chat,
         # Shop

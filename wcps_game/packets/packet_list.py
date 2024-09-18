@@ -13,7 +13,7 @@ class PacketList:
     INTERNAL_CLIENT_CONNECTION = cp.ClientConnection
     INTERNAL_PLAYER_AUTHENTICATION = cp.ClientAuthentication
     # Lobby
-    LEAVE_SERVER = 0x6000
+    DO_CLOSE_WARROCK = 0x6000
     DO_SERIAL_GSERV = 0x6100
     PLAYER_AUTHORIZATION = 0x6200
     PING = 0x6400

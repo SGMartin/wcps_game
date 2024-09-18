@@ -39,7 +39,7 @@ HANDLER_MAP = {
     # Server - client lobby
     PacketList.DO_SERIAL_GSERV: RequestServerTimeHandler,
     PacketList.PLAYER_AUTHORIZATION: ClientAuthenticationHandler,
-    PacketList.LEAVE_SERVER: LeaveServerHandler,
+    PacketList.DO_CLOSE_WARROCK: LeaveServerHandler,
     PacketList.SELECT_CHANNEL: SelectChannelHandler,
     PacketList.PING: PingHandler,
     PacketList.USERLIST: UserListHandler,
