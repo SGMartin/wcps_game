@@ -378,7 +378,6 @@ async def update_user_money(username: str, new_money: int) -> bool:
                 return False  # User not found
 
             user_id = user_result[0]
-            logging.info(f"User ID for {username} is {user_id}")
 
             # Now, update the money field
             update_query = """
