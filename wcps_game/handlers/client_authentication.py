@@ -26,7 +26,7 @@ class ClientAuthenticationHandler(PacketHandler):
 
         if reported_client_session not in range(-32767, 32768):
             error_packet = PacketFactory.create_packet(
-                packet_id=PacketList.PLAYER_AUTHORIZATION,
+                packet_id=PacketList.DO_JOIN_SERV,
                 error_code=PlayerAuthorizationError.INVALID_PACKET
                 )
             await u.send(error_packet.build())
@@ -36,7 +36,7 @@ class ClientAuthenticationHandler(PacketHandler):
         # Banned player?
         if reported_access_level <= 0:
             error_packet = PacketFactory.create_packet(
-                packet_id=PacketList.PLAYER_AUTHORIZATION,
+                packet_id=PacketList.DO_JOIN_SERV,
                 error_code=PlayerAuthorizationError.NOT_ACCESIBLE
                 )
             await u.send(error_packet.build())
@@ -46,7 +46,7 @@ class ClientAuthenticationHandler(PacketHandler):
         # Session exists already
         if await u.this_server.is_online(reported_client_session):
             error_packet = PacketFactory.create_packet(
-                packet_id=PacketList.PLAYER_AUTHORIZATION,
+                packet_id=PacketList.DO_JOIN_SERV,
                 error_code=PlayerAuthorizationError.IDIN_USE
                 )
             await u.send(error_packet.build())
@@ -56,7 +56,7 @@ class ClientAuthenticationHandler(PacketHandler):
         # Server reached maximum capacity
         if u.this_server.get_player_count() >= u.this_server.max_players:
             error_packet = PacketFactory.create_packet(
-                packet_id=PacketList.PLAYER_AUTHORIZATION,
+                packet_id=PacketList.DO_JOIN_SERV,
                 error_code=PlayerAuthorizationError.SERVER_FULL
             )
             await u.send(error_packet.build())
@@ -83,7 +83,7 @@ class ClientAuthenticationHandler(PacketHandler):
             await u.this_server.send(internal_auth_packet.build())
         else:
             error_packet = PacketFactory.create_packet(
-                packet_id=PacketList.PLAYER_AUTHORIZATION,
+                packet_id=PacketList.DO_JOIN_SERV,
                 error_code=PlayerAuthorizationError.NICKNAME_TOO_SHORT
                 )
             await u.send(error_packet.build())

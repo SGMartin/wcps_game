@@ -14,7 +14,7 @@ from wcps_game.packets.packet_list import ClientXorKeys, PacketList
 class PlayerAuthorization(OutPacket):
     def __init__(self, error_code: PlayerAuthorizationError, u: "User" = None):
         super().__init__(
-            packet_id=PacketList.PLAYER_AUTHORIZATION,
+            packet_id=PacketList.DO_JOIN_SERV,
             xor_key=ClientXorKeys.SEND
         )
         if error_code != er.SUCCESS or not u:

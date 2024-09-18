@@ -21,7 +21,7 @@ class AuthorizeClientHandler(PacketHandler):
         reported_rights = int(self.get_block(3))
 
         error_packet = PacketFactory.create_packet(
-            packet_id=PacketList.PLAYER_AUTHORIZATION,
+            packet_id=PacketList.DO_JOIN_SERV,
             error_code=PlayerAuthorizationError.NORMAL_PROCEDURE
             )
 
@@ -43,7 +43,7 @@ class AuthorizeClientHandler(PacketHandler):
 
                 if can_authorize:
                     packet = PacketFactory.create_packet(
-                        packet_id=PacketList.PLAYER_AUTHORIZATION,
+                        packet_id=PacketList.DO_JOIN_SERV,
                         error_code=ErrorCodes.SUCCESS,
                         u=this_user
                     )

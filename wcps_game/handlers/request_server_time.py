@@ -33,7 +33,7 @@ class RequestServerTimeHandler(PacketHandler):
         # TODO: mac ban?
         if len(mac_address) != 12 or not mac_address.isalnum():
             packet = PacketFactory.create_packet(
-                packet_id=PacketList.PLAYER_AUTHORIZATION,
+                packet_id=PacketList.DO_JOIN_SERV,
                 error_code=PlayerAuthorizationError.NOT_ACCESIBLE
                 )
             await u.send(packet.build())
