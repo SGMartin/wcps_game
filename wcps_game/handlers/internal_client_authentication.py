@@ -52,7 +52,7 @@ class AuthorizeClientHandler(PacketHandler):
                     await this_user.send_ping()
                     # Item has expired packet. Here or after channel selection with userlist?
                     update_inventory_packet = PacketFactory.create_packet(
-                         packet_id=PacketList.UPDATE_INVENTORY,
+                         packet_id=PacketList.DO_SBI_CHANGE,
                          user=this_user
                      )
                     await this_user.send(update_inventory_packet.build())

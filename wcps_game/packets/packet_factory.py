@@ -60,11 +60,11 @@ class PacketFactory:
         PacketList.DO_USER_LIST: UserList,
         PacketList.DO_CHAT: Chat,
         # Shop
-        PacketList.EQUIPMENT: Equipment,
-        PacketList.UPDATE_INVENTORY: UpdateInventory,
-        PacketList.ITEMSHOP: ItemShop,
-        PacketList.USEITEM: UsePXItem,
-        PacketList.COUPON: Coupon,
+        PacketList.DO_BITEM_CHANGE: Equipment,
+        PacketList.DO_SBI_CHANGE: UpdateInventory,
+        PacketList.DO_ITEM_PROCESS: ItemShop,
+        PacketList.DO_NCASH_PROCESS: UsePXItem,
+        PacketList.DO_COUPON: Coupon,
         # Room
         PacketList.ROOM_CREATE: RoomCreate,
         PacketList.DO_ROOM_LIST: RoomList,

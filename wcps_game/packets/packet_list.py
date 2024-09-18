@@ -21,11 +21,11 @@ class PacketList:
     DO_USER_LIST = 0x7100
     DO_CHAT = 0x7400
     # Shop
-    EQUIPMENT = 0x7512
-    UPDATE_INVENTORY = 0x7900  # Also controls when items expire
-    ITEMSHOP = 0x7600
-    USEITEM = 0x7800
-    COUPON = 0x8100
+    DO_BITEM_CHANGE = 0x7512
+    DO_SBI_CHANGE = 0x7900  # Also controls when items expire
+    DO_ITEM_PROCESS = 0x7600
+    DO_NCASH_PROCESS = 0x7800
+    DO_COUPON = 0x8100  # Id by DarkRaptor
 
     # Room
     DO_ROOM_LIST = 0x7200

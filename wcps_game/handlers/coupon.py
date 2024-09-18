@@ -22,14 +22,14 @@ class CouponHandler(PacketHandler):
                 await user.update_money(new_money=new_balance)
 
                 award_packet = PacketFactory.create_packet(
-                    packet_id=PacketList.COUPON,
+                    packet_id=PacketList.DO_COUPON,
                     error_code=CouponError.SUCCESS,
                     awarded_dinars=new_balance
                 )
                 await user.send(award_packet.build())
             else:
                 error_packet = PacketFactory.create_packet(
-                    packet_id=PacketList.COUPON,
+                    packet_id=PacketList.DO_COUPON,
                     error_code=CouponError.INCORRECT_CODE,
                     awarded_dinars=user.money
                 )

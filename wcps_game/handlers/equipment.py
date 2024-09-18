@@ -61,7 +61,7 @@ class EquipmentHandler(PacketHandler):
                 )
 
                 unequip_packet = PacketFactory.create_packet(
-                    packet_id=PacketList.EQUIPMENT,
+                    packet_id=PacketList.DO_BITEM_CHANGE,
                     error_code=1,
                     target_class=target_branch,
                     new_loadout=u.inventory.equipment.loadout[target_branch]
@@ -72,7 +72,7 @@ class EquipmentHandler(PacketHandler):
         if equipped_in_slot >= 0:
             # Item is already equipped
             already_equipped_packet = PacketFactory.create_packet(
-                packet_id=PacketList.EQUIPMENT,
+                packet_id=PacketList.DO_BITEM_CHANGE,
                 error_code=EquipmentError.ALREADY_EQUIPPED
             )
             await u.send(already_equipped_packet.build())
@@ -91,7 +91,7 @@ class EquipmentHandler(PacketHandler):
             )
 
             equip_packet = PacketFactory.create_packet(
-                packet_id=PacketList.EQUIPMENT,
+                packet_id=PacketList.DO_BITEM_CHANGE,
                 error_code=1,
                 target_class=target_branch,
                 new_loadout=u.inventory.equipment.loadout[target_branch]
@@ -100,7 +100,7 @@ class EquipmentHandler(PacketHandler):
         else:
             # Weapon cannot be placed in the target slot
             unsuitable_packet = PacketFactory.create_packet(
-                packet_id=PacketList.EQUIPMENT,
+                packet_id=PacketList.DO_BITEM_CHANGE,
                 error_code=EquipmentError.INVALID_BRANCH
             )
             await u.send(unsuitable_packet.build())

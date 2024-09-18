@@ -13,7 +13,7 @@ from wcps_game.packets.error_codes import ItemShopError
 
 class ItemShop(OutPacket):
     def __init__(self, error_code: ItemShopError, user: "User" = None):
-        super().__init__(packet_id=PacketList.ITEMSHOP, xor_key=ClientXorKeys.SEND)
+        super().__init__(packet_id=PacketList.DO_ITEM_PROCESS, xor_key=ClientXorKeys.SEND)
 
         if error_code != corerr.SUCCESS or not user:
             self.append(error_code)

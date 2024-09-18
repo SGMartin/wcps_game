@@ -13,7 +13,7 @@ from wcps_game.packets.packet_list import ClientXorKeys, PacketList
 
 class UsePXItem(OutPacket):
     def __init__(self, error_code: corerr, user: "User" = None, item_px: str = ""):
-        super().__init__(packet_id=PacketList.USEITEM, xor_key=ClientXorKeys.SEND)
+        super().__init__(packet_id=PacketList.DO_NCASH_PROCESS, xor_key=ClientXorKeys.SEND)
 
         if error_code != corerr.SUCCESS or not user or not item_px:
             self.append(error_code)

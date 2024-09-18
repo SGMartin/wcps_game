@@ -68,7 +68,7 @@ class ItemShopHandler(PacketHandler):
 
             if not item_database.is_buyable(item_code):
                 cannot_be_bought = PacketFactory.create_packet(
-                    packet_id=PacketList.ITEMSHOP,
+                    packet_id=PacketList.DO_ITEM_PROCESS,
                     error_code=ItemShopError.CANNOT_BE_BOUGHT
                 )
                 await user.send(cannot_be_bought.build())
@@ -76,7 +76,7 @@ class ItemShopHandler(PacketHandler):
 
             if len(user.inventory.item_list) >= MAX_ITEMS:
                 max_item_error = PacketFactory.create_packet(
-                    packet_id=PacketList.ITEMSHOP,
+                    packet_id=PacketList.DO_ITEM_PROCESS,
                     error_code=ItemShopError.INVENTORY_FULL
                 )
                 await user.send(max_item_error.build())
@@ -84,7 +84,7 @@ class ItemShopHandler(PacketHandler):
 
             if item_database.requires_premium(item_code) and user.premium == Premium.F2P:
                 need_premium = PacketFactory.create_packet(
-                    packet_id=PacketList.ITEMSHOP,
+                    packet_id=PacketList.DO_ITEM_PROCESS,
                     error_code=ItemShopError.PREMIUM_ONLY
                 )
                 await user.send(need_premium.build())
@@ -92,7 +92,7 @@ class ItemShopHandler(PacketHandler):
 
             if item_database.get_required_level(item_code) > get_level_for_exp(user.xp):
                 low_level = PacketFactory.create_packet(
-                    packet_id=PacketList.ITEMSHOP,
+                    packet_id=PacketList.DO_ITEM_PROCESS,
                     error_code=ItemShopError.LEVEL_UNSUITABLE
                 )
                 await user.send(low_level.build())
@@ -101,7 +101,7 @@ class ItemShopHandler(PacketHandler):
             # Do not let premium gold users buy 5th slot as in the original game
             if user.premium == Premium.GOLD and item_code == "CA01":  # 5th slot
                 cannot_buy_slot = PacketFactory.create_packet(
-                    packet_id=PacketList.ITEMSHOP,
+                    packet_id=PacketList.DO_ITEM_PROCESS,
                     error_code=ItemShopError.SLOT5_FREE_GOLD
                 )
                 await user.send(cannot_buy_slot.build())
@@ -111,7 +111,7 @@ class ItemShopHandler(PacketHandler):
 
             if this_weapon_cost == -1:  # player chose a leasing time not available for weapon
                 cannot_be_bought = PacketFactory.create_packet(
-                    packet_id=PacketList.ITEMSHOP,
+                    packet_id=PacketList.DO_ITEM_PROCESS,
                     error_code=ItemShopError.CANNOT_BE_BOUGHT
                 )
                 await user.send(cannot_be_bought.build())
@@ -121,7 +121,7 @@ class ItemShopHandler(PacketHandler):
 
             if money_left < 0:
                 no_money = PacketFactory.create_packet(
-                    packet_id=PacketList.ITEMSHOP,
+                    packet_id=PacketList.DO_ITEM_PROCESS,
                     error_code=ItemShopError.NOT_ENOUGH_MONEY
                 )
                 await user.send(no_money.build())
@@ -144,14 +144,14 @@ class ItemShopHandler(PacketHandler):
                     await user.update_money(new_money=money_left)
 
                     new_item_packet = PacketFactory.create_packet(
-                        packet_id=PacketList.ITEMSHOP,
+                        packet_id=PacketList.DO_ITEM_PROCESS,
                         error_code=1,
                         user=user
                     )
                     await user.send(new_item_packet.build())
                 else:
                     error_packet = PacketFactory.create_packet(
-                        packet_id=PacketList.ITEMSHOP,
+                        packet_id=PacketList.DO_ITEM_PROCESS,
                         error_code=ItemShopError.CANNOT_BE_BOUGHT
                     )   
                     await user.send(error_packet.build())
@@ -173,14 +173,14 @@ class ItemShopHandler(PacketHandler):
                     await user.update_money(new_money=money_left)
 
                     new_item_packet = PacketFactory.create_packet(
-                        packet_id=PacketList.ITEMSHOP,
+                        packet_id=PacketList.DO_ITEM_PROCESS,
                         error_code=1,
                         user=user
                     )
                     await user.send(new_item_packet.build())
                 else:
                     error_packet = PacketFactory.create_packet(
-                        packet_id=PacketList.ITEMSHOP,
+                        packet_id=PacketList.DO_ITEM_PROCESS,
                         error_code=ItemShopError.CANNOT_BE_BOUGHT
                     )         
                     await user.send(error_packet.build())
@@ -193,7 +193,7 @@ class ItemShopHandler(PacketHandler):
                 await user.stats.reset_kills_deaths()
                 await user.inventory.remove_item(item_to_remove=item_code)
                 use_packet = PacketFactory.create_packet(
-                    packet_id=PacketList.USEITEM,
+                    packet_id=PacketList.DO_NCASH_PROCESS,
                     error_code=1,
                     user=user,
                     item_px=item_code

@@ -13,7 +13,7 @@ from wcps_game.packets.packet_list import PacketList, ClientXorKeys
 class UpdateInventory(OutPacket):
     def __init__(self, user: "User"):
         super().__init__(
-            packet_id=PacketList.UPDATE_INVENTORY,
+            packet_id=PacketList.DO_SBI_CHANGE,
             xor_key=ClientXorKeys.SEND
         )
         self.append(ErrorCodes.SUCCESS)

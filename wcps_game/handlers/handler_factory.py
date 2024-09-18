@@ -45,9 +45,9 @@ HANDLER_MAP = {
     PacketList.DO_USER_LIST: UserListHandler,
     PacketList.DO_CHAT: ChatHandler,
     # Shop
-    PacketList.EQUIPMENT: EquipmentHandler,
-    PacketList.ITEMSHOP: ItemShopHandler,
-    PacketList.COUPON: CouponHandler,
+    PacketList.DO_BITEM_CHANGE: EquipmentHandler,
+    PacketList.DO_ITEM_PROCESS: ItemShopHandler,
+    PacketList.DO_COUPON: CouponHandler,
     # Room
     PacketList.ROOM_CREATE: RoomCreateHandler,
     PacketList.DO_ROOM_LIST: RoomListHandler,
