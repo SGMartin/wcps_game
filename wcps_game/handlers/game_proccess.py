@@ -22,7 +22,7 @@ class GameProcessHandler(PacketHandler):
         packet_subtype = int(self.get_block(3))
 
         if room_slot >= user.room.max_players or room_id != user.room.id:
-            # TODO: Is this cheating? Log this
+            logging.info(f"Unknown packet recipient: {self.block}")
             return
 
         # Try to find the subpacket handler for this
