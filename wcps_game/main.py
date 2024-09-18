@@ -97,6 +97,11 @@ async def main():
 
     try:
         while True:
+
+            if not game_server.authorized:
+                await asyncio.sleep(1)
+                continue
+
             server_loops += 1
 
             # each 5 loops, start the ping routines
