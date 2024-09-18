@@ -149,6 +149,7 @@ class UDPListener:
 
             # TUNNELING
             elif packet[14] in {0x10, 0x30, 0x31, 0x32, 0x34}:
+                print("TUNNELING")
                 session_id_bytes = packet[4:6][
                     ::-1
                 ]
@@ -174,6 +175,12 @@ class UDPListener:
                         and U1.room.state == RoomStatus.PLAYING
                     ):
                         self.transport.sendto(packet, U2.remote_end_point)
+
+                        # update spectators too
+                        for spec in U1.room.spectators.values():
+                            if spec is not None:
+                                print("Tunneling")
+                                self.transport.sendto(packet, spec.remote_end_point)
                     else:
                         logging.error(
                             f"UDP TUNNEL PACKET FAULTY - ROOM DID NOT MATCH SENDER "

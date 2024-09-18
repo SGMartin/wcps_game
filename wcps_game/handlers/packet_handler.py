@@ -116,6 +116,7 @@ class GameProcessHandler(abc.ABC):
                         game_data_packet = PacketFactory.create_packet(
                             packet_id=PacketList.DO_GAME_PROCESS, blocks=new_packet
                         )
+                        logging.info(f"Final packet {game_data_packet.blocks}")
                         if self.error_code > corerr.SUCCESS or self.self_target:
                             # If we need to send map data, do it first
                             if self.map_data:

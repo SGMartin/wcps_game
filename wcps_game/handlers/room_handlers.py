@@ -438,3 +438,30 @@ class RoomExpelHandler(PacketHandler):
             )
 
             await target_player.user.send(kick_packet.build())
+
+
+class RoomSpectateHandler(PacketHandler):
+    async def process(self, user: "User"):
+
+        if not user.authorized or user.rights < 3:
+            return
+
+        # leave = 0 / join = 1
+        join_or_leave = int(self.get_block(0))
+
+        if join_or_leave == gconstants.RoomSpectateAction.JOIN:
+            room_id = int(self.get_block(1))
+
+            this_room = user.this_server.channels[user.channel].rooms[room_id]
+
+            # TODO: any error code we can use?
+            if not this_room:
+                return
+
+            spec_id = await this_room.add_spectator(user)
+            print(f"Assigned spec id {spec_id}")
+
+        elif join_or_leave == gconstants.RoomSpectateAction.LEAVE:
+            pass
+        else:
+            return

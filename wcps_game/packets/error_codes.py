@@ -71,6 +71,10 @@ class RoomJoinError:
     PREMIUM_ONLY = 94301
 
 
+class RoomSpectateError:
+    MAX_SPECTATORS = 94070
+
+
 class RoomInvitationError:
     GENERIC = 93020
     ALREADY_IN_ROOM = 93030

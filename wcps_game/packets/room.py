@@ -130,6 +130,19 @@ class RoomKick(OutPacket):
         self.append(target_player)
 
 
+class RoomSpectate(OutPacket):
+    def __init__(self, room_to_join: "Room", spectate_slot: int):
+        super().__init__(
+            packet_id=PacketList.DO_GUEST_JOIN,
+            xor_key=ClientXorKeys.SEND
+        )
+
+        self.append(corerr.SUCCESS)
+        self.append(1)
+        self.append(spectate_slot)
+        add_room_info_to_packet(self, room_to_join)
+
+
 class RoomPlayers(OutPacket):
     def __init__(self, player_list: list):
         super().__init__(
@@ -169,6 +182,26 @@ class RoomPlayers(OutPacket):
             self.append(ip_string_to_long(player.user.local_end_point[0]))
             self.append(player.user.local_port)
             self.append(0)  # Unknown
+
+
+class RoomSpectators(OutPacket):
+    def __init__(self, spec: "User", slot: int):
+        super().__init__(
+            packet_id=PacketList.DO_GAME_GUEST_LIST,
+            xor_key=ClientXorKeys.SEND
+        )
+        self.append(corerr.SUCCESS)
+        self.append(1)  # TODO: What happens if we have more specs?
+        self.append(slot)  # is this reaaaally the slot?
+        self.append(spec.session_id)
+        self.append(spec.session_id)
+        self.append("0")
+        self.append(999) # rights?
+        self.append(ip_string_to_long(spec.remote_end_point[0]))
+        self.append(spec.remote_port)
+        self.append(ip_string_to_long(spec.local_end_point[0]))
+        self.append(spec.local_port)
+        self.append(0)
 
 
 def add_room_info_to_packet(packet: OutPacket, room):
