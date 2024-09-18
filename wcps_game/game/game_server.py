@@ -151,7 +151,7 @@ class User(NetworkEntity):
             self.is_updated_ping = False
             await self.update_premium_status()
             user_ping_packet = PacketFactory.create_packet(
-                packet_id=PacketList.PING,
+                packet_id=PacketList.DO_KEEPALIVE,
                 u=self
             )
             await self.send(user_ping_packet.build())

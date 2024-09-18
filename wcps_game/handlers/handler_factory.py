@@ -41,7 +41,7 @@ HANDLER_MAP = {
     PacketList.PLAYER_AUTHORIZATION: ClientAuthenticationHandler,
     PacketList.DO_CLOSE_WARROCK: LeaveServerHandler,
     PacketList.SELECT_CHANNEL: SelectChannelHandler,
-    PacketList.PING: PingHandler,
+    PacketList.DO_KEEPALIVE: PingHandler,
     PacketList.USERLIST: UserListHandler,
     PacketList.CHAT: ChatHandler,
     # Shop

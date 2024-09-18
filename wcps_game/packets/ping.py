@@ -11,7 +11,7 @@ from wcps_game.packets.packet_list import PacketList, ClientXorKeys
 class Ping(OutPacket):
     def __init__(self, u: "User"):
         super().__init__(
-            packet_id=PacketList.PING,
+            packet_id=PacketList.DO_KEEPALIVE,
             xor_key=ClientXorKeys.SEND
         )
         self.append(5000)    # ping frequency in milliseconds
