@@ -151,6 +151,11 @@ class RoomUpdateType:
     DELETE = 2
 
 
+class RoomSpectateAction:
+    LEAVE = 0
+    JOIN = 1
+
+
 class Team:
     DERBARAN = 0
     NIU = 1
