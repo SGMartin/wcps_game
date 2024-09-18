@@ -40,7 +40,7 @@ HANDLER_MAP = {
     PacketList.DO_SERIAL_GSERV: RequestServerTimeHandler,
     PacketList.PLAYER_AUTHORIZATION: ClientAuthenticationHandler,
     PacketList.DO_CLOSE_WARROCK: LeaveServerHandler,
-    PacketList.SELECT_CHANNEL: SelectChannelHandler,
+    PacketList.DO_SET_CHANNEL: SelectChannelHandler,
     PacketList.DO_KEEPALIVE: PingHandler,
     PacketList.USERLIST: UserListHandler,
     PacketList.CHAT: ChatHandler,

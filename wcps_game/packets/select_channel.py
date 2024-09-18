@@ -7,7 +7,7 @@ from wcps_game.packets.packet_list import PacketList, ClientXorKeys
 class SelectChannel(OutPacket):
     def __init__(self, target_channel: int = 0):
         super().__init__(
-            packet_id=PacketList.SELECT_CHANNEL,
+            packet_id=PacketList.DO_SET_CHANNEL,
             xor_key=ClientXorKeys.SEND
         )
         self.append(corerr.SUCCESS)

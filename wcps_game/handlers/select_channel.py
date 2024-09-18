@@ -25,7 +25,7 @@ class SelectChannelHandler(PacketHandler):
                 user.room_page = 0
 
                 channel_change = PacketFactory.create_packet(
-                    packet_id=PacketList.SELECT_CHANNEL,
+                    packet_id=PacketList.DO_SET_CHANNEL,
                     target_channel=target_channel
                 )
                 await user.send(channel_change.build())

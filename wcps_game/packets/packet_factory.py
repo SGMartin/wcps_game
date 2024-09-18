@@ -54,7 +54,7 @@ class PacketFactory:
         # Lobby
         PacketList.DO_SERIAL_GSERV: ServerTime,
         PacketList.PLAYER_AUTHORIZATION: PlayerAuthorization,
-        PacketList.SELECT_CHANNEL: SelectChannel,
+        PacketList.DO_SET_CHANNEL: SelectChannel,
         PacketList.DO_KEEPALIVE: Ping,
         PacketList.DO_CLOSE_WARROCK: LeaveServer,
         PacketList.USERLIST: UserList,
