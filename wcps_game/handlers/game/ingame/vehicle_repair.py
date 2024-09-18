@@ -6,6 +6,7 @@ from wcps_game.game.constants import ChannelType, RoomStatus, Team
 
 class RepairVehicleHandler(GameProcessHandler):
     async def handle(self):
+        # TODO: add timer here to not answer all packets, else we will repair too fast
         if not self.player.user.authorized:
             return
 
@@ -28,7 +29,7 @@ class RepairVehicleHandler(GameProcessHandler):
         if target_vehicle is None:
             return
 
-        if target_vehicle != Team.NONE and target_vehicle.team != self.player.team:
+        if target_vehicle.team != self.player.team and target_vehicle.team != Team.NONE:
             return
 
         if target_vehicle.health >= target_vehicle.max_health:
