@@ -25,7 +25,8 @@ class UpdateGameData(OutPacket):
             self.append(player.vehicle_seat)
 
         self.append(len(room.vehicles))
-
+        # Reverse engineered by trial and error in the pserver
+        # Most sources expand this part of the packet with more info
+        # But PF20 just requires the veh health?
         for vehicle in room.vehicles.values():
             self.append(vehicle.health)
-            self.append(vehicle.max_health)
