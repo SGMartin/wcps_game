@@ -71,7 +71,7 @@ class ExplosivesHandler(PacketHandler):
                 explosives = PacketFactory.create_packet(
                     packet_id=PacketList.DO_BOMB_PROCESS,
                     blocks=self.in_packet.blocks,
-                    bomb_id=item_id
+                    bomb_id=bomb_site
                 )
 
                 await user.room.send(explosives.build())
