@@ -4,16 +4,6 @@ from wcps_game.packets.packet_list import ClientXorKeys, PacketList
 
 
 class UserList(OutPacket):
-    static_user_list = [
-        [6, 7, "Jastro", -1, -1, -1, -1, 18202728, 1],
-        [4, 8, "DarkRaptor", 2, "PUEBLO", 5, 0, 2821928, 3],
-        [5, 9, "PJ1712", -1, -1, -1, -1, 1, 2],
-        [12, 18, "Sinso", 1, "MAFIA", 2, 0, 1363725, 2],
-        [13, 26, "CrS-", 1, "MAFIA", 4, 0, 2363725, 2],
-        [13, 26, "MoonKai", 1, "NAVAJA", 4, 0, 10194975, 2]
-
-    ]
-
     def __init__(self, lobby_user_list: list, target_page: int):
         super().__init__(packet_id=PacketList.DO_USER_LIST, xor_key=ClientXorKeys.SEND)
 
