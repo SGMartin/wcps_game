@@ -235,6 +235,59 @@ class RoomJoinHandler(PacketHandler):
             return
 
 
+class RoomQuickJoinHandler(PacketHandler):
+    async def process(self, user: "User"):
+
+        if not user.authorized:
+            return
+
+        if user.room is not None:
+            return
+
+        this_channel = user.this_server.channels[user.channel]
+
+        for room_id, room in this_channel.rooms.items():
+            if not room:
+                continue
+
+            # Room is full
+            if room.get_player_count() >= room.max_players:
+                continue
+
+            # Fixed user limit
+            if room.user_limit:
+                continue
+
+            # No password rooms
+            if room.password_protected:
+                continue
+
+            # was kicked out
+            if user.username in room.votekick.locked_users:
+                continue
+
+            # premium only room
+            if room.premium_only and user.premium == gconstants.Premium.F2P:
+                continue
+
+            # Player level is unsuitable
+            this_player_level = gconstants.get_level_for_exp(user.xp)
+            level_required = gconstants.RoomLevelLimits.MIN_LEVEL_REQUIREMENTS.get(
+                room.level_limit
+            )
+
+            if this_player_level not in level_required:
+                continue
+
+            # TODO: ping
+            success = await room.add_player(user)
+
+            if not success:
+                continue
+
+            # TODO: any kind of message if failed to join any room?
+
+
 class RoomLeaveHandler(PacketHandler):
     async def process(self, user: "User"):
 

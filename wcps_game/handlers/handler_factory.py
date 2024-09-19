@@ -19,6 +19,7 @@ from wcps_game.handlers.coupon import CouponHandler
 from wcps_game.handlers.room_handlers import (
     RoomCreateHandler,
     RoomJoinHandler,
+    RoomQuickJoinHandler,
     RoomLeaveHandler,
     RoomListHandler,
     RoomInviteHandler,
@@ -53,6 +54,7 @@ HANDLER_MAP = {
     PacketList.DO_ROOM_LIST: RoomListHandler,
     PacketList.DO_EXIT_ROOM: RoomLeaveHandler,
     PacketList.DO_JOIN_ROOM: RoomJoinHandler,
+    PacketList.DO_QUICK_JOIN: RoomQuickJoinHandler,
     PacketList.DO_GUEST_JOIN: RoomSpectateHandler,
     PacketList.DO_INVITATION: RoomInviteHandler,
     PacketList.DO_EXPEL_PLAYER: RoomExpelHandler,
