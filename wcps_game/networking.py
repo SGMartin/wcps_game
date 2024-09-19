@@ -149,7 +149,6 @@ class UDPListener:
 
             # TUNNELING
             elif packet[14] in {0x10, 0x30, 0x31, 0x32, 0x34}:
-                print("TUNNELING")
                 session_id_bytes = packet[4:6][
                     ::-1
                 ]
@@ -179,7 +178,6 @@ class UDPListener:
                         # update spectators too
                         for spec in U1.room.spectators.values():
                             if spec is not None:
-                                print("Tunneling")
                                 self.transport.sendto(packet, spec.remote_end_point)
                     else:
                         logging.error(
