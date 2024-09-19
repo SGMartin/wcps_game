@@ -31,7 +31,7 @@ Issues = "https://github.com/SGMartin/wcps_game/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["wcps_game"]
+include = ["wcps_game", "wcps_game.*"]
 
 [project.scripts]
 wcps-game = "wcps_game.cli:run"
