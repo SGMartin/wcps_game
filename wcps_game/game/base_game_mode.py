@@ -16,7 +16,9 @@ from wcps_game.game.constants import (
     DamageMultipliers,
     DamageDistances,
     DefaultWeapon,
+    EquipmentWeaponTypes,
     Team,
+    WeaponTypes
 )
 from wcps_game.client.items import ItemDatabase
 from wcps_game.packets.packet_list import PacketList
@@ -122,7 +124,7 @@ class BaseGameMode(ABC):
             )
             return
 
-        if not self.can_be_damaged(attacker=attacker, victim=victim):
+        if not self.can_be_damaged(attacker=attacker, victim=victim, weapon=weapon_code):
             logging.info(
                 f"{attacker.user.displayname} cannot damage {victim.user.displayname}"
             )
@@ -134,7 +136,7 @@ class BaseGameMode(ABC):
 
         # WTF WarRock
         bone_id = hitbox_location - attacker.user.session_id
-        if "DA" in weapon_code or "DJ" in weapon_code or "DK" in weapon_code:
+        if "DA" in weapon_code or self.is_projectile_weapon(weapon=weapon_code):
             can_headhot = False
         else:
             can_headhot = True
@@ -165,16 +167,16 @@ class BaseGameMode(ABC):
         if attacker_vehicle is None or attacker_vehicle.code != vehicle_code:
             return
 
-        # I could check vehicle health but what about rogue cannon projectiles?
-        if not self.can_be_damaged(attacker, victim):
-            return
-
         is_sub_weapon = bool(int(handler.get_block(9)))
 
         if is_sub_weapon:
             weapon_code = attacker_vehicle.seats[attacker.vehicle_seat].sub_weapon_code
         else:
             weapon_code = attacker_vehicle.seats[attacker.vehicle_seat].main_weapon_code
+
+        # I could check vehicle health but what about rogue cannon projectiles?
+        if not self.can_be_damaged(attacker, victim, weapon_code):
+            return
 
         # most vehicles use radius calc. even for machine guns but just in case handle everything
         damage_taken = 0
@@ -221,7 +223,7 @@ class BaseGameMode(ABC):
         if not vehicle:
             return
 
-        if not self.can_be_damaged(attacker=attacker, victim=vehicle):
+        if not self.can_be_damaged(attacker=attacker, victim=vehicle, weapon=weapon_code):
             return
 
         # Define the vehicle type of the victim
@@ -374,8 +376,13 @@ class BaseGameMode(ABC):
             handler.set_block(13, damage_taken)
             handler.answer = True
 
-    def can_be_damaged(self, attacker: "Player", victim: "Player"):
+    def can_be_damaged(self, attacker: "Player", victim: "Player", weapon: str):
+
         can_be_damaged = False
+        is_projectile_weapon = self.is_projectile_weapon(weapon)
+        is_projectile_vehicle_weapon = self.is_projectile_vehicle_weapon(weapon)
+
+        is_projectile = is_projectile_weapon or is_projectile_vehicle_weapon
 
         # Make sure no damage can be taken in explosive after the bomb is defused or explodes
         this_room = attacker.user.room
@@ -389,7 +396,7 @@ class BaseGameMode(ABC):
         if victim.spawn_protection_ticks > 0:
             return can_be_damaged
 
-        if attacker.health <= 0:
+        if attacker.health <= 0 and not is_projectile:
             return can_be_damaged
 
         if victim.health <= 0:
@@ -437,3 +444,36 @@ class BaseGameMode(ABC):
 
         final_damage = round(damage_taken)
         return final_damage
+
+    def is_projectile_weapon(self, weapon: str) -> bool:
+
+        # Projectile weapons should damage the victim even if the attacker died
+        projectile_type = [
+            WeaponTypes.ANTITANK_WEAPON,
+            WeaponTypes.GROUND_TO_AIR_WEAPON,
+            WeaponTypes.ANTITANK_MINE,
+            WeaponTypes.GRENADE,
+            WeaponTypes.GRENADE_COMBATANT,
+            WeaponTypes.BOMB,
+        ]
+        # D = player weapon code
+        if weapon[1] in projectile_type and weapon[0] == "D":
+            return True
+        else:
+            return False
+
+    def is_projectile_vehicle_weapon(self, weapon: str) -> bool:
+        projectile_type = [
+            EquipmentWeaponTypes.ANTI_AIRCRAFT_MISSILE,
+            EquipmentWeaponTypes.ANTI_SHIP_MISSILE,
+            EquipmentWeaponTypes.BOMB,
+            EquipmentWeaponTypes.GRENADE_LAUNCHER,
+            EquipmentWeaponTypes.GROUND_MISSILE,
+            EquipmentWeaponTypes.SELF_PROPELLED_ARTILLERY
+        ]
+
+        # E = Equipment weapon types
+        if weapon[1] in projectile_type and weapon[0] == "E":
+            return True
+        else:
+            return False
