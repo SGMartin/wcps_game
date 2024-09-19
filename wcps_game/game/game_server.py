@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from wcps_game.game.rooms import Room
 
-from wcps_core.constants import Ports, InternalKeys
+from wcps_core.constants import Ports, InternalKeys, ErrorCodes
 from wcps_core.packets import OutPacket
 
 from wcps_game.config import settings
@@ -137,7 +137,7 @@ class User(NetworkEntity):
             try:
                 # TODO: improve leave server routine including mysql queries
                 await self.this_server.channels[self.channel].remove_user(self)
-                await self.this_server.remove_player(self.username)
+                await self.this_server.remove_player(self)
             except Exception as e:
                 logging.exception(f"Error removing player {self.username}: {e}")
 
@@ -266,14 +266,22 @@ class GameServer(NetworkEntity):
                 raise Exception(f"User {u.username} already exists")
             self.online_users[u.username] = u
 
-    # TODO: send internal packet to auth
-    async def remove_player(self, username):
+    async def remove_player(self, user: User):
         async with self.lock:
-            if username in self.online_users:
-                del self.online_users[username]
-                logging.info(f"Removed player {username}")
+            # Tell the auth server to flush the session
+            internal_player_leave = PacketFactory.create_packet(
+                packet_id=PacketList.INTERNAL_PLAYER_AUTHENTICATION,
+                error_code=ErrorCodes.END_CONNECTION,
+                session_id=user.session_id,
+                username=user.username,
+                rights=user.rights
+            )
+            await self.send(internal_player_leave.build())
+            if user.username in self.online_users:
+                del self.online_users[user.username]
+                logging.info(f"Removed player {user.username}")
             else:
-                raise Exception(f"User {username} does not exist")
+                raise Exception(f"User {user.username} does not exist")
 
     async def is_online(self, username) -> bool:
         async with self.lock:
