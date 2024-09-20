@@ -211,6 +211,15 @@ class Room:
                     this_player = Player(
                         user=user, slot=requested_slot, team=player_team
                     )
+                    # Get the current player list
+                    current_players = self.get_all_players()
+
+                    # First, notify the users of the new player
+                    new_player_data = PacketFactory.create_packet(
+                        packet_id=PacketList.DO_GAME_USER_LIST,
+                        player_list=[this_player]
+                    )
+                    await self.send(new_player_data.build())
 
                     # Send the incoming user the room join packet
                     join_packet = PacketFactory.create_packet(
@@ -223,14 +232,17 @@ class Room:
                     user.set_room(room=self, room_slot=requested_slot)
                     await user.send(join_packet.build())
 
-                    # Now add the player to the list of players
-                    self.players[requested_slot] = this_player
+                    # Important: these packets must be sent in this order
+                    # For UDP to work for all of them and not for some user
 
                     room_players_packet = PacketFactory.create_packet(
                         packet_id=PacketList.DO_GAME_USER_LIST,
-                        player_list=self.get_all_players()
+                        player_list=current_players
                     )
                     await self.send(room_players_packet.build())
+
+                    # Now add the player to the list of players
+                    self.players[requested_slot] = this_player
 
                     # Send an update to the lobby
                     channel_users = await self.channel.get_users()
@@ -542,11 +554,13 @@ class Room:
         self.votekick.locked_users.clear()
 
         # Send a new room update packet so that k/d stats are updated
-        room_players = PacketFactory.create_packet(
-            packet_id=PacketList.DO_GAME_USER_LIST,
-            player_list=self.get_all_players()
-        )
-        await self.send(room_players.build())
+        # Commented out. We need tests to ensure sending the full packet does not
+        # end with UDP breaking
+        # room_players = PacketFactory.create_packet(
+        #     packet_id=PacketList.DO_GAME_USER_LIST,
+        #     player_list=self.get_all_players()
+        # )
+        # await self.send(room_players.build())
 
         logging.info(f"Room {self.id} ended")
 
