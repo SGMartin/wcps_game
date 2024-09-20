@@ -239,7 +239,7 @@ class Room:
                         packet_id=PacketList.DO_GAME_USER_LIST,
                         player_list=current_players
                     )
-                    await self.send(room_players_packet.build())
+                    await user.send(room_players_packet.build())
 
                     # Now add the player to the list of players
                     self.players[requested_slot] = this_player
