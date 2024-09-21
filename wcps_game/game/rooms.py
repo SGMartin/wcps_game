@@ -77,7 +77,13 @@ class Room:
         # Auto/default settings on room creating
         self.state = gconstants.RoomStatus.WAITING
         self.rounds_setting = 3  # Packet specific
-        self.tickets_setting = 3  # Packet specific
+
+        # In CQC the default is 2 (100 kills), in other channels it's 3
+        if self.channel.type == gconstants.ChannelType.CQC:
+            self.tickets_setting = 2
+        else:
+            self.tickets_setting = 3
+    
         self.rounds = gconstants.ROUND_LIMITS[self.rounds_setting]  # Actual setting
         self.tdm_tickets = gconstants.TDM_LIMITS[self.tickets_setting]  # Actual setting
         self.autostart = False
