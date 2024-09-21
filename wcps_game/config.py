@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     # Time to wait until unused vehicles are killed and reset
     unused_vehicle_time: int = 600
 
+    # Global multipliers for money and xp
+    global_xp_rate: int = 1
+    global_money_rate: int = 1
+
     class Config:
         env_file = ".env"
 

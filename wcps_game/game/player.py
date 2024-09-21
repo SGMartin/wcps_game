@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from wcps_game.game.game_server import User
 
 import wcps_game.game.constants as gconstants
+from wcps_game.config import settings
 
 
 class Player:
@@ -208,9 +209,8 @@ class Player:
         xp_earned = 20 + self.points * 4 * final_xp_rate
         money_earned = 50 + self.points * 3 * final_money_rate
 
-        # TODO: add global rates here or event rates :)
-        xp_earned = math.ceil(xp_earned)
-        money_earned = math.ceil(money_earned)
+        xp_earned = math.ceil(xp_earned * settings().global_xp_rate)
+        money_earned = math.ceil(money_earned * settings().global_money_rate)
 
         self.xp_earned = xp_earned
         self.money_earned = money_earned
