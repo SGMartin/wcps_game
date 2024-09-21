@@ -48,11 +48,19 @@ class Explosive(BaseGameMode):
             gconstants.Team.NIU: self.team_rounds.get(gconstants.Team.NIU, 0),
         }
         winning_team = max(rounds, key=rounds.get)
-        return (
-            winning_team
-            if rounds[gconstants.Team.DERBARAN] != rounds[gconstants.Team.NIU]
-            else gconstants.Team.NONE
-        )
+
+        # If the derbaran team has no players alive, niu wins no matter what
+        if self.alive_players[gconstants.Team.DERBARAN] == 0:
+            return gconstants.Team.NIU
+        # If the niu team has no players alive, derbaran wins no matter what
+        elif self.alive_players[gconstants.Team.NIU] == 0:
+            return gconstants.Team.DERBARAN
+        else:
+            return (
+                winning_team
+                if rounds[gconstants.Team.DERBARAN] != rounds[gconstants.Team.NIU]
+                else gconstants.Team.NONE
+            )
 
     def is_goal_reached(self):
         derb_rounds = self.team_rounds[gconstants.Team.DERBARAN]
@@ -127,15 +135,15 @@ class Explosive(BaseGameMode):
             self.alive_players[gconstants.Team.NIU] = niu_alive
 
             if not self.is_round_running():
-                winner = self.winning_round_team()
+                round_winner = self.winning_round_team()
 
                 if (
                     self.room.get_player_count() <= 1
-                    or self.team_rounds[winner] >= self.rounds_limit
+                    or self.team_rounds[round_winner] >= self.rounds_limit
                 ):
                     await self.room.end_game(winner_team=self.winner())
                 else:
-                    await self.end_round(winner_team=winner)
+                    await self.end_round(winner_team=round_winner)
 
     async def prepare_round(self, is_first_round: bool = False) -> bool:
 
