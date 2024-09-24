@@ -216,6 +216,16 @@ class PXItem:  # Introduced in late CP1
     TIME = "C"
     EXPSET = "D"
     DINARSET = "E"
+    SP = "F"
+    SCOPE = "G"
+    BANDAGE = "H"
+    RELOAD = "I"
+    MAGAZINE = "J"
+    DISGUISE = "K"
+    DINAR = "M"
+    GRADESET = "R"
+    MEMVERSET = "S"
+    PX = "Z"
 
 
 class WeaponTypes:
@@ -245,7 +255,14 @@ class WeaponTypes:
     SCOUT_PAID = "X"
     COMBATANT_PAID = "Y"
     HEAVY_WEAPONS_PAID = "Z"
-
+    DESTRUCTIVE_MODEL_WEAPON = "0"
+    SLOT_SIXTH_CHANGE = "1"
+    COMMON_8TH = "4"
+    ENGINEER_8TH = "5"
+    MEDIC_8TH = "6"
+    SNIPER_8th = "7"
+    ASSAULT_8TH = "8"
+    HEAVYTROOPER_8th = "9"
 
 class EquipmentTypes:
     FIXED_GROUND_TO_GROUND_MISSILE = "A"
@@ -261,7 +278,7 @@ class EquipmentTypes:
     AIRPLANE = "K"
     NAVAL_TRANSPORT = "L"
     NAVAL_ATTACK = "M"
-
+    DESTRUCTIVE_MODEL = "N"
 
 class EquipmentWeaponTypes:
     SEAT = "A"
