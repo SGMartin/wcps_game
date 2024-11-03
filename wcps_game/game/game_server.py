@@ -70,7 +70,10 @@ class User(NetworkEntity):
         self.premium_seconds_left = -1
         self.premium_expire_date = 0
 
+        # Ping data
         self.last_ping = datetime.now()
+        self.ping_retries = 0
+        self.max_ping_retries = 10 # TODO: configure this
         self.ping = 0
         self.is_updated_ping = True
 
@@ -145,11 +148,18 @@ class User(NetworkEntity):
     # TODO: Do we need a lock here?
     async def send_ping(self):
         if not self.is_updated_ping:
-            # await self.disconnect()
-            # TODO: Have a retry mechanism here before disconnecting
-            logging.error(f"Could not send ping to {self.username}")
+            self.ping_retries += 1
+            logging.warning(f"Ping attempt {self.ping_retries}/{self.max_ping_retries} failed for {self.username}")
+
+            if self.ping_retries >= self.max_ping_retries:
+                logging.error(f"User {self.username} exceeded maximum ping attempts. Disconnecting.")
+                await self.disconnect()
+
+            return
         else:
+            # Reset timer on successful ping
             self.is_updated_ping = False
+            self.ping_retries = 0
             await self.update_premium_status()
             user_ping_packet = PacketFactory.create_packet(
                 packet_id=PacketList.DO_KEEPALIVE,
