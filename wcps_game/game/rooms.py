@@ -494,6 +494,27 @@ class Room:
                     await player.user.send(specs_list.build())
             return slot_to_test
 
+    def is_spectator(self, user: "User") -> bool:
+        return user is not None and self.spectators.get(user.room_slot) is user
+
+    async def remove_spectator(self, spectator: "User", notify: bool = True):
+        """Remove a spectator from this room.
+
+        notify: send the leave confirmation to the spectator (skip it when the
+        user is disconnecting).
+        """
+        if not self.is_spectator(spectator):
+            return
+
+        self.spectators[spectator.room_slot] = None
+        spectator.set_room(None, 0)
+        # TODO: tell the players so they drop the spectator from their peer table.
+        # The DO_GAME_GUEST_LIST removal format still needs to be checked in the client.
+
+        if notify:
+            leave_packet = PacketFactory.create_packet(packet_id=PacketList.DO_GUEST_JOIN)
+            await spectator.send(leave_packet.build())
+
     async def switch_player_side(self, player_to_switch: Player):
 
         can_switch = False
