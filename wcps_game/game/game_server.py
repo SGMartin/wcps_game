@@ -62,6 +62,11 @@ class User(NetworkEntity):
         self.money = 0
         self.channel = 0
         self.room = None
+        # True while a create/join/quick join request is being processed. The client can send two
+        # join requests in the same instant (e.g. two UIs reacting to the same double click); each
+        # packet is handled in its own task, so without this both could pass the "user.room is None"
+        # check before either sets the room, leaving the user in two rooms.
+        self.joining_room = False
         self.userlist_page = 0
         self.room_page = 0
 
