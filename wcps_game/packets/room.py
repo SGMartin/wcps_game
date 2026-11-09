@@ -134,13 +134,19 @@ class RoomKick(OutPacket):
 
 
 class RoomSpectate(OutPacket):
-    def __init__(self, room_to_join: "Room", spectate_slot: int):
+    def __init__(self, room_to_join: "Room" = None, spectate_slot: int = 0):
         super().__init__(
             packet_id=PacketList.DO_GUEST_JOIN,
             xor_key=ClientXorKeys.SEND
         )
 
         self.append(corerr.SUCCESS)
+        if room_to_join is None:
+            # Leave confirmation. The client (0x4f0fc0) reads <code> <join/leave> and on
+            # leave (0x4f13d0) clears its spectator flag and goes back to the lobby.
+            self.append(0)
+            return
+
         self.append(1)
         self.append(spectate_slot)
         add_room_info_to_packet(self, room_to_join)

@@ -1,3 +1,4 @@
+import logging
 import random
 from typing import TYPE_CHECKING
 
@@ -272,6 +273,20 @@ class RoomLeaveHandler(PacketHandler):
         if not user.authorized:
             return
 
+        # Spectators leaving from inside the match also send DO_EXIT_ROOM. The client
+        # (0x4eba90) expects the regular RoomLeave layout; when the slot is its own it
+        # goes back to the lobby. Only the spectator gets it: players would read it as
+        # "the player in that slot left".
+        if user.room is not None and user.room.is_spectator(user):
+            room = user.room
+            old_slot = user.room_slot
+            await room.remove_spectator(user, notify=False)
+            leave_packet = PacketFactory.create_packet(
+                packet_id=PacketList.DO_EXIT_ROOM, user=user, room=room, old_slot=old_slot
+            )
+            await user.send(leave_packet.build())
+            return
+
         if user.room is not None:
             room_left = user.room
 
@@ -446,7 +461,12 @@ class RoomSpectateHandler(PacketHandler):
         # leave = 0 / join = 1
         join_or_leave = int(self.get_block(0))
 
+        # Client format (0x4695b0): <join/leave> <room id> <password or NULL>
         if join_or_leave == gconstants.RoomSpectateAction.JOIN:
+            # Already playing or spectating somewhere
+            if user.room is not None:
+                return
+
             room_id = int(self.get_block(1))
 
             this_room = user.this_server.channels[user.channel].rooms[room_id]
@@ -456,9 +476,13 @@ class RoomSpectateHandler(PacketHandler):
                 return
 
             spec_id = await this_room.add_spectator(user)
-            print(f"Assigned spec id {spec_id}")
+            logging.info(f"{user.displayname} spectating room {room_id} in slot {spec_id}")
 
         elif join_or_leave == gconstants.RoomSpectateAction.LEAVE:
-            pass
+            # The client sends the room it is currently spectating
+            if user.room is None or not user.room.is_spectator(user):
+                return
+
+            await user.room.remove_spectator(user)
         else:
             return
