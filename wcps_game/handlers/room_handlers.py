@@ -21,10 +21,18 @@ from wcps_game.packets.error_codes import (
 
 class RoomCreateHandler(PacketHandler):
     async def process(self, user: "User"):
-        # bytearray(b'50910153 29440 Mediavida 1 hello 1 12 0 0 0 3 1 1 \n')
-
-        if not user.authorized:
+        # Check and reserve with no await in between (see User.joining_room)
+        if not user.authorized or user.room is not None or user.joining_room:
             return
+
+        user.joining_room = True
+        try:
+            await self.create_room(user)
+        finally:
+            user.joining_room = False
+
+    async def create_room(self, user: "User"):
+        # bytearray(b'50910153 29440 Mediavida 1 hello 1 12 0 0 0 3 1 1 \n')
 
         room_name = self.get_block(0)
         has_password = bool(int(self.get_block(1)))
@@ -149,11 +157,17 @@ class RoomCreateHandler(PacketHandler):
 
 class RoomJoinHandler(PacketHandler):
     async def process(self, user: "User"):
-        if not user.authorized:
+        # Check and reserve with no await in between (see User.joining_room)
+        if not user.authorized or user.room is not None or user.joining_room:
             return
 
-        if user.room is not None:
-            return
+        user.joining_room = True
+        try:
+            await self.join_room(user)
+        finally:
+            user.joining_room = False
+
+    async def join_room(self, user: "User"):
 
         room_target = int(self.get_block(0))
         room_password = self.get_block(1)
@@ -237,12 +251,17 @@ class RoomJoinHandler(PacketHandler):
 
 class RoomQuickJoinHandler(PacketHandler):
     async def process(self, user: "User"):
-
-        if not user.authorized:
+        # Check and reserve with no await in between (see User.joining_room)
+        if not user.authorized or user.room is not None or user.joining_room:
             return
 
-        if user.room is not None:
-            return
+        user.joining_room = True
+        try:
+            await self.quick_join(user)
+        finally:
+            user.joining_room = False
+
+    async def quick_join(self, user: "User"):
 
         this_channel = user.this_server.channels[user.channel]
 
@@ -284,6 +303,8 @@ class RoomQuickJoinHandler(PacketHandler):
 
             if not success:
                 continue
+
+            break  # joined: do not keep adding the user to the next rooms
 
             # TODO: any kind of message if failed to join any room?
 

@@ -195,6 +195,10 @@ class Room:
             return this_player
 
         async with self._players_lock:
+            # Defensive: never put a user in a second room (callers check user.room before awaiting)
+            if user.room is not None:
+                return this_player
+
             player_team = gconstants.Team.DERBARAN
 
             current_derbaran_players = self.get_player_count_in_team(
@@ -217,6 +221,9 @@ class Room:
                     this_player = Player(
                         user=user, slot=requested_slot, team=player_team
                     )
+                    # Reserve the room before the first await below, so any other join request for
+                    # this user that runs meanwhile already sees user.room set
+                    user.set_room(room=self, room_slot=requested_slot)
                     # Get the current player list
                     current_players = self.get_all_players()
 
@@ -235,7 +242,6 @@ class Room:
                         player_slot=requested_slot,
                     )
 
-                    user.set_room(room=self, room_slot=requested_slot)
                     await user.send(join_packet.build())
 
                     # Important: these packets must be sent in this order
