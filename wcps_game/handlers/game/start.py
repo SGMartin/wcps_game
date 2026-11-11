@@ -1,4 +1,5 @@
 from wcps_game.handlers.packet_handler import GameProcessHandler
+from wcps_game.client.maps import MapDatabase
 
 from wcps_game.game.constants import RoomStatus, Team, GameMode
 from wcps_game.packets.packet_list import PacketList
@@ -16,6 +17,15 @@ class StartRoomHandler(GameProcessHandler):
 
         # This user is not the master
         if self.player.id != self.room.master_slot:
+            return
+
+        # Members-only maps need a master whose premium tier reaches the map's PayType.
+        # The client checks it before sending this packet (s_MapIsMembershipOnly), so this is
+        # a defensive check: no answer, as in the other invalid cases.
+        required_premium = MapDatabase().get_map_premium(map_id=self.room.current_map)
+        if required_premium is None:  # map not in maps.csv
+            return
+        if self.player.user.premium < required_premium:  # members-only map, F2P master
             return
 
         ready_derbaran = self.room.get_ready_player_count_in_team(Team.DERBARAN)
