@@ -1,7 +1,10 @@
 from wcps_game.handlers.packet_handler import GameProcessHandler
 
-from wcps_game.game.constants import GameMode, RoomStatus
+from wcps_game.game.constants import GameMode, Premium, RoomStatus
 from wcps_game.client.maps import MapDatabase
+
+# Modes an F2P room master can choose; FFA and Conquest need premium
+F2P_GAME_MODES = (GameMode.EXPLOSIVE, GameMode.TDM)
 
 
 class ChangeGameModeHandler(GameProcessHandler):
@@ -20,6 +23,12 @@ class ChangeGameModeHandler(GameProcessHandler):
 
         if new_game_mode < 0:
             new_game_mode = 0
+
+        # Premium modes: an F2P master may only pick the modes the client allows them
+        # (table 0x8ce6b8 read by 0x456cc0 in the PF23 exe). The client already blocks the
+        # others, so this is a defensive check with no answer.
+        if self.player.user.premium < Premium.BRONZE and new_game_mode not in F2P_GAME_MODES:
+            return
 
         self.room.game_mode = new_game_mode
 
