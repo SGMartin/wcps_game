@@ -29,8 +29,8 @@ RPG7_CODE = "DJ03"
 RPG7_DIRECT_HIT_DAMAGE = 1000
 
 # Channel limits enforced by the client; a hit outside them means a tampered client
-# Barrett M82 and AW50F: UO/BG only (Legacy client, exe group Q)
-NO_CQC_WEAPONS = ("DG02", "DG08")
+# Barrett M82, AW50F, flash mine and land mine: UO/BG only (Legacy client, exe group Q)
+NO_CQC_WEAPONS = ("DG02", "DG08", "DS05", "DU02")
 # MK1S and HK69: BG only (original client, 0x4fc900 in PF23)
 BG_ONLY_WEAPONS = ("DT03", "DT04")
 
@@ -469,13 +469,13 @@ class BaseGameMode(ABC):
         return final_damage
 
     def weapon_allowed_in_channel(self, attacker, weapon_code: str) -> bool:
-        """False (and logged) for a weapon the client does not let fire in this channel."""
+        """False (and logged) for a weapon the client does not let use in this channel."""
         channel = attacker.user.room.channel.type
         if (channel == ChannelType.CQC and weapon_code in NO_CQC_WEAPONS) or (
             channel != ChannelType.BATTLEGROUP and weapon_code in BG_ONLY_WEAPONS
         ):
             logging.warning(
-                f"{attacker.user.displayname} hit with {weapon_code} in channel {channel}, ignored"
+                f"{attacker.user.displayname} used {weapon_code} in channel {channel}, ignored"
             )
             return False
         return True
