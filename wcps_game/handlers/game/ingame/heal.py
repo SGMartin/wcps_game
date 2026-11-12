@@ -1,3 +1,6 @@
+import logging
+
+from wcps_game.client.items import ItemDatabase
 from wcps_game.handlers.packet_handler import GameProcessHandler
 from wcps_game.game.constants import GameMode, HealingPower, RoomStatus
 from wcps_game.packets.packet_list import PacketList
@@ -68,10 +71,17 @@ class HealPlayerHandler(GameProcessHandler):
         if is_healing_post:
             hp_to_heal += 400
         else:
-            if self.player.weapon == 65 and self.player.health < 400:  # adrenaline special shit
+            weapon_code = ItemDatabase().weapon_code(self.player.weapon)
+            if weapon_code not in HealingPower.HEALING_POWER:
+                logging.error(
+                    f"{self.player.user.displayname} healed with weapon {self.player.weapon} "
+                    f"({weapon_code}), which does not heal"
+                )
+                return
+            if weapon_code == HealingPower.ADRENALINE and self.player.health < 400:
                 hp_to_heal = 400 - self.player.health
             else:
-                hp_to_heal = HealingPower.HEALING_POWER[self.player.weapon]
+                hp_to_heal = HealingPower.HEALING_POWER[weapon_code]
 
         target.health = target.health + hp_to_heal
 
