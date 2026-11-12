@@ -28,8 +28,11 @@ from wcps_game.packets.packet_list import PacketList
 RPG7_CODE = "DJ03"
 RPG7_DIRECT_HIT_DAMAGE = 1000
 
-# Barrett M82 and AW50F: UO/BG only (the Legacy client blocks them in CQC, exe group Q)
+# Channel limits enforced by the client; a hit outside them means a tampered client
+# Barrett M82 and AW50F: UO/BG only (Legacy client, exe group Q)
 NO_CQC_WEAPONS = ("DG02", "DG08")
+# MK1S and HK69: BG only (original client, 0x4fc900 in PF23)
+BG_ONLY_WEAPONS = ("DT03", "DT04")
 
 
 class BaseGameMode(ABC):
@@ -142,14 +145,7 @@ class BaseGameMode(ABC):
             logging.info(f"{weapon_code} is not a weapon")
             return
 
-        # The Legacy client cannot fire these in CQC (exe group Q); a hit means a tampered client
-        if (
-            damage_handler.room.channel.type == ChannelType.CQC
-            and weapon_code in NO_CQC_WEAPONS
-        ):
-            logging.warning(
-                f"{attacker.user.displayname} hit with {weapon_code} in CQC, ignored"
-            )
+        if not self.weapon_allowed_in_channel(attacker, weapon_code):
             return
 
         # WTF WarRock
@@ -260,6 +256,8 @@ class BaseGameMode(ABC):
                 not attacker.user.inventory.has_item(weapon_code)
                 and weapon_code not in DefaultWeapon.DEFAULTS
             ):
+                return
+            if not self.weapon_allowed_in_channel(attacker, weapon_code):
                 return
             damage_taken = self.damage_calculator(
                 weapon=weapon_code,
@@ -469,6 +467,18 @@ class BaseGameMode(ABC):
 
         final_damage = round(damage_taken)
         return final_damage
+
+    def weapon_allowed_in_channel(self, attacker, weapon_code: str) -> bool:
+        """False (and logged) for a weapon the client does not let fire in this channel."""
+        channel = attacker.user.room.channel.type
+        if (channel == ChannelType.CQC and weapon_code in NO_CQC_WEAPONS) or (
+            channel != ChannelType.BATTLEGROUP and weapon_code in BG_ONLY_WEAPONS
+        ):
+            logging.warning(
+                f"{attacker.user.displayname} hit with {weapon_code} in channel {channel}, ignored"
+            )
+            return False
+        return True
 
     def is_projectile_weapon(self, weapon: str) -> bool:
 
