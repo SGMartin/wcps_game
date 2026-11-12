@@ -27,11 +27,22 @@ class ItemDatabase:
             self._vehicle_weapons = pd.read_csv(
                 f"{self._runtime_dir}/vehicle_weapon_damage.csv"
             )
+            # The client refers to the weapon in hand by its index in the [WEAPON] section of
+            # items.bin; items.csv keeps that order.
+            self._weapon_codes = self._items.loc[
+                self._items["source"] == "WEAPON", "code"
+            ].tolist()
             logging.info("Client data files loaded!")
         except FileNotFoundError as e:
             raise RuntimeError(
                 "CLIENT DATA ERROR: Cannot load client data tables"
             ) from e
+
+    def weapon_code(self, index: int):
+        """Item code of the weapon with this client index ([WEAPON] order), or None."""
+        if 0 <= index < len(self._weapon_codes):
+            return self._weapon_codes[index]
+        return None
 
     @property
     def item_data(self):

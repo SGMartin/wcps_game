@@ -1,7 +1,8 @@
 import logging
 
 from wcps_game.handlers.packet_handler import GameProcessHandler
-from wcps_game.game.constants import ChannelType, RoomStatus, Team
+from wcps_game.client.items import ItemDatabase
+from wcps_game.game.constants import ChannelType, RepairPower, RoomStatus, Team
 
 
 class RepairVehicleHandler(GameProcessHandler):
@@ -38,14 +39,12 @@ class RepairVehicleHandler(GameProcessHandler):
         if is_healing_station:
             repair_rate = 0.20
         else:
-            # Get weapon codes. # TODO: careful here if these ids change down the line PF23
-            if self.player.weapon == 63:  # default
-                repair_rate = 0.10
-            elif self.player.weapon == 64:  # pipe wrench
-                repair_rate = 0.15
-            else:
-                repair_rate = 0
-                logging.error(f"Failure to get repair rate for item {self.player.weapon}")
+            weapon_code = ItemDatabase().weapon_code(self.player.weapon)
+            repair_rate = RepairPower.REPAIR_RATE.get(weapon_code, 0)
+            if repair_rate == 0:
+                logging.error(
+                    f"Failure to get repair rate for item {self.player.weapon} ({weapon_code})"
+                )
 
         if repair_rate > 0:
             health_gained = round(target_vehicle.max_health * repair_rate)
