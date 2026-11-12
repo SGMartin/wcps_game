@@ -394,10 +394,22 @@ class RoomMaximumPlayers:
 
 
 class HealingPower:
+    # By item code: the client sends the weapon in hand as its index in the [WEAPON] section of
+    # items.bin, which differs between versions (PF20: medic kits 60-62; PF23: 77-79).
+    # ItemDatabase.weapon_code() turns the index into the code.
+    ADRENALINE = "DS01"  # heals up to 400 if below it, else 100
     HEALING_POWER = {
-        60: 300,  # Medic Kit 1
-        61: 450,  # Medic Kit 2
-        62: 600,  # Medic kit 3
-        65: 100,  # Adrenaline
-        85: 200   # hp kit
+        "DQ01": 300,  # Medic kit 1
+        "DQ02": 450,  # Medic kit 2
+        "DQ03": 600,  # Medic kit 3
+        "DS01": 100,  # Adrenaline
+        "DS10": 200,  # HP kit
+    }
+
+
+class RepairPower:
+    # Share of the vehicle's max health per repair, by item code (see HealingPower)
+    REPAIR_RATE = {
+        "DR01": 0.10,  # Spanner (default)
+        "DR02": 0.15,  # Pipe wrench
     }
