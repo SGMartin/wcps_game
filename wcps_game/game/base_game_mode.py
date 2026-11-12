@@ -438,6 +438,7 @@ class BaseGameMode(ABC):
                 HitboxBone.HEADNECK: DamageMultipliers.HEADNECK,
                 HitboxBone.TORSOLIMBS: DamageMultipliers.TORSOLIMBS,
                 HitboxBone.FEETHANDS: DamageMultipliers.FEETHANDS,
+                HitboxBone.SNIPERBONE: DamageMultipliers.SNIPERBONE,
             }
             bone_coef = bone_multipliers[hitbox] / 100
             damage_taken = weapon_power * damage_type * bone_coef
