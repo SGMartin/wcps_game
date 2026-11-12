@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from wcps_game.game.player import Player
 
 from wcps_game.game.constants import (
+    ChannelType,
     Classes,
     GameMode,
     HitboxBone,
@@ -26,6 +27,9 @@ from wcps_game.packets.packet_list import PacketList
 # RPG-7: a direct hit (not the blast radius) is lethal anywhere on the body
 RPG7_CODE = "DJ03"
 RPG7_DIRECT_HIT_DAMAGE = 1000
+
+# Barrett M82 and AW50F: UO/BG only (the Legacy client blocks them in CQC, exe group Q)
+NO_CQC_WEAPONS = ("DG02", "DG08")
 
 
 class BaseGameMode(ABC):
@@ -136,6 +140,16 @@ class BaseGameMode(ABC):
 
         if not item_database.is_weapon(weapon_code):
             logging.info(f"{weapon_code} is not a weapon")
+            return
+
+        # The Legacy client cannot fire these in CQC (exe group Q); a hit means a tampered client
+        if (
+            damage_handler.room.channel.type == ChannelType.CQC
+            and weapon_code in NO_CQC_WEAPONS
+        ):
+            logging.warning(
+                f"{attacker.user.displayname} hit with {weapon_code} in CQC, ignored"
+            )
             return
 
         # WTF WarRock
