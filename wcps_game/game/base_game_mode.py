@@ -23,7 +23,7 @@ from wcps_game.game.constants import (
 from wcps_game.client.items import ItemDatabase
 from wcps_game.packets.packet_list import PacketList
 
-# RPG-7: a direct hit (not the blast radius) is lethal anywhere on the body
+# RPG-7: a direct hit (not the blast radius) on the head or torso is lethal
 RPG7_CODE = "DJ03"
 RPG7_DIRECT_HIT_DAMAGE = 1000
 
@@ -147,10 +147,15 @@ class BaseGameMode(ABC):
 
         is_headshot = (bone_id == HitboxBone.HEADNECK) and can_headhot
 
-        if weapon_code == RPG7_CODE and not is_radius_damage:
-            # A direct RPG-7 hit killed in the original game, while the Panzerfaust, with almost the
-            # same data (POWER 1200 vs 1490), did not. No formula on items.bin explains both, so K2's
-            # server special-cased it. Same fix as the 2016 Spanish server: a flat lethal hit.
+        if (
+            weapon_code == RPG7_CODE
+            and not is_radius_damage
+            and bone_id in (HitboxBone.HEADNECK, HitboxBone.TORSOLIMBS)
+        ):
+            # A direct RPG-7 hit on the head or torso killed in the original game, while the
+            # Panzerfaust, with almost the same data (POWER 1200 vs 1490), did not. No formula on
+            # items.bin explains both, so K2's server special-cased it. Like the 2016 Spanish
+            # server's fix, but limbs (arms, hands, calves, feet) keep the usual formula.
             damage_taken = RPG7_DIRECT_HIT_DAMAGE
         else:
             damage_taken = self.damage_calculator(
