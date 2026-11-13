@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from wcps_game.game.player import Player
 
 from wcps_game.game.constants import (
+    ChannelType,
     Classes,
     GameMode,
     HitboxBone,
@@ -22,6 +23,16 @@ from wcps_game.game.constants import (
 )
 from wcps_game.client.items import ItemDatabase
 from wcps_game.packets.packet_list import PacketList
+
+# RPG-7: a direct hit (not the blast radius) is lethal anywhere on the body
+RPG7_CODE = "DJ03"
+RPG7_DIRECT_HIT_DAMAGE = 1000
+
+# Channel limits enforced by the client; a hit outside them means a tampered client
+# Barrett M82, AW50F, flash mine and land mine: UO/BG only (Legacy client, exe group Q)
+NO_CQC_WEAPONS = ("DG02", "DG08", "DS05", "DU02")
+# MK1S and HK69: BG only (original client, 0x4fc900 in PF23)
+BG_ONLY_WEAPONS = ("DT03", "DT04")
 
 
 class BaseGameMode(ABC):
@@ -134,6 +145,9 @@ class BaseGameMode(ABC):
             logging.info(f"{weapon_code} is not a weapon")
             return
 
+        if not self.weapon_allowed_in_channel(attacker, weapon_code):
+            return
+
         # WTF WarRock
         bone_id = hitbox_location - attacker.user.session_id
         if "DA" in weapon_code or self.is_projectile_weapon(weapon=weapon_code):
@@ -143,13 +157,19 @@ class BaseGameMode(ABC):
 
         is_headshot = (bone_id == HitboxBone.HEADNECK) and can_headhot
 
-        damage_taken = self.damage_calculator(
-            weapon=weapon_code,
-            damage_type=DamageTypes.INFANTRY,
-            hitbox=bone_id,
-            distance=0,  # TODO,
-            radius=radius,
-        )
+        if weapon_code == RPG7_CODE and not is_radius_damage:
+            # A direct RPG-7 hit killed in the original game, while the Panzerfaust, with almost the
+            # same data (POWER 1200 vs 1490), did not. No formula on items.bin explains both, so K2's
+            # server special-cased it. Same fix as the 2016 Spanish server: a flat lethal hit.
+            damage_taken = RPG7_DIRECT_HIT_DAMAGE
+        else:
+            damage_taken = self.damage_calculator(
+                weapon=weapon_code,
+                damage_type=DamageTypes.INFANTRY,
+                hitbox=bone_id,
+                distance=0,  # TODO,
+                radius=radius,
+            )
         await self.damage_player(
             handler=damage_handler,
             attacker=attacker,
@@ -236,6 +256,8 @@ class BaseGameMode(ABC):
                 not attacker.user.inventory.has_item(weapon_code)
                 and weapon_code not in DefaultWeapon.DEFAULTS
             ):
+                return
+            if not self.weapon_allowed_in_channel(attacker, weapon_code):
                 return
             damage_taken = self.damage_calculator(
                 weapon=weapon_code,
@@ -438,12 +460,25 @@ class BaseGameMode(ABC):
                 HitboxBone.HEADNECK: DamageMultipliers.HEADNECK,
                 HitboxBone.TORSOLIMBS: DamageMultipliers.TORSOLIMBS,
                 HitboxBone.FEETHANDS: DamageMultipliers.FEETHANDS,
+                HitboxBone.SNIPERBONE: DamageMultipliers.SNIPERBONE,
             }
             bone_coef = bone_multipliers[hitbox] / 100
             damage_taken = weapon_power * damage_type * bone_coef
 
         final_damage = round(damage_taken)
         return final_damage
+
+    def weapon_allowed_in_channel(self, attacker, weapon_code: str) -> bool:
+        """False (and logged) for a weapon the client does not let use in this channel."""
+        channel = attacker.user.room.channel.type
+        if (channel == ChannelType.CQC and weapon_code in NO_CQC_WEAPONS) or (
+            channel != ChannelType.BATTLEGROUP and weapon_code in BG_ONLY_WEAPONS
+        ):
+            logging.warning(
+                f"{attacker.user.displayname} used {weapon_code} in channel {channel}, ignored"
+            )
+            return False
+        return True
 
     def is_projectile_weapon(self, weapon: str) -> bool:
 

@@ -19,6 +19,10 @@ class PlaceGroundItemHandler(GameProcessHandler):
         if not self.player.user.inventory.has_item(item):
             return
 
+        # Mines are banned in CQC (Legacy client, exe group Q)
+        if not self.room.current_game_mode.weapon_allowed_in_channel(self.player, item):
+            return
+
         if self.player.items_planted >= 7:
             return
 

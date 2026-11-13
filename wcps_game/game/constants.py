@@ -104,6 +104,9 @@ class DamageMultipliers:
     HEADNECK = 120
     TORSOLIMBS = 60
     FEETHANDS = 30
+    # Upper chest (clavicles, Spine2) or left arm hit by an infantry PSG-1, Barrett M82 or AW50F
+    # (client 0x4ad040 in PF23): the "heart" shot of the beta PSG-1 description
+    SNIPERBONE = 150
 
 
 class DamageTypes:
