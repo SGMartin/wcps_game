@@ -18,6 +18,19 @@ from wcps_game.packets.error_codes import (
     RoomInvitationError,
 )
 
+# Default room names of the PF20 client (m727-m729 of each textdata file) and the
+# encoding of that file. Packets are read as latin-1 with spaces sent as 0x1d, so the
+# names are turned into that form once here.
+_DEFAULT_ROOM_NAMES = {
+    "cp1252": ("Let's play WarRock today!!!", "One Shot, One Kill", "Go! Go! Go!"),
+    "cp949": ("오늘도 워록 한판!", "원샷원킬", "작전지역으로 출발"),
+}
+DEFAULT_ROOM_NAMES = frozenset(
+    name.encode(encoding).decode("latin-1").replace(" ", "\x1d")
+    for encoding, names in _DEFAULT_ROOM_NAMES.items()
+    for name in names
+)
+
 
 class RoomCreateHandler(PacketHandler):
     async def process(self, user: "User"):
@@ -45,6 +58,21 @@ class RoomCreateHandler(PacketHandler):
         level_limit = int(self.get_block(8))
         premium_only = bool(int(self.get_block(9)))
         votekick_enabled = bool(int(self.get_block(10)))
+
+        # Era conventions (PF20): the create room window gives a random default name
+        # (in the client's language) and only lets Silver and up edit it or make the
+        # room private; Bronze and up may mark it premium only (0x562c20 in the PF20
+        # exe). The client already blocks the rest, so this is a defensive check.
+        # PF20 only: Code Name Legacy frees these options.
+        if user.premium < gconstants.Premium.SILVER and (
+            room_name not in DEFAULT_ROOM_NAMES or has_password
+        ):
+            await self.send_generic_error(user)
+            return
+
+        if user.premium < gconstants.Premium.BRONZE and premium_only:
+            await self.send_generic_error(user)
+            return
 
         # Start validating the room name
         default_longest_name = "Let's\x1dplay\x1dWarRock\x1dtoday!!!"
