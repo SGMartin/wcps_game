@@ -171,6 +171,8 @@ class User(NetworkEntity):
                 packet_id=PacketList.DO_KEEPALIVE,
                 u=self
             )
+            # The client throttles its P2P state rate if this ping is high (#36)
+            self.last_ping = datetime.now()
             await self.send(user_ping_packet.build())
 
     async def answer_ping(self):
