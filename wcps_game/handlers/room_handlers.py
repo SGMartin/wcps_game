@@ -68,7 +68,7 @@ class RoomCreateHandler(PacketHandler):
             gconstants.RoomMaximumPlayers.MAXIMUM_PLAYERS[user.channel]
         )
 
-        if player_limit > max_players_for_room:
+        if player_limit < 0 or player_limit >= max_players_for_room:
             await self.send_generic_error(user)
             return
 
