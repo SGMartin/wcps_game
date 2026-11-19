@@ -42,7 +42,6 @@ class GameDataInfo(OutPacket):
 
         self.append(len(vehicles_to_update))
         if vehicles_to_update:
-            self.append("")
             for vehicle in vehicles_to_update:
                 self.append(vehicle.id)
                 self.append(vehicle.health)

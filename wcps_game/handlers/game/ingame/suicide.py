@@ -1,5 +1,5 @@
 from wcps_game.handlers.packet_handler import GameProcessHandler
-from wcps_game.game.constants import RoomStatus, GameMode
+from wcps_game.game.constants import RoomStatus, GameMode, DeathCause
 from wcps_game.packets.packet_list import PacketList
 
 
@@ -15,7 +15,14 @@ class SuicideHandler(GameProcessHandler):
         if not self.player.alive:
             return
 
-        if self.room.game_mode == GameMode.EXPLOSIVE or self.room.game_mode == GameMode.FFA:
+        # p1 = cause. The client sends 0 for the suicide key and 5 (mine message) when the danger zone
+        # countdown runs out; it does not kill itself, it waits for this answer
+        cause = int(self.get_block(3))
+        if cause != DeathCause.MINE:
+            cause = DeathCause.SUICIDE
+
+        # No voluntary suicide in Explosive and FFA. The danger zone still kills there.
+        if cause == DeathCause.SUICIDE and self.room.game_mode in (GameMode.EXPLOSIVE, GameMode.FFA):
             return
 
         self.sub_packet = PacketList.DO_SUICIDE
@@ -24,5 +31,5 @@ class SuicideHandler(GameProcessHandler):
         await self.room.current_game_mode.on_suicide(self.player)
 
         self.set_block(2, self.player.id)
-        self.set_block(3, 0)
+        self.set_block(3, cause)
         self.answer = True

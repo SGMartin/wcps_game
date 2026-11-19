@@ -25,11 +25,11 @@ class VoteKickHandler(GameProcessHandler):
             self.answer = True
             return
 
-        # You cannot kick yourself
-        # if self.player.id == target_user:
-        #     self.error_code = RoomKickError.INVALID_CANDIDATE
-        #     self.answer = True
-        #     return
+        # You cannot kick yourself (the client already blocks it, m993_5)
+        if self.player.id == target_user:
+            self.error_code = RoomKickError.INVALID_CANDIDATE
+            self.answer = True
+            return
 
         # try to get the target player
         this_player = self.room.players.get(target_user)
@@ -60,13 +60,22 @@ class VoteKickHandler(GameProcessHandler):
             self.answer = True
             return
 
+        # m993_4 "You need 4 or more players": the vote is within the target's team, so the minimum is
+        # counted there. With fewer, one proposer would be enough to kick a teammate.
+        if is_vote_request and self.room.get_player_count_in_team(this_player.team) < 4:
+            self.error_code = RoomKickError.AT_LEAST_FOUR_PLAYERS
+            self.answer = True
+            return
+
         # Tell the game the vote kick started
         if not self.room.votekick.running and is_vote_request:
             self.room.votekick.start_vote(target_slot=this_player.id, side=this_player.team)
+            # The proposer votes YES (a later Y from them does not count twice)
+            self.room.votekick.add_user_vote(user=self.player.user, kick=True)
             self.set_block(2, 1)
             self.set_block(6, self.player.id)  # kicker id
             self.answer = True
         # It seems chapter 1 only sends the packet back if the user says "YES"
-        else:
-            # TODO: some msg should be added here
+        # A YES vote (Y key; N sends nothing): only for the vote in progress, once per player
+        elif self.room.votekick.running and target_user == self.room.votekick.target_id:
             self.room.votekick.add_user_vote(user=self.player.user, kick=True)

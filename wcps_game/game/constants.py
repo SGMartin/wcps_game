@@ -377,6 +377,16 @@ BranchSlotCodes = {
 }
 
 
+class DeathCause:
+    """p1 of DO_SUICIDE 0x9d: the message the client shows (handler PF23 0x4e6d70)."""
+    SUICIDE = 0  # m859 "Suicide"
+    BLEEDING = 1  # m62 "killed by not having medical treatment"
+    FALL = 2  # m63 "killed by falling from high ground"
+    VEHICLE = 4  # m65 "killed by a vehicle"
+    MINE = 5  # m64 "killed by stepping on a mine", plus scream and explosion. The client sends it when the
+    # danger zone countdown (m408) runs out
+
+
 class RoomPingLimit:
     GREEN = 0
     YELLOW = 1
