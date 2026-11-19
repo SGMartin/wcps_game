@@ -21,7 +21,7 @@ class ChangeKillsTicketsHandler(GameProcessHandler):
         else:
             max_tickets = 5
 
-        if target_tickets > max_tickets:
+        if target_tickets < 0 or target_tickets > max_tickets:
             target_tickets = 0
 
         self.room.update_tickets_from_settings(

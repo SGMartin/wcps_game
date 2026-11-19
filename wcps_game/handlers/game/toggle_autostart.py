@@ -11,7 +11,9 @@ class ToggleAutoStartHandler(GameProcessHandler):
         if self.room.state != RoomStatus.WAITING:
             return
 
-        self.room.autostart = not self.room.autostart
+        # p0 is the value the client asks for (a toggle could desync and do the opposite). The map
+        # selector also sends 0 when the master's premium does not allow Auto Start on the new map.
+        self.room.autostart = bool(int(self.get_block(2)))
 
         self.set_block(2, self.room.autostart)
         self.update_lobby = True
