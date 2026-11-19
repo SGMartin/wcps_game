@@ -44,12 +44,13 @@ class CallArtilleryHandler(GameProcessHandler):
             strike["cooldown_until"] = strike["active_until"] + settings().artillery_cooldown
 
         if phase == ArtilleryPhase.REQUEST:
+            # A request a legit client cannot send (dead, not a sniper, no binoculars): no answer
             if (
                 not self.player.alive
                 or self.player.branch != Classes.SNIPER
                 or not self.player.user.inventory.has_item("DX01")  # binoculars
             ):
-                return self.reject(ArtilleryReject.IN_USE)
+                return
             if strike["owner"] is not None:
                 return self.reject(ArtilleryReject.IN_USE)
             if now < strike["cooldown_until"]:
