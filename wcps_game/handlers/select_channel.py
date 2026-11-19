@@ -37,12 +37,9 @@ class SelectChannelHandler(PacketHandler):
 
                 for channel_member in all_channel_users:
                     if channel_member.room is None:
-                        userlist = PacketFactory.create_packet(
-                            packet_id=PacketList.DO_USER_LIST,
-                            lobby_user_list=all_channel_users,
-                            target_page=channel_member.userlist_page
-                            )
-                        await channel_member.send(userlist.build())
+                        await user.this_server.channels[target_channel].send_user_list(
+                            channel_member, all_channel_users
+                        )
 
                 # Send the room list to the user: page 0, ids 0-7 (not the first 8 rooms that exist: with
                 # gaps, those could include ids 8+ and the client would write them outside its table)

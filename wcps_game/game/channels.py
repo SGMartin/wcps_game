@@ -12,6 +12,7 @@ from wcps_core.packets import OutPacket
 from wcps_game.game.constants import ChannelType, RoomStatus
 from wcps_game.packets.packet_list import PacketList
 from wcps_game.packets.packet_factory import PacketFactory
+from wcps_game.packets.userlist import last_user_list_page
 
 
 class Channel:
@@ -54,12 +55,21 @@ class Channel:
         users_left = await self.get_users()
         for user in users_left:
             if user.room is None:
-                new_user_list = PacketFactory.create_packet(
-                    packet_id=PacketList.DO_USER_LIST,
-                    lobby_user_list=users_left,
-                    target_page=user.userlist_page
-                    )
-                await user.send(new_user_list.build())
+                await self.send_user_list(user, users_left)
+
+    async def send_user_list(self, user: "User", channel_users: list = None):
+        """Send the user their page of the lobby user list, moved back to the last page if the list
+        got shorter (it is never empty: the user is in it)."""
+        if channel_users is None:
+            channel_users = await self.get_users()
+
+        user.userlist_page = min(user.userlist_page, last_user_list_page(len(channel_users)))
+        user_list = PacketFactory.create_packet(
+            packet_id=PacketList.DO_USER_LIST,
+            lobby_user_list=channel_users,
+            target_page=user.userlist_page,
+        )
+        await user.send(user_list.build())
 
     async def get_users(self):
         async with self._users_lock:
