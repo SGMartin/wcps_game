@@ -11,7 +11,7 @@ class ManualVoteKick(OutPacket):
     and compares p3 with a threshold of 80 (60 in CQC) to show the kick. The old layout (b0 = 4, p0 = 0,
     p1 = 0, p3 = 75) read as "vote state 0, target slot 0": the HUD closed but no result was shown."""
 
-    def __init__(self, room, voted_player_id: int, kicked: bool):
+    def __init__(self, room, voted_player_id: int, percentage: int):
         super().__init__(
             packet_id=PacketList.DO_GAME_PROCESS,
             xor_key=ClientXorKeys.SEND
@@ -27,5 +27,5 @@ class ManualVoteKick(OutPacket):
         self.append(2)  # p0: result
         self.append(voted_player_id)  # p1: target slot
         self.append(0)  # p2
-        self.append(100 if kicked else 0)  # p3: percentage, above the client threshold when kicked
+        self.append(percentage)  # p3: YES votes %, the client shows the kick from 80 (60 in CQC)
         self.fill(0, 4)  # p4..p7

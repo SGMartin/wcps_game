@@ -60,9 +60,18 @@ class VoteKickHandler(GameProcessHandler):
             self.answer = True
             return
 
+        # m993_4 "You need 4 or more players": the vote is within the target's team, so the minimum is
+        # counted there. With fewer, one proposer would be enough to kick a teammate.
+        if is_vote_request and self.room.get_player_count_in_team(this_player.team) < 4:
+            self.error_code = RoomKickError.AT_LEAST_FOUR_PLAYERS
+            self.answer = True
+            return
+
         # Tell the game the vote kick started
         if not self.room.votekick.running and is_vote_request:
             self.room.votekick.start_vote(target_slot=this_player.id, side=this_player.team)
+            # The proposer votes YES (a later Y from them does not count twice)
+            self.room.votekick.add_user_vote(user=self.player.user, kick=True)
             self.set_block(2, 1)
             self.set_block(6, self.player.id)  # kicker id
             self.answer = True
