@@ -94,7 +94,7 @@ class Channel:
         if not user.room_list_waiting:
             return [room for room in rooms if room.room_page == user.room_page]
 
-        waiting = [room for room in rooms if room.state == RoomStatus.WAITING]
+        waiting = [room for room in rooms if room.lobby_state == RoomStatus.WAITING]
         return [room for room in waiting if room.id >= user.room_list_anchor][:8]
 
     async def send_room_list(self, user: "User"):
