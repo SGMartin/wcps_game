@@ -23,6 +23,7 @@ class SelectChannelHandler(PacketHandler):
                 user.channel = target_channel
                 user.userlist_page = 0
                 user.room_page = 0
+                user.room_list_waiting = False  # the client starts the lobby on all rooms, page 0
 
                 channel_change = PacketFactory.create_packet(
                     packet_id=PacketList.DO_SET_CHANNEL,
@@ -43,18 +44,8 @@ class SelectChannelHandler(PacketHandler):
                             )
                         await channel_member.send(userlist.build())
 
-                # Send the room list to the user
-                all_rooms_channel = await user.this_server.channels[target_channel].get_all_rooms()
-
-                # Send only the first 8 rooms since it's page 1
-                first_page_rooms = list(all_rooms_channel.values())[0:8]
-
-                room_list = PacketFactory.create_packet(
-                    packet_id=PacketList.DO_ROOM_LIST,
-                    room_page=0,
-                    room_list=first_page_rooms,
-                    viewer=user,
-                )
-                await user.send(room_list.build())
+                # Send the room list to the user: page 0, ids 0-7 (not the first 8 rooms that exist: with
+                # gaps, those could include ids 8+ and the client would write them outside its table)
+                await user.this_server.channels[target_channel].send_room_list(user)
         else:
             await user.disconnect()
