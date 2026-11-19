@@ -1,3 +1,4 @@
+import time
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -20,6 +21,7 @@ class SelectChannelHandler(PacketHandler):
 
                 # TODO: move this to user/channel class and implement upper bounds
                 await user.this_server.channels[target_channel].add_user(user)
+                user.lobby_since = time.monotonic()  # to the top of the lobby user list
                 user.channel = target_channel
                 user.userlist_page = 0
                 user.room_page = 0

@@ -59,9 +59,11 @@ class Channel:
 
     async def send_user_list(self, user: "User", channel_users: list = None):
         """Send the user their page of the lobby user list, moved back to the last page if the list
-        got shorter (it is never empty: the user is in it)."""
+        got shorter (it is never empty: the user is in it). The list shows the users who entered the
+        channel or came back from a room most recently first, so they push the others down."""
         if channel_users is None:
             channel_users = await self.get_users()
+        channel_users = sorted(channel_users, key=lambda u: u.lobby_since, reverse=True)
 
         user.userlist_page = min(user.userlist_page, last_user_list_page(len(channel_users)))
         user_list = PacketFactory.create_packet(
