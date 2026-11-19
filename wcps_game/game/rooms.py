@@ -826,19 +826,17 @@ class Room:
         if not self.votekick.running:
             return
 
+        # The rule of the client (PF23 0x4e76e0, PF20 0x4e83b0): the result carries the percentage of YES
+        # votes and the client shows the kick from 80% (60% in CQC). The voters are the target's team
+        # without the target, who cannot vote in their own favour.
         votes_to_kick = len(self.votekick.get_positive_votes())
-        # votes_to_save = len(self.votekick.get_negative_votes())
+        voters = max(1, self.get_player_count_in_team(team_to_count=self.votekick.vote_team) - 1)
+        percentage = min(100, votes_to_kick * 100 // voters)
+        threshold = 60 if self.channel.type == gconstants.ChannelType.CQC else 80
+        should_kick = percentage >= threshold
 
-        players_in_team = self.get_player_count_in_team(
-            team_to_count=self.votekick.vote_team
-        )
-        majority = round(players_in_team / 2) + 1
-        should_kick = votes_to_kick >= majority
-
-        if time.time() >= self.votekick.timestamp:
-            await self.votekick.stop_vote(should_kick)
-        elif should_kick:
-            await self.votekick.stop_vote(kicked=True)
+        if should_kick or time.time() >= self.votekick.timestamp:
+            await self.votekick.stop_vote(kicked=should_kick, percentage=percentage)
 
     async def handle_bleeding(self):
         # No bleeding out in cqc
@@ -892,9 +890,9 @@ class VoteKick:
         self.vote_team = side
         self.timestamp = self.get_timestamp() + 30
 
-    async def stop_vote(self, kicked):
+    async def stop_vote(self, kicked, percentage):
         # kick the user if needed
-        await self.kick_user(kicked)
+        await self.kick_user(kicked, percentage)
 
         self.running = False
         self.timestamp = 0
@@ -917,7 +915,7 @@ class VoteKick:
     def get_negative_votes(self):
         return [vote for vote in self.votes if not vote["kick"]]
 
-    async def kick_user(self, kicked):
+    async def kick_user(self, kicked, percentage):
 
         player = self.room.players.get(self.target_id)
 
@@ -937,7 +935,7 @@ class VoteKick:
         kick_notification = PacketFactory.create_packet(
             packet_id=PacketList.DO_VOTE_KICK,
             room=self.room,
-            kicked=bool(kicked and player),
+            percentage=percentage,
             voted_player_id=self.target_id,
         )
         for remaining_player in self.room.get_all_players():
