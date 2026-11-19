@@ -131,22 +131,7 @@ class UDPListener:
 
                 # Temporal test to try to keep the player updated of rooms while training
                 if room_id == 999:
-                    rooms = await this_user.this_server.channels[
-                        this_user.channel
-                    ].get_all_rooms()
-                    rooms = [
-                        room
-                        for room in rooms.values()
-                        if room.room_page == this_user.room_page
-                    ]
-
-                    room_list = PacketFactory.create_packet(
-                        packet_id=PacketList.DO_ROOM_LIST,
-                        room_page=this_user.room_page,
-                        room_list=rooms,
-                        viewer=this_user,
-                    )
-                    await this_user.send(room_list.build())
+                    await this_user.this_server.channels[this_user.channel].send_room_list(this_user)
 
             # TUNNELING
             elif packet[14] in {0x10, 0x30, 0x31, 0x32, 0x34}:

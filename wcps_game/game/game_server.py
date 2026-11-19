@@ -69,6 +69,10 @@ class User(NetworkEntity):
         self.joining_room = False
         self.userlist_page = 0
         self.room_page = 0
+        # Room list filter, as the client keeps it: False = all rooms by page (the default, the client
+        # resets it on lobby entry), True = waiting rooms only, browsed by room id (see RoomListHandler)
+        self.room_list_waiting = False
+        self.room_list_anchor = 0  # waiting only: id the shown list starts from
 
         # Premium data
         self.premium = Premium.F2P
@@ -234,6 +238,7 @@ class User(NetworkEntity):
         self.room_slot = room_slot
         # reset room and user list page
         self.room_page = 0
+        self.room_list_waiting = False
         self.userlist_page = 0
 
 

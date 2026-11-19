@@ -319,18 +319,7 @@ class RoomLeaveHandler(PacketHandler):
             await user.send(user_list_full.build())
 
             # Send the user the room list
-            all_rooms = await user.this_server.channels[user.channel].get_all_rooms()
-            rooms_to_send = [
-                room for room in all_rooms.values() if room.room_page == user.room_page
-            ]
-
-            new_room_list = PacketFactory.create_packet(
-                packet_id=PacketList.DO_ROOM_LIST,
-                room_page=user.room_page,
-                room_list=rooms_to_send,
-                viewer=user,
-            )
-            await user.send(new_room_list.build())
+            await user.this_server.channels[user.channel].send_room_list(user)
 
             # Send an userlist packet for all users in the user list for their current page
             # TODO: check if packet DO_USERLIST_CHANGE (0x7110) would work here?
@@ -356,51 +345,46 @@ class RoomLeaveHandler(PacketHandler):
 
 
 class RoomListHandler(PacketHandler):
+    """DO_ROOM_LIST request: <target> <waiting only> <backward> (client builder PF20 0x469114,
+    PF23 0x469590).
+
+    - All rooms (block 1 = 0, the default): block 0 is the page the client wants. Next / previous
+      send page+1 / page-1, the SHOW ALL / SHOW AVAIL toggle and /go send page 0 or the page of a room.
+    - Waiting only (block 1 = 1): block 0 is a room id. Next sends the highest id on screen + 1,
+      previous the lowest id on screen, with block 2 = 1.
+    """
+
     async def process(self, user: "User"):
         if not user.authorized:
             return
 
         if user.room is not None:
             return
-        # 2024-08-11 00:06:22,839 - INFO - IN:: bytearray(b'27754355 29184 1 0 0 \n')
-        # go_forward = bool(int(self.get_block(0)))
-        show_waiting = False if int(self.get_block(1)) == 1 else True
-        go_backward = bool(int(self.get_block(2)))
 
-        if go_backward:
-            user.room_page = user.room_page - 1
+        target = int(self.get_block(0))
+        user.room_list_waiting = int(self.get_block(1)) == 1
+        backward = int(self.get_block(2)) == 1
+
+        channel = user.this_server.channels[user.channel]
+
+        if not user.room_list_waiting:
+            user.room_page = max(0, target)
         else:
-            user.room_page = user.room_page + 1
+            rooms = (await channel.get_all_rooms()).values()
+            waiting_ids = sorted(room.id for room in rooms if room.state == gconstants.RoomStatus.WAITING)
 
-        if user.room_page < 0:
-            user.room_page = 0
+            if backward:
+                # The 8 waiting rooms right before the first one on screen
+                before = [room_id for room_id in waiting_ids if room_id < target][-8:]
+                anchor = before[0] if before else 0
+            else:
+                after = [room_id for room_id in waiting_ids if room_id >= target]
+                # Nothing further on (or the toggle with no waiting rooms): keep the current list
+                anchor = after[0] if after else user.room_list_anchor
 
-        all_channel_rooms = await user.this_server.channels[
-            user.channel
-        ].get_all_rooms()
-        last_waiting_rooms = []
-        last_rooms = []
+            user.room_list_anchor = anchor
 
-        for idx, room in all_channel_rooms.items():
-            if room is not None:
-                if room.id >= 8 * user.room_page and room.id < 8 * (user.room_page + 1):
-                    last_rooms.append(room)
-                if room.state == gconstants.RoomStatus.WAITING:
-                    last_waiting_rooms.append(room)
-
-        if show_waiting:
-            rooms_to_send = last_waiting_rooms[-8:]
-        else:
-            rooms_to_send = last_rooms
-
-        room_packet = PacketFactory.create_packet(
-            packet_id=PacketList.DO_ROOM_LIST,
-            room_page=user.room_page,
-            room_list=rooms_to_send,
-            viewer=user,
-        )
-        # TODO: recheck filtering step of waiting rooms
-        await user.send(room_packet.build())
+        await channel.send_room_list(user)
 
 
 class RoomInviteHandler(PacketHandler):
