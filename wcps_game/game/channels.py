@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 from wcps_core.packets import OutPacket
 
-from wcps_game.game.constants import ChannelType
+from wcps_game.game.constants import ChannelType, RoomStatus
 from wcps_game.packets.packet_list import PacketList
 from wcps_game.packets.packet_factory import PacketFactory
 
@@ -68,6 +68,31 @@ class Channel:
     async def get_all_rooms(self):
         async with self._rooms_lock:
             return {k: v for k, v in self.rooms.items() if v is not None}
+
+    async def get_room_list_for(self, user: "User") -> list:
+        """The rooms of this user's room list, as their filter shows them.
+
+        All rooms (default): the rooms of user.room_page, ids page*8 .. page*8+7. The client puts each
+        one in row 'id - page*8' of its 8-row table without a bounds check (PF20 0x4f69a0), so a room
+        from another page would be written outside the table.
+        Waiting only: up to 8 waiting rooms from user.room_list_anchor on, in id order. The client
+        fills its rows one after another."""
+        rooms = sorted((await self.get_all_rooms()).values(), key=lambda room: room.id)
+
+        if not user.room_list_waiting:
+            return [room for room in rooms if room.room_page == user.room_page]
+
+        waiting = [room for room in rooms if room.state == RoomStatus.WAITING]
+        return [room for room in waiting if room.id >= user.room_list_anchor][:8]
+
+    async def send_room_list(self, user: "User"):
+        room_list = PacketFactory.create_packet(
+            packet_id=PacketList.DO_ROOM_LIST,
+            room_page=user.room_page,
+            room_list=await self.get_room_list_for(user),
+            viewer=user,
+        )
+        await user.send(room_list.build())
 
     async def broadcast_packet_to_channel(self, packet: OutPacket):
         all_users = await self.get_users()
