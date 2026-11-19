@@ -13,7 +13,7 @@ class ChangePingLimitHandler(GameProcessHandler):
 
         target_ping = int(self.get_block(2))
 
-        if target_ping > RoomPingLimit.ALL:
+        if target_ping < RoomPingLimit.GREEN or target_ping > RoomPingLimit.ALL:
             target_ping = RoomPingLimit.GREEN
 
         self.room.ping_limit = target_ping

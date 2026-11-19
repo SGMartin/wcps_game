@@ -1,6 +1,7 @@
 from wcps_game.handlers.packet_handler import GameProcessHandler
 
 from wcps_game.game.constants import RoomStatus
+from wcps_game.packets.error_codes import RoomKickError
 
 
 class StartRoomHandler(GameProcessHandler):
@@ -18,3 +19,7 @@ class StartRoomHandler(GameProcessHandler):
         # invalid cases.
         if self.room.can_start():
             await self.room.launch()
+        else:
+            # m774 "Not enough players. Cannot start game." (client 0x7530 error table, PF23 0x5f79e0)
+            self.error_code = RoomKickError.NOT_ENOUGH_PLAYERS
+            self.answer = True

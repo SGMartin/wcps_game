@@ -11,7 +11,8 @@ class ToggleUserLimitHandler(GameProcessHandler):
         if self.room.state != RoomStatus.WAITING:
             return
 
-        self.room.user_limit = not self.room.user_limit
+        # p0 is the value the client asks for (a toggle could desync and do the opposite)
+        self.room.user_limit = bool(int(self.get_block(2)))
 
         self.set_block(2, self.room.user_limit)
         self.update_lobby = True
