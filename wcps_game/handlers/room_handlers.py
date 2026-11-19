@@ -140,11 +140,12 @@ class RoomCreateHandler(PacketHandler):
         channel_users = await user.this_server.channels[user.channel].get_users()
 
         for user_to_update in channel_users:
-            if user_to_update.room is None and user.room_page == new_room.room_page:
+            if user_to_update.room is None and user_to_update.room_page == new_room.room_page:
                 update_packet = PacketFactory.create_packet(
                     packet_id=PacketList.DO_ROOM_INFO_CHANGE,
                     room_to_update=new_room,
                     update_type=gconstants.RoomUpdateType.CREATE,
+                    viewer=user_to_update,
                 )
                 await user_to_update.send(update_packet.build())
 
@@ -194,37 +195,16 @@ class RoomJoinHandler(PacketHandler):
             await user.send(password_incorrect.build())
             return
 
-        if this_room.premium_only and user.premium == gconstants.Premium.F2P:
-            not_premium = PacketFactory.create_packet(
+        # Premium only, level, voted out, ping limit. The OldUI room list lets the user try to join
+        # a greyed out room (no check on 'can join' before sending the join), so check it here too
+        join_error = this_room.join_error(user)
+        if join_error != corerr.SUCCESS:
+            cannot_join = PacketFactory.create_packet(
                 packet_id=PacketList.DO_JOIN_ROOM,
-                error_code=RoomJoinError.PREMIUM_ONLY,
+                error_code=join_error,
                 room_to_join=None,
             )
-            await user.send(not_premium.build())
-            return
-
-        # Player level is unsuitable
-        this_player_level = gconstants.get_level_for_exp(user.xp)
-        level_required = gconstants.RoomLevelLimits.MIN_LEVEL_REQUIREMENTS.get(
-            this_room.level_limit
-        )
-
-        if this_player_level not in level_required:
-            bad_level_error = PacketFactory.create_packet(
-                packet_id=PacketList.DO_JOIN_ROOM,
-                error_code=RoomJoinError.UNSUITABLE_LEVEL,
-                room_to_join=None
-            )
-            await user.send(bad_level_error.build())
-            return
-
-        if user.username in this_room.votekick.locked_users:
-            voted_out_error = PacketFactory.create_packet(
-                packet_id=PacketList.DO_JOIN_ROOM,
-                error_code=RoomJoinError.GENERIC,
-                room_to_join=None
-            )
-            await user.send(voted_out_error.build())
+            await user.send(cannot_join.build())
             return
 
         # If this function does not return none, it will send the room join packet
@@ -281,24 +261,10 @@ class RoomQuickJoinHandler(PacketHandler):
             if room.password_protected:
                 continue
 
-            # was kicked out
-            if user.username in room.votekick.locked_users:
+            # Premium only, level, voted out, ping limit
+            if room.join_error(user) != corerr.SUCCESS:
                 continue
 
-            # premium only room
-            if room.premium_only and user.premium == gconstants.Premium.F2P:
-                continue
-
-            # Player level is unsuitable
-            this_player_level = gconstants.get_level_for_exp(user.xp)
-            level_required = gconstants.RoomLevelLimits.MIN_LEVEL_REQUIREMENTS.get(
-                room.level_limit
-            )
-
-            if this_player_level not in level_required:
-                continue
-
-            # TODO: ping
             success = await room.add_player(user)
 
             if not success:
@@ -343,6 +309,7 @@ class RoomLeaveHandler(PacketHandler):
                 packet_id=PacketList.DO_ROOM_LIST,
                 room_page=user.room_page,
                 room_list=rooms_to_send,
+                viewer=user,
             )
             await user.send(new_room_list.build())
 
@@ -364,6 +331,7 @@ class RoomLeaveHandler(PacketHandler):
                             packet_id=PacketList.DO_ROOM_INFO_CHANGE,
                             room_to_update=room_left,
                             update_type=gconstants.RoomUpdateType.UPDATE,
+                            viewer=c_user,
                         )
                         await c_user.send(room_update.build())
 
@@ -410,6 +378,7 @@ class RoomListHandler(PacketHandler):
             packet_id=PacketList.DO_ROOM_LIST,
             room_page=user.room_page,
             room_list=rooms_to_send,
+            viewer=user,
         )
         # TODO: recheck filtering step of waiting rooms
         await user.send(room_packet.build())
