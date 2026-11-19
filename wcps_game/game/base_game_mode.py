@@ -446,10 +446,12 @@ class BaseGameMode(ABC):
         damage_type_coefs = item_database.get_weapon_damage_class(
             code=weapon, damage_class=damage_type, is_vehicle=is_vehicle_weapon
         )
-        # Distance can only be short / mid / long
-        damage_type = (
-            damage_type_coefs[DamageDistances.SHORT] / 100
-        )  # TODO: DISTANCE HERE
+        # Distance can only be short / mid / long, but the server cannot know it:
+        # DO_DAMAGED_PLAYER carries the shot origin (attacker position) and no
+        # victim position or distance, and in P2P the position updates never
+        # reach the server. The original server most likely did not apply the
+        # mid/long coefficients against infantry either, so SHORT is always used.
+        damage_type = damage_type_coefs[DamageDistances.SHORT] / 100
 
         if radius > 0 or not hitbox:  # Then it is a radius damage
             radius_coef = radius / 100
