@@ -1,3 +1,4 @@
+import time
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -20,6 +21,7 @@ class SelectChannelHandler(PacketHandler):
 
                 # TODO: move this to user/channel class and implement upper bounds
                 await user.this_server.channels[target_channel].add_user(user)
+                user.lobby_since = time.monotonic()  # to the top of the lobby user list
                 user.channel = target_channel
                 user.userlist_page = 0
                 user.room_page = 0
@@ -37,12 +39,9 @@ class SelectChannelHandler(PacketHandler):
 
                 for channel_member in all_channel_users:
                     if channel_member.room is None:
-                        userlist = PacketFactory.create_packet(
-                            packet_id=PacketList.DO_USER_LIST,
-                            lobby_user_list=all_channel_users,
-                            target_page=channel_member.userlist_page
-                            )
-                        await channel_member.send(userlist.build())
+                        await user.this_server.channels[target_channel].send_user_list(
+                            channel_member, all_channel_users
+                        )
 
                 # Send the room list to the user: page 0, ids 0-7 (not the first 8 rooms that exist: with
                 # gaps, those could include ids 8+ and the client would write them outside its table)

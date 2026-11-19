@@ -2,22 +2,30 @@ from wcps_core.packets import OutPacket
 
 from wcps_game.packets.packet_list import ClientXorKeys, PacketList
 
+# The client keeps one page of the lobby user list: 10 entries of 0x1a40 bytes (PF20 0xc1bfc8..0xc2c648,
+# PF23 0xc2ffc0..0xc40640). Its reader (PF20 0x4fa7a0, PF23 0x603250) writes each entry to row
+# 'index - page * 10' with no bounds check, so a packet must only carry the users of that page.
+USER_LIST_PAGE_SIZE = 10
+
+
+def last_user_list_page(user_count: int) -> int:
+    return max(0, (user_count - 1) // USER_LIST_PAGE_SIZE)
+
 
 class UserList(OutPacket):
     def __init__(self, lobby_user_list: list, target_page: int):
+        """One page of the lobby user list: the users of target_page among lobby_user_list (the whole
+        channel). An empty page sends count 0: the client then keeps the list and page it shows."""
         super().__init__(packet_id=PacketList.DO_USER_LIST, xor_key=ClientXorKeys.SEND)
 
-        # User list count. Technically I managed to get to 302 with slider = 1
-        # but sometime it crashes going back. 250 ALWAYS work
-        self.append(len(lobby_user_list))
-        self.append(target_page)  # user list page
+        first = target_page * USER_LIST_PAGE_SIZE
+        page_users = lobby_user_list[first:first + USER_LIST_PAGE_SIZE]
 
-        # Discovered by SGMartin. The user list is a slider. The higher the value,
-        # the lower the userlist rotates. Max. to 10 and the user list stays in place
-        slider = 1
+        self.append(len(page_users))  # entries in this packet (the client returns at once if <= 0)
+        self.append(target_page)  # the client stores it as its current page
 
-        for idx, this_user in enumerate(lobby_user_list):
-            self.append(idx + target_page * slider)
+        for row, this_user in enumerate(page_users):
+            self.append(first + row)  # the client puts it in row 'index - page * 10' = row
             self.append(this_user.session_id)  # used to be internal id
             self.append(this_user.session_id)  # session id
             self.append(this_user.displayname)  # displayname

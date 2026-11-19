@@ -40,9 +40,4 @@ class BackToLobbyHandler(GameProcessHandler):
                 if self.player.user.room is None:
                     self.player.user.set_room(None, 0)
 
-                    user_list = PacketFactory.create_packet(
-                        packet_id=PacketList.DO_USER_LIST,
-                        lobby_user_list=channel_users,
-                        target_page=self.player.user.userlist_page
-                    )
-                    await self.player.user.send(user_list.build())
+                    await self.room.channel.send_user_list(self.player.user)
