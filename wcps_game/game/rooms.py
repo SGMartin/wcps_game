@@ -25,6 +25,7 @@ from wcps_game.game.game_modes.conquest import Conquest
 
 from wcps_game.packets.packet_list import PacketList
 from wcps_game.packets.packet_factory import PacketFactory
+from wcps_game.packets.error_codes import RoomJoinError
 
 
 class Room:
@@ -187,6 +188,33 @@ class Room:
     def get_player_team(self, player_slot: int) -> int:
         return self.players[player_slot].team
 
+    def join_error(self, user: "User") -> int:
+        """Why this user may not join, as a RoomJoinError, or SUCCESS. A full room and the
+        password are left to the join itself."""
+        if self.premium_only and user.premium == gconstants.Premium.F2P:
+            return RoomJoinError.PREMIUM_ONLY
+
+        user_level = gconstants.get_level_for_exp(user.xp)
+        if user_level not in gconstants.RoomLevelLimits.MIN_LEVEL_REQUIREMENTS.get(self.level_limit):
+            return RoomJoinError.UNSUITABLE_LEVEL
+
+        if user.username in self.votekick.locked_users:
+            return RoomJoinError.GENERIC
+
+        # The client has no message for this one
+        max_ping = gconstants.RoomPingLimit.MAX_PING.get(self.ping_limit)
+        if max_ping is not None and user.ping >= max_ping:
+            return RoomJoinError.GENERIC
+
+        return corerr.SUCCESS
+
+    def can_join(self, user: "User") -> bool:
+        """The room list's 'can join' field: the client greys the row out when it is 0. Password
+        rooms stay enabled, since the user can still join them with the password."""
+        if self.get_player_count() >= self.max_players or self.user_limit:
+            return False
+        return self.join_error(user) == corerr.SUCCESS
+
     async def add_player(self, user: "User") -> Player:
 
         this_player = None
@@ -265,6 +293,7 @@ class Room:
                                 packet_id=PacketList.DO_ROOM_INFO_CHANGE,
                                 room_to_update=self,
                                 update_type=gconstants.RoomUpdateType.UPDATE,
+                                viewer=user,
                             )
                             await user.send(room_update.build())
                     break
@@ -462,6 +491,7 @@ class Room:
                     packet_id=PacketList.DO_ROOM_INFO_CHANGE,
                     room_to_update=self,
                     update_type=gconstants.RoomUpdateType.DELETE,
+                    viewer=user,
                 )
                 await user.send(room_delete.build())
 
@@ -479,6 +509,7 @@ class Room:
                     packet_id=PacketList.DO_ROOM_LIST,
                     room_page=user.room_page,
                     room_list=room_list_for_page,
+                    viewer=user,
                 )
                 await user.send(new_room_list.build())
 

@@ -373,6 +373,10 @@ class RoomPingLimit:
     YELLOW = 1
     ALL = 2
 
+    # Highest ping (ms, exclusive) each limit lets in. The client colours a ping green below 100 ms,
+    # yellow below 175 ms and red from there on (PF20 0x4b3370, PF23 0x4b4c80).
+    MAX_PING = {GREEN: 100, YELLOW: 175}
+
 
 class RoomLevelLimits:
     MIN_LEVEL_REQUIREMENTS = {
