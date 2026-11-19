@@ -68,6 +68,9 @@ class User(NetworkEntity):
         # check before either sets the room, leaving the user in two rooms.
         self.joining_room = False
         self.userlist_page = 0
+        # When the user last entered the channel or came back to the lobby from a room: the lobby user
+        # list shows the latest first, as the original did
+        self.lobby_since = 0.0
         self.room_page = 0
         # Room list filter, as the client keeps it: False = all rooms by page (the default, the client
         # resets it on lobby entry), True = waiting rooms only, browsed by room id (see RoomListHandler)
@@ -240,6 +243,8 @@ class User(NetworkEntity):
         self.room_page = 0
         self.room_list_waiting = False
         self.userlist_page = 0
+        if room is None:  # back to the lobby: to the top of the user list
+            self.lobby_since = time.monotonic()
 
 
 class GameServer(NetworkEntity):
