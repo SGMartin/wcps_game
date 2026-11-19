@@ -214,7 +214,7 @@ def add_room_info_to_packet(packet: OutPacket, room, viewer: "User" = None):
 
     packet.append(room.id)
     packet.append(1)  # Unknown
-    packet.append(room.state)
+    packet.append(room.lobby_state)  # Playing until every player is back from the results screen
     packet.append(room.master_slot)
     packet.append(room.displayname)
     packet.append(room.password_protected)

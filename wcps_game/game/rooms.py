@@ -73,7 +73,7 @@ class Room:
         # TODO: make this configurable
         self.max_spectators = 4
 
-        self.running = False
+        self._loop_task = None  # the room loop (run()) of the current game, see start_loop()
 
         # Auto/default settings on room creating
         self.state = gconstants.RoomStatus.WAITING
@@ -225,6 +225,36 @@ class Room:
                     1, 0, self.current_map] + [0] * 7,
         )
         await self.send(confirm.build())
+        await self.notify_lobby()
+
+        await self.start()
+
+    def start_loop(self):
+        """Start the room loop (clock, map data, game mode processing, game end checks...) once a
+        player has loaded the map (DO_REQUEST_MISSION). Only while playing, and only if the loop of
+        this game is not running yet: a loop that already ended can always be started again, so no
+        flag can be left stuck (#40)."""
+        if self.state != gconstants.RoomStatus.PLAYING:
+            return
+        if self._loop_task is None or self._loop_task.done():
+            self._loop_task = asyncio.create_task(self.run())
+
+    @property
+    def lobby_state(self) -> int:
+        """The state the lobby shows: Playing while the game runs and until every player still in
+        the room is back from the results screen, as the original (it only told the lobby when all
+        of them were back). Derived, so it does not depend on who sends the last back to lobby."""
+        if self.state == gconstants.RoomStatus.PLAYING:
+            return gconstants.RoomStatus.PLAYING
+        if any(player.state != gconstants.RoomStatus.WAITING for player in self.get_all_players()):
+            return gconstants.RoomStatus.PLAYING
+        return gconstants.RoomStatus.WAITING
+
+    async def notify_lobby(self):
+        """Send this room's info to the lobby users looking at its page. Called on every change the
+        lobby shows (start, end, players back from the results, a player leaving or disconnecting)."""
+        if self.channel.rooms.get(self.id) is not self:  # destroyed: the lobby already got the delete
+            return
 
         for user in await self.channel.get_users():
             if user.room is None and user.room_page == self.room_page:
@@ -235,8 +265,6 @@ class Room:
                     viewer=user,
                 )
                 await user.send(room_update.build())
-
-        await self.start()
 
     def autostart_ready(self) -> bool:
         """Auto Start fires when it is on, every player is ready and the room can start."""
@@ -550,6 +578,9 @@ class Room:
             await self.send(room_leave.build())
 
         if self.get_player_count() > 0:
+            # The player count changed, and if they were the last one on the results screen the room
+            # is back to Waiting. Covers the leave button and a disconnect alike.
+            await self.notify_lobby()
             await self.check_autostart()
 
     async def add_item(self, owner: Player, code: str):
@@ -564,6 +595,9 @@ class Room:
             return new_id
 
     async def destroy(self):
+        # Stop the room loop if a game was running: nobody is left to play it
+        self.state = gconstants.RoomStatus.WAITING
+
         # Get the users in the channel
         channel_users = await self.channel.get_users()
         # Clear the room slot from the channel
@@ -665,7 +699,6 @@ class Room:
         # Reset game mode
         self.current_game_mode = None
         self.state = gconstants.RoomStatus.WAITING
-        self.running = False
         # Reset kicked users set
         self.votekick.locked_users.clear()
 
@@ -679,6 +712,7 @@ class Room:
         # await self.send(room_players.build())
 
         logging.info(f"Room {self.id} ended")
+        await self.notify_lobby()
 
     async def run(self):
         try:
