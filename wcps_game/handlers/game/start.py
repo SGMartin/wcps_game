@@ -1,8 +1,6 @@
 from wcps_game.handlers.packet_handler import GameProcessHandler
-from wcps_game.client.maps import MapDatabase
 
-from wcps_game.game.constants import RoomStatus, Team, GameMode
-from wcps_game.packets.packet_list import PacketList
+from wcps_game.game.constants import RoomStatus
 
 
 class StartRoomHandler(GameProcessHandler):
@@ -15,39 +13,8 @@ class StartRoomHandler(GameProcessHandler):
         if self.room.state != RoomStatus.WAITING:
             return
 
-        # This user is not the master
-        if self.player.id != self.room.master_slot:
-            return
-
-        # Members-only maps need a master whose premium tier reaches the map's PayType.
-        # The client checks it before sending this packet (s_MapIsMembershipOnly), so this is
-        # a defensive check: no answer, as in the other invalid cases.
-        required_premium = MapDatabase().get_map_premium(map_id=self.room.current_map)
-        if required_premium is None:  # map not in maps.csv
-            return
-        if self.player.user.premium < required_premium:  # members-only map, F2P master
-            return
-
-        ready_derbaran = self.room.get_ready_player_count_in_team(Team.DERBARAN)
-        ready_niu = self.room.get_ready_player_count_in_team(Team.NIU)
-
-        can_start = False
-        if self.room.game_mode == GameMode.FFA:
-            if ready_derbaran + ready_niu > 1 or self.player.user.rights >= 3:
-                can_start = True
-        else:
-            if ready_derbaran > 0 and ready_niu > 0:
-                if abs(ready_derbaran - ready_niu) <= 2:  # TODO: make this configurable
-                    can_start = True
-
-            # Override settings because of admin rights
-            if self.player.user.rights >= 3:
-                can_start = True
-
-        if can_start:
-            self.room.state = RoomStatus.PLAYING
-            self.sub_packet = PacketList.DO_ROOM_START_CONFIRM
-            self.set_block(2, self.room.current_map)
-            self.answer = True
-            self.update_lobby = True
-            await self.room.start()
+        # Same rules as Auto Start (Room.can_start). Members-only maps: the client checks them before
+        # sending this packet (s_MapIsMembershipOnly), so failing here gets no answer, as the other
+        # invalid cases.
+        if self.room.can_start():
+            await self.room.launch()

@@ -88,6 +88,7 @@ class Room:
         self.rounds = gconstants.ROUND_LIMITS[self.rounds_setting]  # Actual setting
         self.tdm_tickets = gconstants.TDM_LIMITS[self.tickets_setting]  # Actual setting
         self.autostart = False
+        self._autostart_task = None  # running Auto Start countdown, if any
         self.user_limit = False
         self.enable_votekick = vote_kick  # vote kick setting as defined in room creating
         self.votekick = VoteKick(self)  # always instanciate a new votekick object just in case
@@ -187,6 +188,90 @@ class Room:
 
     def get_player_team(self, player_slot: int) -> int:
         return self.players[player_slot].team
+
+    def can_start(self) -> bool:
+        """The start rules of the master's GAME START (StartRoomHandler), shared with Auto Start."""
+        if self.state != gconstants.RoomStatus.WAITING:
+            return False
+
+        # Members-only maps need a master whose premium tier reaches the map's PayType
+        required_premium = MapDatabase().get_map_premium(map_id=self.current_map)
+        if required_premium is None:  # map not in maps.csv
+            return False
+        if self.master.premium < required_premium:
+            return False
+
+        if self.master.rights >= 3:  # admin rights override the player rules
+            return True
+
+        ready_derbaran = self.get_ready_player_count_in_team(gconstants.Team.DERBARAN)
+        ready_niu = self.get_ready_player_count_in_team(gconstants.Team.NIU)
+
+        if self.game_mode == gconstants.GameMode.FFA:
+            return ready_derbaran + ready_niu > 1
+
+        # TODO: make the team difference configurable
+        return ready_derbaran > 0 and ready_niu > 0 and abs(ready_derbaran - ready_niu) <= 2
+
+    async def launch(self):
+        """Start the game, from the master's GAME START or from Auto Start: confirm it to the room
+        (DO_ROOM_START_CONFIRM with the map, as the server answers the master), update the lobby and
+        start the room."""
+        self.state = gconstants.RoomStatus.PLAYING
+
+        confirm = PacketFactory.create_packet(
+            packet_id=PacketList.DO_GAME_PROCESS,
+            blocks=[corerr.SUCCESS, self.master_slot, self.id, 1, PacketList.DO_ROOM_START_CONFIRM,
+                    1, 0, self.current_map] + [0] * 7,
+        )
+        await self.send(confirm.build())
+
+        for user in await self.channel.get_users():
+            if user.room is None and user.room_page == self.room_page:
+                room_update = PacketFactory.create_packet(
+                    packet_id=PacketList.DO_ROOM_INFO_CHANGE,
+                    room_to_update=self,
+                    update_type=gconstants.RoomUpdateType.UPDATE,
+                    viewer=user,
+                )
+                await user.send(room_update.build())
+
+        await self.start()
+
+    def autostart_ready(self) -> bool:
+        """Auto Start fires when it is on, every player is ready and the room can start."""
+        if not self.autostart:
+            return False
+        if any(not player.ready for player in self.get_all_players()):
+            return False
+        return self.can_start()
+
+    async def check_autostart(self):
+        """Call after anything that can complete the Auto Start conditions (ready, Auto Start on,
+        a player leaving, side, map or mode change). Starts the countdown if needed; the countdown
+        checks the conditions again every second and stops by itself when they no longer hold."""
+        if self._autostart_task is None and self.autostart_ready():
+            self._autostart_task = asyncio.create_task(self._autostart_countdown())
+
+    async def _autostart_countdown(self):
+        try:
+            # 20 s, as the client's messages say. Checked every second, the last one included: a player
+            # who unreadies or leaves (e.g. to dodge the team balance at the end) cancels it
+            for seconds in range(20, 0, -1):
+                if not self.autostart_ready():
+                    logging.info(f"Room {self.id}: Auto Start cancelled at {seconds} s")
+                    return
+                clock = PacketFactory.create_packet(packet_id=PacketList.DO_GAME_LAUNCH_CLOCK, seconds=seconds)
+                await self.send(clock.build())
+                await asyncio.sleep(1)
+
+            if self.autostart_ready():
+                logging.info(f"Room {self.id}: Auto Start launching the game")
+                await self.launch()
+        except Exception:
+            logging.exception(f"Room {self.id}: Auto Start countdown failed")
+        finally:
+            self._autostart_task = None
 
     def join_error(self, user: "User") -> int:
         """Why this user may not join, as a RoomJoinError, or SUCCESS. A full room and the
@@ -463,6 +548,9 @@ class Room:
             await user.send(room_leave.build())
             # Send it to the rest of the room
             await self.send(room_leave.build())
+
+        if self.get_player_count() > 0:
+            await self.check_autostart()
 
     async def add_item(self, owner: Player, code: str):
         async with self._items_lock:
