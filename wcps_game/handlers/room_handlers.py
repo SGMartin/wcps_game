@@ -302,9 +302,8 @@ class RoomLeaveHandler(PacketHandler):
 
         if user.room is not None:
             room_left = user.room
-            this_room_page = room_left.room_page
-            is_last_player = room_left.get_player_count() == 1
 
+            # Also tells the lobby about the room (Room.remove_player -> notify_lobby)
             await room_left.remove_player(user)
             user.set_room(None, 0)
 
@@ -322,16 +321,6 @@ class RoomLeaveHandler(PacketHandler):
             for c_user in channel_users:
                 if c_user.room is None:
                     await user.this_server.channels[user.channel].send_user_list(c_user, channel_users)
-
-                    # Send a room update packet to the lobby if there are players left
-                    if c_user.room_page == this_room_page and not is_last_player:
-                        room_update = PacketFactory.create_packet(
-                            packet_id=PacketList.DO_ROOM_INFO_CHANGE,
-                            room_to_update=room_left,
-                            update_type=gconstants.RoomUpdateType.UPDATE,
-                            viewer=c_user,
-                        )
-                        await c_user.send(room_update.build())
 
 
 class RoomListHandler(PacketHandler):
@@ -361,7 +350,7 @@ class RoomListHandler(PacketHandler):
             user.room_page = max(0, target)
         else:
             rooms = (await channel.get_all_rooms()).values()
-            waiting_ids = sorted(room.id for room in rooms if room.state == gconstants.RoomStatus.WAITING)
+            waiting_ids = sorted(room.id for room in rooms if room.lobby_state == gconstants.RoomStatus.WAITING)
 
             if backward:
                 # The 8 waiting rooms right before the first one on screen
