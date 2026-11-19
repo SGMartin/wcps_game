@@ -32,7 +32,8 @@ class BackToLobbyHandler(GameProcessHandler):
                             room_update = PacketFactory.create_packet(
                                 packet_id=PacketList.DO_ROOM_INFO_CHANGE,
                                 room_to_update=self.room,
-                                update_type=RoomUpdateType.UPDATE
+                                update_type=RoomUpdateType.UPDATE,
+                                viewer=chuser,
                             )
                             await chuser.send(room_update.build())
 

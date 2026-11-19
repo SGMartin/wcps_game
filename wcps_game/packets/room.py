@@ -47,7 +47,8 @@ class RoomLeave(OutPacket):
 
 
 class RoomList(OutPacket):
-    def __init__(self, room_page: int, room_list: list):
+    # Built per user: 'can join' depends on who receives it
+    def __init__(self, room_page: int, room_list: list, viewer: "User"):
         super().__init__(
             packet_id=PacketList.DO_ROOM_LIST,
             xor_key=ClientXorKeys.SEND
@@ -58,11 +59,12 @@ class RoomList(OutPacket):
         self.append(0)  # ?
 
         for room in room_list:
-            add_room_info_to_packet(self, room)
+            add_room_info_to_packet(self, room, viewer)
 
 
 class RoomInfoUpdate(OutPacket):
-    def __init__(self, room_to_update: "Room", update_type: RoomUpdateType):
+    # Built per user: 'can join' depends on who receives it
+    def __init__(self, room_to_update: "Room", update_type: RoomUpdateType, viewer: "User"):
         super().__init__(
             packet_id=PacketList.DO_ROOM_INFO_CHANGE,
             xor_key=ClientXorKeys.SEND
@@ -74,7 +76,7 @@ class RoomInfoUpdate(OutPacket):
             self.append(update_type)
         else:
             self.append(update_type)
-            add_room_info_to_packet(self, room_to_update)
+            add_room_info_to_packet(self, room_to_update, viewer)
 
 
 class RoomJoin(OutPacket):
@@ -204,7 +206,9 @@ class RoomSpectators(OutPacket):
         self.append(0)
 
 
-def add_room_info_to_packet(packet: OutPacket, room):
+def add_room_info_to_packet(packet: OutPacket, room, viewer: "User" = None):
+    # viewer: the lobby user the room list entry is for. None for the packets sent to the room's own
+    # players (create, join, spectate), where 'can join' does not matter.
     cqc_rounds = room.rounds_setting if room.game_mode == GameMode.EXPLOSIVE else 0
     tdm_tickets = room.tickets_setting if room.game_mode > GameMode.EXPLOSIVE else 0
 
@@ -222,7 +226,7 @@ def add_room_info_to_packet(packet: OutPacket, room):
     packet.append(0)  # Unknown
     packet.append(room.game_mode)  # game mode
     packet.append(4)  # Unknown
-    packet.append(1)  # #TODO: Can join?
+    packet.append(1 if viewer is None or room.can_join(viewer) else 0)  # can join (greyed out if 0)
     packet.append(0)  # ??
     packet.append(room.supermaster)
     packet.append(room.type)  # Unused in Chapter 1
@@ -230,7 +234,7 @@ def add_room_info_to_packet(packet: OutPacket, room):
     packet.append(room.premium_only)
     packet.append(room.enable_votekick)
     packet.append(room.autostart)  # autostart
-    packet.append(0)  # average ping before patch G1-17
+    packet.append(0)  # room ping: the PF20/PF23 clients no longer draw it (PF20 0x57df40 is uncalled)
     packet.append(room.ping_limit)  # ping limit
     packet.append(-1)  # Is clan war? possibly incomplete? if enabled needs 2 blocks more
 
