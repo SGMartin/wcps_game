@@ -30,6 +30,7 @@ from wcps_game.packets.room import (
 )
 from wcps_game.packets.game_process import GameProcess
 from wcps_game.packets.game_clock import GameUpdateClock
+from wcps_game.packets.launch_clock import GameLaunchClock
 from wcps_game.packets.scoreboard import ScoreBoard
 from wcps_game.packets.end_game import EndGame
 from wcps_game.packets.promotion import Promotion
@@ -82,6 +83,7 @@ class PacketFactory:
         PacketList.DO_GAME_PROCESS: GameProcess,
         PacketList.DO_BOMB_PROCESS: Explosives,
         PacketList.DO_GAME_UPDATE_CLOCK: GameUpdateClock,
+        PacketList.DO_GAME_LAUNCH_CLOCK: GameLaunchClock,
         PacketList.DO_GDATA_INFO: GameDataInfo,
         PacketList.DO_GAME_UPDATE_DATA: UpdateGameData,
         PacketList.DO_GAME_SCORE: ScoreBoard,

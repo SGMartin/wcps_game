@@ -50,3 +50,4 @@ class ChangeGameModeHandler(GameProcessHandler):
 
         self.update_lobby = True
         self.answer = True
+        await self.room.check_autostart()
