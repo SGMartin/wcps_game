@@ -108,6 +108,13 @@ class Player:
 
     # TODO: We can reset more stuff here. Called on confirm death
     async def reset_vehicle_status(self):
+        # Free the seat too: if the ALIGHT of this death arrives later, vehicle_leave rejects it (we are no
+        # longer in a vehicle) and the seat would stay taken until the vehicle resets
+        room = self.user.room
+        if self.vehicle_id != -1 and room is not None:
+            vehicle = room.vehicles.get(self.vehicle_id)
+            if vehicle is not None:
+                await vehicle.leave_vehicle(self)
         self.vehicle_id = -1
         self.vehicle_seat = -1
 

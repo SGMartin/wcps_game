@@ -36,6 +36,10 @@ class RepairVehicleHandler(GameProcessHandler):
         if target_vehicle.health >= target_vehicle.max_health:
             return
 
+        # A destroyed vehicle waits for its respawn: repairing it would bring it back server-side only
+        if target_vehicle.health <= 0:
+            return
+
         if is_healing_station:
             repair_rate = 0.20
         else:
