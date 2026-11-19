@@ -16,3 +16,4 @@ class ToggleAutoStartHandler(GameProcessHandler):
         self.set_block(2, self.room.autostart)
         self.update_lobby = True
         self.answer = True
+        await self.room.check_autostart()

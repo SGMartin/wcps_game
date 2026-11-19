@@ -16,3 +16,4 @@ class ToggleReadyHandler(GameProcessHandler):
         self.set_block(2, self.player.ready)
 
         self.answer = True
+        await self.room.check_autostart()
