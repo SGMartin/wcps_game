@@ -238,23 +238,14 @@ class RoomJoinHandler(PacketHandler):
         # If this function does not return none, it will send the room join packet
         player = await this_room.add_player(user)
 
+        # Full or closed (user limit) room: both are m14 "Users exceeded for this room" in the client
         if player is None:
-            if this_room.user_limit:
-                cannot_join_error = PacketFactory.create_packet(
-                    packet_id=PacketList.DO_JOIN_ROOM,
-                    error_code=RoomJoinError.MAX_USERS,
-                    room_to_join=None,
-                )
-                await user.send(cannot_join_error.build())
-            else:
-                room_full_error = PacketFactory.create_packet(
-                    packet_id=PacketList.DO_JOIN_ROOM,
-                    error_code=RoomJoinError.ROOM_FULL,
-                    room_to_join=None,
-                )
-                await user.send(room_full_error.build())
-        else:
-            return
+            room_full_error = PacketFactory.create_packet(
+                packet_id=PacketList.DO_JOIN_ROOM,
+                error_code=RoomJoinError.MAX_USERS,
+                room_to_join=None,
+            )
+            await user.send(room_full_error.build())
 
 
 class RoomQuickJoinHandler(PacketHandler):

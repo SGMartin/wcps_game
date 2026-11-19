@@ -60,15 +60,17 @@ class RoomCreateError:
 
 
 class RoomJoinError:
-    GENERIC = 94010
-    INVALID_PASSWORD = 94030
-    MAX_USERS = 94060
+    # Messages from the client's join reply (PF20 0x4e97d5, PF23 0x5f2f20, same table); any other code shows
+    # m19 "You cannot join"
+    GENERIC = 94010              # m19 "You cannot join" (not in the table)
+    INVALID_PASSWORD = 94030     # m18 "Invalid Password"
+    MAX_USERS = 94060            # m14 "Users exceeded for this room" (full or closed room)
     MAX_SPECS = 94070
-    CANNOT_JOIN_LOADING = 94100
-    CALCULATING_RESULTS = 94110
-    ROOM_FULL = 94120
-    UNSUITABLE_LEVEL = 94300
-    PREMIUM_ONLY = 94301
+    CANNOT_JOIN_LOADING = 94100  # m15 "You cannot join during data loading"
+    CALCULATING_RESULTS = 94110  # m16 "Calculating results"
+    GAME_ENDING = 94120          # m17 "Game will end soon. Please join after game has ended"
+    UNSUITABLE_LEVEL = 94300     # m_levelrange_2 "Your level is unsuitable to enter this room."
+    PREMIUM_ONLY = 94301         # m_levelrange_1 "Only Premium members may enter this room."
 
 
 class RoomSpectateError:
