@@ -24,3 +24,4 @@ class ChangeSideHandler(GameProcessHandler):
             self.set_block(4, self.room.master_slot)
 
         self.answer = True
+        await self.room.check_autostart()
