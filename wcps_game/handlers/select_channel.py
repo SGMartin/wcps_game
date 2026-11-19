@@ -52,7 +52,8 @@ class SelectChannelHandler(PacketHandler):
                 room_list = PacketFactory.create_packet(
                     packet_id=PacketList.DO_ROOM_LIST,
                     room_page=0,
-                    room_list=first_page_rooms
+                    room_list=first_page_rooms,
+                    viewer=user,
                 )
                 await user.send(room_list.build())
         else:

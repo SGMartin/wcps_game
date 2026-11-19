@@ -144,6 +144,7 @@ class UDPListener:
                         packet_id=PacketList.DO_ROOM_LIST,
                         room_page=this_user.room_page,
                         room_list=rooms,
+                        viewer=this_user,
                     )
                     await this_user.send(room_list.build())
 
