@@ -11,7 +11,8 @@ if TYPE_CHECKING:
 from wcps_core.constants import ErrorCodes as corerr
 from wcps_core.packets import OutPacket
 
-from wcps_game.game.constants import GameMode, RoomUpdateType
+from wcps_game.config import settings
+from wcps_game.game.constants import GameMode, RoomUpdateType, room_time_limit_index
 from wcps_game.packets.packet_list import PacketList, ClientXorKeys
 from wcps_game.packets.error_codes import RoomCreateError, RoomJoinError, RoomInvitationError
 
@@ -223,7 +224,7 @@ def add_room_info_to_packet(packet: OutPacket, room, viewer: "User" = None):
     packet.append(room.current_map)
     packet.append(cqc_rounds)  # Explosive rounds when game mode is explosives/mission
     packet.append(tdm_tickets)  # TDM tickets and FFA rounds
-    packet.append(0)  # Unknown
+    packet.append(room_time_limit_index(settings().game_time_limit))  # time limit index (was 0 = 1 minute)
     packet.append(room.game_mode)  # game mode
     packet.append(4)  # Unknown
     packet.append(1 if viewer is None or room.can_join(viewer) else 0)  # can join (greyed out if 0)

@@ -1,6 +1,7 @@
 from wcps_game.handlers.packet_handler import GameProcessHandler
 
-from wcps_game.game.constants import GameMode, RoomStatus
+from wcps_game.config import settings
+from wcps_game.game.constants import GameMode, RoomStatus, room_time_limit_index
 from wcps_game.client.maps import MapDatabase
 
 
@@ -38,6 +39,8 @@ class ChangeGameModeHandler(GameProcessHandler):
         self.set_block(3, self.room.current_map)
         self.set_block(4, cqc_rounds)
         self.set_block(5, tdm_tickets)
+        # p4: time limit index. Left at 0 it reset the room time to 1 minute on every client
+        self.set_block(6, room_time_limit_index(settings().game_time_limit))
 
         self.update_lobby = True
         self.answer = True

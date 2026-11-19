@@ -18,10 +18,15 @@ class ChangeSideHandler(GameProcessHandler):
 
         can_switch = await self.room.switch_player_side(player_to_switch=self.player)
 
-        if can_switch:
-            self.set_block(2, self.player.team)
-            self.set_block(3, self.player.id)
-            self.set_block(4, self.room.master_slot)
+        # The client (PF23 0x4e7320, PF20 0x4e7ff0) copies the player to slot p1 and makes p2 the master.
+        # Answering a failed switch (team full, clan war) with the request's zeros moved the player into
+        # slot 0 and the crown to slot 0 on every client: no answer instead.
+        if not can_switch:
+            return
+
+        self.set_block(2, self.player.team)
+        self.set_block(3, self.player.id)  # p1: new slot
+        self.set_block(4, self.room.master_slot)  # p2: master slot
 
         self.answer = True
         await self.room.check_autostart()
