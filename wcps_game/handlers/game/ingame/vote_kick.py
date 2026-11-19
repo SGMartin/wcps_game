@@ -25,11 +25,11 @@ class VoteKickHandler(GameProcessHandler):
             self.answer = True
             return
 
-        # You cannot kick yourself
-        # if self.player.id == target_user:
-        #     self.error_code = RoomKickError.INVALID_CANDIDATE
-        #     self.answer = True
-        #     return
+        # You cannot kick yourself (the client already blocks it, m993_5)
+        if self.player.id == target_user:
+            self.error_code = RoomKickError.INVALID_CANDIDATE
+            self.answer = True
+            return
 
         # try to get the target player
         this_player = self.room.players.get(target_user)
@@ -67,6 +67,6 @@ class VoteKickHandler(GameProcessHandler):
             self.set_block(6, self.player.id)  # kicker id
             self.answer = True
         # It seems chapter 1 only sends the packet back if the user says "YES"
-        else:
-            # TODO: some msg should be added here
+        # A YES vote (Y key; N sends nothing): only for the vote in progress, once per player
+        elif self.room.votekick.running and target_user == self.room.votekick.target_id:
             self.room.votekick.add_user_vote(user=self.player.user, kick=True)

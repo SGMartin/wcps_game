@@ -867,7 +867,7 @@ class Room:
                         packet_id=PacketList.DO_SUICIDE,
                         room=self,
                         player=player,
-                        suicide_type=1,  # TODO: make enum
+                        suicide_type=gconstants.DeathCause.BLEEDING,
                         out_of_map_limits=False
                     )
                     await player.add_deaths()
@@ -879,7 +879,7 @@ class VoteKick:
     def __init__(self, room):
         self.room = room
         self.votes = []
-        self.vote_side = -1
+        self.vote_team = -1
         self.target_id = -1
         self.running = False
         self.timestamp = 0
@@ -906,6 +906,8 @@ class VoteKick:
 
     def add_user_vote(self, user, kick):
         # I think only positive votes return a packet, but keep a dict nevertheless just in case
+        if any(vote["user"] is user for vote in self.votes):  # one vote per player
+            return
         vote = {"user": user, "kick": kick}
         self.votes.append(vote)
 
@@ -931,14 +933,15 @@ class VoteKick:
             # add the player to the list of kicked players
             self.locked_users.add(player.user.username)
 
+        # The result closes the vote HUD of the team. The target may have left the room meanwhile
         kick_notification = PacketFactory.create_packet(
             packet_id=PacketList.DO_VOTE_KICK,
             room=self.room,
-            kicked=kicked,
-            voted_player_id=player.id
+            kicked=bool(kicked and player),
+            voted_player_id=self.target_id,
         )
         for remaining_player in self.room.get_all_players():
-            if remaining_player.team == player.team and remaining_player != player:
+            if remaining_player.team == self.vote_team and remaining_player is not player:
                 await remaining_player.user.send(kick_notification.build())
 
     def get_timestamp(self):
