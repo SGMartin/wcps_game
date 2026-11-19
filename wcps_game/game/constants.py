@@ -1,5 +1,14 @@
 # GAME CONSTANTS
 ROUND_LIMITS = [1, 3, 5, 7, 9]
+# Room time limits the client knows, in minutes, by index (DO_TIME_CLICK 0x36, room info, DO_TYPE_CLICK p4).
+# The selector itself has no control in the PF23 OldUI; the index is only shown by the dormant mode 5 HUD.
+ROOM_TIME_LIMITS = [1, 2, 3, 4, 5, 10, 15, 20, 25, 30]
+
+
+def room_time_limit_index(seconds: int) -> int:
+    """Index of the longest client time limit that fits in 'seconds' (0 if none does)."""
+    fitting = [i for i, minutes in enumerate(ROOM_TIME_LIMITS) if minutes * 60 <= seconds]
+    return fitting[-1] if fitting else 0
 TDM_LIMITS = [30, 50, 100, 150, 200, 300]
 MAX_CHANNELS = 3
 MAX_CLASSES = 5
