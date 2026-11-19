@@ -1,4 +1,7 @@
 from wcps_game.game.constants import RoomStatus, DeathCause
+
+# Fixed environment damage per tick: under water, flipped, boat beached, danger zone
+VEHICLE_ENVIRONMENT_DAMAGE = (60, 20, 10, 100)
 from wcps_game.handlers.packet_handler import GameProcessHandler
 from wcps_game.packets.packet_list import PacketList
 from wcps_game.packets.packet_factory import PacketFactory
@@ -15,8 +18,10 @@ class CollisionDamageHandler(GameProcessHandler):
 
         is_player = bool(int(self.get_block(2)))
         target_vehicle = int(self.get_block(4))
-        damage_sustained = int(self.get_block(5))
-        out_of_playable_zone = int(self.get_block(6))  # TODO what are you doing soldier!
+        damage_sustained = int(self.get_block(5))  # p3
+        # p4 (client senders 0x47ddb0 / 0x47dc60): 1 = fixed environment damage in p3, sent every tick
+        # (under water 60, flipped 20, boat beached 10, danger zone 100); > 1 = divisor of a speed crash
+        damage_kind = int(self.get_block(6))
 
         if damage_sustained <= 0:
             return
@@ -26,11 +31,14 @@ class CollisionDamageHandler(GameProcessHandler):
             if not target_vehicle:
                 return
 
-            if out_of_playable_zone != 1:
-                target_vehicle.health -= damage_sustained
-            else:
-                target_vehicle.health = 0
-                damage_sustained = target_vehicle.health
+            if damage_kind == 1:
+                # It used to blow the vehicle up at once (read as "out of playable zone"). The server only
+                # takes the damage values the client can send
+                if damage_sustained not in VEHICLE_ENVIRONMENT_DAMAGE:
+                    return
+            # TODO speed crash (damage_kind > 1): p3 is the speed and p4 the divisor; check in game whether
+            # the damage should be p3 // p4 before changing it (#66)
+            target_vehicle.health -= damage_sustained
 
             if target_vehicle.health <= 0:
                 target_vehicle.health = 0

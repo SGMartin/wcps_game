@@ -124,11 +124,15 @@ class Conquest(BaseGameMode):
             self.niu_tickets -= 1
 
     async def on_flag_capture(self, player, flag_status):
-        if flag_status == -1:  # neutral flag
+        if flag_status == -1:  # neutral flag taken
             if player.team == gconstants.Team.DERBARAN:
                 self.derbaran_flags += 1
             else:
                 self.niu_flags += 1
+        elif flag_status == gconstants.Team.DERBARAN:  # Derbaran flag neutralised: it no longer counts
+            self.derbaran_flags -= 1
+        elif flag_status == gconstants.Team.NIU:
+            self.niu_flags -= 1
 
         if player.team == gconstants.Team.DERBARAN:
             self.niu_tickets -= 1
