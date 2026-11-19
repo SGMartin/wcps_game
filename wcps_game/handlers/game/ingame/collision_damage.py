@@ -1,7 +1,6 @@
-from wcps_game.game.constants import RoomStatus
+from wcps_game.game.constants import RoomStatus, DeathCause
 from wcps_game.handlers.packet_handler import GameProcessHandler
 from wcps_game.packets.packet_list import PacketList
-from wcps_game.packets.game_process import GameProcess
 from wcps_game.packets.packet_factory import PacketFactory
 
 
@@ -47,17 +46,15 @@ class CollisionDamageHandler(GameProcessHandler):
                     await seat.player.add_deaths()
                     await self.room.current_game_mode.on_suicide(seat.player)
 
-                    # Ugly, but it's best to build here a player suicide packet
-                    packet_buffer = []
-                    packet_buffer.append(1)
-                    packet_buffer.append(seat.player.id)
-                    packet_buffer.append(self.room.id)
-                    packet_buffer.append(self.packet.blocks[2])
-                    packet_buffer.append(PacketList.DO_SUICIDE)
-                    packet_buffer.extend(self.blocks)
-                    packet_buffer[23] = "$"
-
-                    await self.room.send(GameProcess(packet_buffer).build())
+                    # The crash packet's p1 (0xc) is no death cause the client knows: no message
+                    occupant_death = PacketFactory.create_packet(
+                        packet_id=PacketList.DO_SUICIDE,
+                        room=self.room,
+                        player=seat.player,
+                        suicide_type=DeathCause.VEHICLE,
+                        out_of_map_limits=False,
+                    )
+                    await self.room.send(occupant_death.build())
 
                 # Finally, destroy the vehicle
                 vehicle_explosion = PacketFactory.create_packet(
@@ -77,7 +74,7 @@ class CollisionDamageHandler(GameProcessHandler):
             self.player.health -= damage_sustained
 
             # The player is killed because of the fall. Oddly, the game sends a suicide subpacket
-            if self.player.health < 0:
+            if self.player.health <= 0:  # exactly 0 HP is dead too
                 self.player.health = 0
                 await self.player.add_deaths()
                 await self.room.current_game_mode.on_suicide(player=self.player)

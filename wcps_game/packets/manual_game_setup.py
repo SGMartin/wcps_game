@@ -19,10 +19,10 @@ class ManualGameSetup(OutPacket):
         self.append(room.id)
         self.append(2)
         self.append(PacketList.DO_GO)
-        self.append(0)
-        self.append(1)
-        self.append(3)  # Unknown. Some game mode shit?
-        self.append(363)  # Unknown
-        self.append(0)
-        self.append(1)
-        self.fill(0, 4)  # Unknown
+        self.append(0)  # b0
+        self.append(0)  # ext: no extended block (it was 1 with nothing after it)
+        self.append(3)  # p0: spawn protection in seconds (the character blinks), overrides the room value
+        self.append(363)  # p1: only written to a client debug log
+        self.append(0)  # p2: side of the first half of the slots
+        self.append(1)  # p3: side of the second half of the slots
+        self.fill(0, 4)  # p4..p7, not read

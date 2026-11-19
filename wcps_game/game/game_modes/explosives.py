@@ -31,6 +31,7 @@ class Explosive(BaseGameMode):
         self.active_round = False
 
         self.team_rounds = {gconstants.Team.DERBARAN: 0, gconstants.Team.NIU: 0}
+        self.last_round_winner = gconstants.Team.NONE  # p0 of the next DO_ROUND_START
 
         self.alive_players = {gconstants.Team.DERBARAN: 0, gconstants.Team.NIU: 0}
 
@@ -229,6 +230,8 @@ class Explosive(BaseGameMode):
 
         for player in players:
             await player.end_round()
+
+        self.last_round_winner = winner_team
 
         if winner_team != gconstants.Team.NONE:
             self.team_rounds[winner_team] += 1
