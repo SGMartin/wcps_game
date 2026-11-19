@@ -311,12 +311,7 @@ class RoomLeaveHandler(PacketHandler):
             channel_users = await user.this_server.channels[user.channel].get_users()
 
             # Send the user the userlist
-            user_list_full = PacketFactory.create_packet(
-                packet_id=PacketList.DO_USER_LIST,
-                lobby_user_list=channel_users,
-                target_page=user.userlist_page,
-            )
-            await user.send(user_list_full.build())
+            await user.this_server.channels[user.channel].send_user_list(user, channel_users)
 
             # Send the user the room list
             await user.this_server.channels[user.channel].send_room_list(user)
@@ -326,12 +321,7 @@ class RoomLeaveHandler(PacketHandler):
             # TODO: IS this really necessary? He has not left the channel...
             for c_user in channel_users:
                 if c_user.room is None:
-                    this_user_update = PacketFactory.create_packet(
-                        packet_id=PacketList.DO_USER_LIST,
-                        lobby_user_list=channel_users,
-                        target_page=c_user.userlist_page,
-                    )
-                    await c_user.send(this_user_update.build())
+                    await user.this_server.channels[user.channel].send_user_list(c_user, channel_users)
 
                     # Send a room update packet to the lobby if there are players left
                     if c_user.room_page == this_room_page and not is_last_player:
