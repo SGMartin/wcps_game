@@ -496,22 +496,7 @@ class Room:
                 await user.send(room_delete.build())
 
                 # send them also the room list
-                room_list_for_page = await user.this_server.channels[
-                    user.channel
-                ].get_all_rooms()
-                room_list_for_page = [
-                    room
-                    for room in room_list_for_page.values()
-                    if room.room_page == user.room_page
-                ]
-
-                new_room_list = PacketFactory.create_packet(
-                    packet_id=PacketList.DO_ROOM_LIST,
-                    room_page=user.room_page,
-                    room_list=room_list_for_page,
-                    viewer=user,
-                )
-                await user.send(new_room_list.build())
+                await user.this_server.channels[user.channel].send_room_list(user)
 
     async def send(self, buffer: "OutPacket"):
         for player in self.players.values():
