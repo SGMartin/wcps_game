@@ -21,8 +21,7 @@ class GameUpdateClock(OutPacket):
         self.append(room.current_game_mode.current_round_niu())
         self.append(room.current_game_mode.scoreboard_derbaran())
         self.append(room.current_game_mode.scoreboard_niu())
-        # Owner of the game mode 5 key point (0 Derbaran, 1 NIU, other: none); only the mode 5 HUD
-        # uses it (PF23 0x5f5560)
+        # Owner of the game mode 5 key point (0 Derbaran, 1 NIU, other: none); only the mode 5 HUD uses it
         self.append(2)
-        self.append(0)  # not read by the client (PF23 0x5f5480 reads 7 fields)
+        self.append(0)  # not read by the client (it reads 7 fields)
         self.append(30)  # not read by the client

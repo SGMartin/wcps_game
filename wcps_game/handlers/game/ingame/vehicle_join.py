@@ -47,8 +47,8 @@ class JoinVehicleHandler(GameProcessHandler):
         self.answer = True
 
     def reject(self):
-        """The client sets a "boarding pending" flag when it asks (PF23 0x4c8549) and only clears it in the
-        0xc8 handler (0x4e61b0); while it is set, the suicide key does nothing. Answer only the requester with
+        """The client sets a "boarding pending" flag when it asks and only clears it in the
+        0xc8 handler; while it is set, the suicide key does nothing. Answer only the requester with
         p0 = -1: the handler clears the flag and stops at its p0 >= 0 check."""
         self.set_block(2, -1)
         self.self_target = True

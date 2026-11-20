@@ -28,7 +28,7 @@ class RoomCreate(OutPacket):
             self.append(error_code)
         else:
             self.append(corerr.SUCCESS)
-            self.append(0)  # own slot in the room (stored by 0x473b00)
+            self.append(0)  # own slot in the room
             add_room_info_to_packet(self, new_room)
 
 
@@ -57,7 +57,7 @@ class RoomList(OutPacket):
 
         self.append(len(room_list))  # The total room list for this page
         self.append(room_page)
-        self.append(0)  # if non-zero, one client list mode fills the page in reverse order (PF23 0x5ff770)
+        self.append(0)  # if non-zero, one client list mode fills the page in reverse order
 
         for room in room_list:
             add_room_info_to_packet(self, room, viewer)
@@ -172,13 +172,13 @@ class RoomPlayers(OutPacket):
             self.append(player.branch)  # Engineer, medic etc.
             self.append(player.health)
             self.append(player.user.displayname)
-            self.fill(-1, 3)  # Clan blocks here: ID/NAME/RANK, all read as ints (PF23 0x5f9360)
+            self.fill(-1, 3)  # Clan blocks here: ID/NAME/RANK, all read as ints
             self.append(1)  # short, no client reader found
             self.append(0)  # short, no client reader found
-            self.append(910)  # short, only shown by a debug overlay as "<nick> <value>" (PF23 0x49a710)
+            self.append(910)  # short, only shown by a debug overlay as "<nick> <value>"
             # 910 (Always)? Send From Login (910 G1, 410 NX , 300 KR , 100 PH, INVALID TW)
             self.append(player.user.premium)
-            self.append(-1)  # if 1, the results screen draws a 26x20 icon by the player (PF23 0x5ec78c)
+            self.append(-1)  # if 1, the results screen draws a 26x20 icon by the player
             self.append(player.user.stats.kills)
             self.append(player.user.stats.deaths)
             self.append(random.randint(0, 149))  # random [0, 149]; stored, no client reader found
@@ -243,7 +243,7 @@ def add_room_info_to_packet(packet: OutPacket, room, viewer: "User" = None):
     packet.append(tdm_tickets)  # TDM tickets and FFA rounds
     packet.append(room_time_limit_index(settings().game_time_limit))  # time limit index (was 0 = 1 minute)
     packet.append(room.game_mode)  # game mode
-    packet.append(4)  # spawn protection in seconds (PF23 0x4f264c); DO_GO p0 overrides it
+    packet.append(4)  # spawn protection in seconds; DO_GO p0 overrides it
     packet.append(1 if viewer is None or room.can_join(viewer) else 0)  # can join (greyed out if 0)
     packet.append(0)  # stored, no client reader found
     packet.append(room.supermaster)
@@ -252,10 +252,9 @@ def add_room_info_to_packet(packet: OutPacket, room, viewer: "User" = None):
     packet.append(room.premium_only)
     packet.append(room.enable_votekick)
     packet.append(room.autostart)  # autostart
-    packet.append(0)  # room ping: the PF20/PF23 clients no longer draw it (PF20 0x57df40 is uncalled)
+    packet.append(0)  # room ping: the PF20/PF23 clients no longer draw it
     packet.append(room.ping_limit)  # ping limit
     # Clan war: read as a string and parsed with _atoi64; if > 0 the client reads two more ints
-    # (PF23 0x5f35e0, 0x5ff770)
     packet.append(-1)
 
 

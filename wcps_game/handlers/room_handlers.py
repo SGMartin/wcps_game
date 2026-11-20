@@ -62,8 +62,8 @@ class RoomCreateHandler(PacketHandler):
 
         # Era conventions (PF20): the create room window gives a random default name
         # (in the client's language) and only lets Silver and up edit it or make the
-        # room private; Bronze and up may mark it premium only (0x562c20 in the PF20
-        # exe). The client already blocks the rest, so this is a defensive check.
+        # room private; Bronze and up may mark it premium only. The client already blocks the
+        # rest, so this is a defensive check.
         # PF20 only: Code Name Legacy frees these options.
         if user.premium < gconstants.Premium.SILVER and (
             room_name not in DEFAULT_ROOM_NAMES or has_password
@@ -325,8 +325,7 @@ class RoomLeaveHandler(PacketHandler):
 
 
 class RoomListHandler(PacketHandler):
-    """DO_ROOM_LIST request: <target> <waiting only> <backward> (client builder PF20 0x469114,
-    PF23 0x469590).
+    """DO_ROOM_LIST request: <target> <waiting only> <backward>.
 
     - All rooms (block 1 = 0, the default): block 0 is the page the client wants. Next / previous
       send page+1 / page-1, the SHOW ALL / SHOW AVAIL toggle and /go send page 0 or the page of a room.

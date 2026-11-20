@@ -19,7 +19,7 @@ class UsePXItem(OutPacket):
             self.append(error_code)
         else:
             self.append(ItemAction.USE)
-            self.append(1)  # result: the client only handles the packet if it is 1 (PF23 0x5fd4d0)
+            self.append(1)  # result: the client only handles the packet if it is 1
             self.append(item_px)
             self.append(user.inventory.inventory_string)
             if item_px == "CB03":  # Reset K/D ratio
@@ -30,6 +30,6 @@ class UsePXItem(OutPacket):
                 self.append(user.money)
             elif item_px == "CB01":  # Change NICKNAME TODO Research this. Not in PF20 default
                 self.append(user.inventory.get_slot_string())
-                self.append("notdone")  # the client copies this into its own nickname (PF23 0x5fd8d1)
+                self.append("notdone")  # the client copies this into its own nickname
             else:
                 logging.error(f"Unknown item passed to packet {item_px}")

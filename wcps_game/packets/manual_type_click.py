@@ -9,8 +9,8 @@ from wcps_game.packets.packet_list import ClientXorKeys, PacketList
 
 
 class ManualTypeClick(OutPacket):
-    """DO_TYPE_CLICK 0x34 with the room's own settings. The client (PF23 0x4e7550) writes p0..p4 to its room
-    data and to the OldUI room. The answer to BACK_TO_LOBBY resets both (0x5f5bd0 case 9): map 0 in the room
+    """DO_TYPE_CLICK 0x34 with the room's own settings. The client writes p0..p4 to its room
+    data and to the OldUI room. The answer to BACK_TO_LOBBY resets both: map 0 in the room
     data, the channel default map in the OldUI room, so this one goes after it (#87)."""
 
     def __init__(self, room):

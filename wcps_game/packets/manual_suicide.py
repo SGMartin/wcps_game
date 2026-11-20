@@ -8,7 +8,7 @@ from wcps_game.packets.packet_list import ClientXorKeys, PacketList
 
 
 class ManualSuicide(OutPacket):
-    """DO_SUICIDE 0x9d sent by the server. The client (PF23 0x4e6d70) kills the sender slot (the player) and
+    """DO_SUICIDE 0x9d sent by the server. The client kills the sender slot (the player) and
     shows the message of p1 (DeathCause). The cause used to go in ext, so the client always read p1 = 0
     and showed "Suicide"."""
 

@@ -11,7 +11,7 @@ class VehicleSpawn(OutPacket):
             xor_key=ClientXorKeys.SEND
         )
 
-        # The client's UNIT_REGEN handler (PF23 0x4e7610) only reads p0; everything after it is ignored
+        # The client's UNIT_REGEN handler only reads p0; everything after it is ignored
         self.append(1)
         self.append(-1)
         self.append(room.id)

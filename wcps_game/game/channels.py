@@ -85,7 +85,7 @@ class Channel:
         """The rooms of this user's room list, as their filter shows them.
 
         All rooms (default): the rooms of user.room_page, ids page*8 .. page*8+7. The client puts each
-        one in row 'id - page*8' of its 8-row table without a bounds check (PF20 0x4f69a0), so a room
+        one in row 'id - page*8' of its 8-row table without a bounds check, so a room
         from another page would be written outside the table.
         Waiting only: up to 8 waiting rooms from user.room_list_anchor on, in id order. The client
         fills its rows one after another."""

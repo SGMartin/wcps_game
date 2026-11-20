@@ -25,9 +25,8 @@ class ChangeGameModeHandler(GameProcessHandler):
         if new_game_mode < 0:
             new_game_mode = 0
 
-        # Premium modes: an F2P master may only pick the modes the client allows them
-        # (table 0x8ce6b8 read by 0x456cc0 in the PF23 exe). The client already blocks the
-        # others, so this is a defensive check with no answer.
+        # Premium modes: an F2P master may only pick the modes the client allows them.
+        # The client already blocks the others, so this is a defensive check with no answer.
         if self.player.user.premium < Premium.BRONZE and new_game_mode not in F2P_GAME_MODES:
             return
 
