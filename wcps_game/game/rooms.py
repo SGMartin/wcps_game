@@ -71,8 +71,8 @@ class Room:
             self.channel.type
         ][max_players]
 
-        # TODO: make this configurable
-        self.max_spectators = 4
+        # The client keeps spectators in their own table of 5 (slots 32-36, guest index 0-4)
+        self.max_spectators = 5
 
         self._loop_task = None  # the room loop (run()) of the current game, see start_loop()
 
@@ -457,42 +457,50 @@ class Room:
 
         return this_player
 
-    # TODO: complete this
     async def add_spectator(self, spectator: "User"):
-        current_specs = [spec for spec in self.spectators.values() if spec]
-        if len(current_specs) >= self.max_spectators:
+        """Add a spectator in the first free slot (32-36).
+
+        A slot >= 32 is what makes the client run as a spectator: below 32 it registers
+        itself in the player table and leaves through DO_EXIT_ROOM, which rejects slots
+        >= 32. Spectators leave through DO_GUEST_JOIN with action 0.
+        """
+        free_slots = [slot for slot, spec in self.spectators.items() if spec is None]
+        if not free_slots:
             return None
-        else:
-            slot_to_test = 16
-            self.spectators[slot_to_test] = spectator
-            spectator.set_room(room=self, room_slot=slot_to_test)
 
-            # Spectate packet to join the room
-            spectate_packet = PacketFactory.create_packet(
-                packet_id=PacketList.DO_GUEST_JOIN,
-                room_to_join=self,
-                spectate_slot=slot_to_test
-            )
-            await spectator.send(spectate_packet.build())
-            # Players information and UPP endpoint
-            room_players_packet = PacketFactory.create_packet(
-                        packet_id=PacketList.DO_GAME_USER_LIST,
-                        player_list=self.get_all_players()
-                    )
+        spectate_slot = free_slots[0]
+        self.spectators[spectate_slot] = spectator
+        spectator.set_room(room=self, room_slot=spectate_slot)
 
-            await spectator.send(room_players_packet.build())
+        # Spectate packet to join the room
+        spectate_packet = PacketFactory.create_packet(
+            packet_id=PacketList.DO_GUEST_JOIN,
+            room_to_join=self,
+            spectate_slot=spectate_slot
+        )
+        await spectator.send(spectate_packet.build())
+        # Players information and UDP endpoints
+        room_players_packet = PacketFactory.create_packet(
+            packet_id=PacketList.DO_GAME_USER_LIST,
+            player_list=self.get_all_players()
+        )
+        await spectator.send(room_players_packet.build())
 
-            # Send players the spectator list?
-            specs_list = PacketFactory.create_packet(
+        # Players add the spectator to their peer table
+        await self.send_to_players(
+            PacketFactory.create_packet(
                 packet_id=PacketList.DO_GAME_GUEST_LIST,
                 spec=spectator,
-                slot=slot_to_test
+                slot=spectate_slot,
+                joined=True
             )
-            # await self.send(specs_list.build())
-            for player in self.get_all_players():
-                if player is not None:
-                    await player.user.send(specs_list.build())
-            return slot_to_test
+        )
+        return spectate_slot
+
+    async def send_to_players(self, packet: "OutPacket"):
+        for player in self.get_all_players():
+            if player is not None:
+                await player.user.send(packet.build())
 
     def is_spectator(self, user: "User") -> bool:
         return user is not None and self.spectators.get(user.room_slot) is user
@@ -506,10 +514,19 @@ class Room:
         if not self.is_spectator(spectator):
             return
 
-        self.spectators[spectator.room_slot] = None
+        old_slot = spectator.room_slot
+        self.spectators[old_slot] = None
         spectator.set_room(None, 0)
-        # TODO: tell the players so they drop the spectator from their peer table.
-        # The DO_GAME_GUEST_LIST removal format still needs to be checked in the client.
+
+        # Players drop the spectator from their peer table
+        await self.send_to_players(
+            PacketFactory.create_packet(
+                packet_id=PacketList.DO_GAME_GUEST_LIST,
+                spec=spectator,
+                slot=old_slot,
+                joined=False
+            )
+        )
 
         if notify:
             leave_packet = PacketFactory.create_packet(packet_id=PacketList.DO_GUEST_JOIN)
