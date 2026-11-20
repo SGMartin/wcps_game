@@ -1,3 +1,4 @@
+import logging
 import random
 from typing import TYPE_CHECKING
 
@@ -446,7 +447,12 @@ class RoomSpectateHandler(PacketHandler):
         # leave = 0 / join = 1
         join_or_leave = int(self.get_block(0))
 
+        # Client format: <join/leave> <room id> <password or NULL>
         if join_or_leave == gconstants.RoomSpectateAction.JOIN:
+            # Already playing or spectating somewhere
+            if user.room is not None:
+                return
+
             room_id = int(self.get_block(1))
 
             this_room = user.this_server.channels[user.channel].rooms[room_id]
@@ -456,9 +462,13 @@ class RoomSpectateHandler(PacketHandler):
                 return
 
             spec_id = await this_room.add_spectator(user)
-            print(f"Assigned spec id {spec_id}")
+            logging.info(f"{user.displayname} spectating room {room_id} in slot {spec_id}")
 
         elif join_or_leave == gconstants.RoomSpectateAction.LEAVE:
-            pass
+            # The client sends the room it is currently spectating
+            if user.room is None or not user.room.is_spectator(user):
+                return
+
+            await user.room.remove_spectator(user)
         else:
             return

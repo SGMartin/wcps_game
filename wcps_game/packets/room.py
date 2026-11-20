@@ -134,13 +134,19 @@ class RoomKick(OutPacket):
 
 
 class RoomSpectate(OutPacket):
-    def __init__(self, room_to_join: "Room", spectate_slot: int):
+    def __init__(self, room_to_join: "Room" = None, spectate_slot: int = 0):
         super().__init__(
             packet_id=PacketList.DO_GUEST_JOIN,
             xor_key=ClientXorKeys.SEND
         )
 
         self.append(corerr.SUCCESS)
+        if room_to_join is None:
+            # Leave confirmation. The client reads <code> <join/leave> and on leave
+            # clears its spectator flag and goes back to the lobby.
+            self.append(0)
+            return
+
         self.append(1)
         self.append(spectate_slot)
         add_room_info_to_packet(self, room_to_join)
@@ -188,18 +194,29 @@ class RoomPlayers(OutPacket):
 
 
 class RoomSpectators(OutPacket):
-    def __init__(self, spec: "User", slot: int):
+    """DO_GAME_GUEST_LIST, sent to the players of the room.
+
+    <code> <mode> then, per spectator: <guest index> <id> <session> <nick> <notice>
+    and, when adding, the UDP endpoints and a flag. Mode 0 removes the spectator from
+    the peer table, 1 adds one, any other value is a count followed by that many
+    entries. The client stores the spectator in peer slot guest index + 32.
+    """
+
+    def __init__(self, spec: "User", slot: int, joined: bool = True):
         super().__init__(
             packet_id=PacketList.DO_GAME_GUEST_LIST,
             xor_key=ClientXorKeys.SEND
         )
         self.append(corerr.SUCCESS)
-        self.append(1)  # TODO: What happens if we have more specs?
-        self.append(slot)  # is this reaaaally the slot?
+        self.append(1 if joined else 0)
+        self.append(slot - 32)  # guest index 0-4
         self.append(spec.session_id)
         self.append(spec.session_id)
-        self.append("0")
-        self.append(999) # rights?
+        self.append(spec.displayname)
+        # Only 3 shows players a "%s is spectating" notice; meaning unknown
+        self.append(999)
+        if not joined:
+            return
         self.append(ip_string_to_long(spec.remote_end_point[0]))
         self.append(spec.remote_port)
         self.append(ip_string_to_long(spec.local_end_point[0]))
