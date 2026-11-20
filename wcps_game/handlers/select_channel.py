@@ -15,6 +15,11 @@ class SelectChannelHandler(PacketHandler):
         if user.authorized:
             target_channel = int(self.get_block(0))
             if target_channel <= ChannelType.BATTLEGROUP:  # min. channel 0 max channel BG
+                # A spectator whose client stayed in the lobby (no spectator view shown) would
+                # otherwise be left in the room and every later room request ignored
+                if user.room is not None and user.room.is_spectator(user):
+                    await user.room.remove_spectator(user, notify=False)
+
                 # Check if the user was previously in any channel
                 if user.channel > 0:
                     await user.this_server.channels[user.channel].remove_user(user)
