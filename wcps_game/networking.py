@@ -1,4 +1,5 @@
 import asyncio
+import os
 import struct
 import socket
 import logging
@@ -72,6 +73,19 @@ class UDPListener:
         self.game_server = server
         self.transport: Optional[asyncio.DatagramTransport] = None
         self.stop_event = asyncio.Event()
+        # Set WCPS_UDP_DEBUG=1 to hex-dump every datagram in/out of this listener
+        self.debug = os.environ.get("WCPS_UDP_DEBUG") == "1"
+
+    def debug_dump(self, direction: str, data: bytes, addr: Tuple[str, int]):
+        if self.debug:
+            logging.info(
+                f"UDP {self.port} {direction} {addr[0]}:{addr[1]} len={len(data)} "
+                f"{bytes(data).hex(' ')}"
+            )
+
+    def send(self, data: bytes, addr: Tuple[str, int]):
+        self.debug_dump("OUT", data, addr)
+        self.transport.sendto(data, addr)
 
     async def start(self):
         """Start the UDP listener on the specified port."""
@@ -96,6 +110,7 @@ class UDPListener:
 
     async def handle_packet(self, packet: bytes, addr: Tuple[str, int]):
         """Handle incoming packets."""
+        self.debug_dump("IN ", packet, addr)
         packet = bytearray(packet)
         type_ = self.to_ushort(packet, 0)
         session_id = self.to_ushort(packet, 4)
@@ -107,7 +122,7 @@ class UDPListener:
 
         if type_ == 0x1001:  # Initial packet
             self.write_ushort(self.port + 1, packet, 4)
-            self.transport.sendto(packet, addr)
+            self.send(packet, addr)
         elif type_ == 0x1010:  # UDP Ping packet
             if packet[14] == 0x21:
                 this_user.local_end_point = self.to_ip_endpoint(packet, 32)
@@ -125,7 +140,7 @@ class UDPListener:
                 self.write_ip_endpoint(
                     endpoint=this_user.local_end_point, data=response, offset=50
                 )
-                self.transport.sendto(response, addr)
+                self.send(response, addr)
 
                 room_id = self.to_ushort(packet, 6)
 
@@ -159,12 +174,12 @@ class UDPListener:
                         and U2.room.id == room_id
                         and U1.room.state == RoomStatus.PLAYING
                     ):
-                        self.transport.sendto(packet, U2.remote_end_point)
+                        self.send(packet, U2.remote_end_point)
 
                         # update spectators too
                         for spec in U1.room.spectators.values():
                             if spec is not None:
-                                self.transport.sendto(packet, spec.remote_end_point)
+                                self.send(packet, spec.remote_end_point)
                     else:
                         logging.error(
                             f"UDP TUNNEL PACKET FAULTY - ROOM DID NOT MATCH SENDER "

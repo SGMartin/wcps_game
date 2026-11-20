@@ -142,7 +142,10 @@ class User(NetworkEntity):
         logging.info("Called disconnect to client")
 
         if self.room:
-            await self.room.remove_player(self)
+            if self.room.is_spectator(self):
+                await self.room.remove_spectator(self, notify=False)
+            else:
+                await self.room.remove_player(self)
         # Call the base class's disconnect for network issues
         await super().disconnect()
 
