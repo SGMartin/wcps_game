@@ -30,11 +30,11 @@ class UserList(OutPacket):
             self.append(this_user.session_id)  # session id
             self.append(this_user.displayname)  # displayname
             self.append(-1)  # clan id
-            self.append(-1)  # clan name
+            self.append(-1)  # clan name (read as a string here)
             self.append(-1)  # clan rank or icon id?
             self.append(-1)  # Clan master = 5. Rank?
-            self.append(0)  # unknown
-            self.append(16)  # unknown
+            self.append(0)  # short, same field as in 0x7500; no client reader found
+            self.append(16)  # short, same field as in 0x7500; no client reader found
             self.append(this_user.xp)  # xp
             self.append(this_user.premium)  # premium
-            self.append(this_user.channel)  # channel ?
+            self.append(this_user.channel)  # same field as the 0x7500 icon flag; not read in the lobby
