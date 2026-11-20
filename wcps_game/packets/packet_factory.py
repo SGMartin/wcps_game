@@ -89,7 +89,7 @@ class PacketFactory:
         PacketList.DO_GAME_UPDATE_DATA: UpdateGameData,
         PacketList.DO_GAME_SCORE: ScoreBoard,
         PacketList.DO_GAME_RESULT: EndGame,
-        PacketList.DO_PROMOTION_OLD: Promotion,
+        PacketList.DO_PROMOTION: Promotion,
 
         # Manual 30000 prebuilt packets
         PacketList.DO_UNIT_REGEN: VehicleSpawn,
