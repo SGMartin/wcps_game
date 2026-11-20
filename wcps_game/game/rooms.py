@@ -241,6 +241,10 @@ class Room:
         player.state = gconstants.RoomStatus.WAITING
         await player.user.send(answer.build())
 
+        # The answer resets the client's room settings to the channel defaults: send the room's own (#87)
+        room_settings = PacketFactory.create_packet(packet_id=PacketList.DO_TYPE_CLICK, room=self)
+        await player.user.send(room_settings.build())
+
         # The lobby shows the room as Playing until every player is back (Room.lobby_state):
         # the last one to come back turns it to Waiting
         await self.notify_lobby()
