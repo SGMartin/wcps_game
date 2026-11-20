@@ -20,12 +20,14 @@ class ManualRoundEnd(OutPacket):
         self.append(PacketList.DO_ROUND_END)
         self.append(0)
         self.append(1)
-        self.append(winning_team)  # Might be for the scoreboard
+        # p0: winning side; the client compares it with its in-game side (DO_GO p2/p3) to pick the
+        # win or lose branch (PF23 0x5f5bd0 case 6). Nothing after p0 is read by that handler.
+        self.append(winning_team)
         self.append(room.current_game_mode.current_round_derbaran())
         self.append(room.current_game_mode.current_round_niu())
-        self.append(5)  # rounds remaining???
+        self.append(5)
         self.append(0)
-        self.append(92)  # WTF
+        self.append(92)
         self.append(-1)
         self.append(0)
         self.append(0)

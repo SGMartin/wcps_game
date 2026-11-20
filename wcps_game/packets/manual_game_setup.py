@@ -21,8 +21,12 @@ class ManualGameSetup(OutPacket):
         self.append(PacketList.DO_GO)
         self.append(0)  # b0
         self.append(0)  # ext: no extended block (it was 1 with nothing after it)
-        self.append(3)  # p0: spawn protection in seconds (the character blinks), overrides the room value
-        self.append(363)  # p1: only written to a client debug log
-        self.append(0)  # p2: side of the first half of the slots
-        self.append(1)  # p3: side of the second half of the slots
+        # p0: spawn protection in seconds, overrides the room value; counted down per frame, the
+        # character blinks while it lasts (PF23 0x4e2a9e, 0x4f264c, 0x4fa693)
+        self.append(3)
+        self.append(363)  # p1: only formatted into a debug string nothing reads (PF23 0x4e2c4f)
+        # p2/p3: in-game side of the slots below / from max_players / 2 (PF23 0x4e29d0). Used for spawn
+        # points, the explosive mission text and ROUND_END. Game mode 1 can set every side to 0.
+        self.append(0)  # p2
+        self.append(1)  # p3
         self.fill(0, 4)  # p4..p7, not read

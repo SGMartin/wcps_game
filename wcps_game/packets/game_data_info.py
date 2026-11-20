@@ -21,14 +21,14 @@ class GameDataInfo(OutPacket):
         for flag in room.flags.values():
             self.append(flag)
 
-        self.append(0)
+        self.append(0)  # index of the game mode 5 key point (PF23 0x4e0cac)
         self.append(room.get_player_count())
 
         players = room.get_all_players()
 
         for player in players:
             self.append(player.id)
-            self.append(-1)  # ??
+            self.append(-1)  # stored, no client reader found
             self.append(player.kills)
             self.append(player.deaths)
             self.append(player.branch)
