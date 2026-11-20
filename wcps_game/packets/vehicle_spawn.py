@@ -11,8 +11,7 @@ class VehicleSpawn(OutPacket):
             xor_key=ClientXorKeys.SEND
         )
 
-        # Most of these bytes are unknown
-        # TODO: research them
+        # The client's UNIT_REGEN handler (0x4e7610) only reads p0; everything after it is ignored
         self.append(1)
         self.append(-1)
         self.append(room.id)
@@ -20,8 +19,10 @@ class VehicleSpawn(OutPacket):
         self.append(PacketList.DO_UNIT_REGEN)
         self.append(0)
         self.append(1)
+        # p0: index in the map's vehicle list. The client respawns that vehicle, reloads its max
+        # health from the vehicle data and prints "<code> has re-spawned" (m54)
         self.append(target_vehicle.id)
-        self.append(500)  # Unknown
+        self.append(500)
         self.append(0)
         self.append(1)
         self.append(0)
@@ -32,7 +33,7 @@ class VehicleSpawn(OutPacket):
         self.append(1090909)
         self.append(-60401)
         self.append(1090909)
-        self.append(target_vehicle.spawn_X)  # Assumed as all of the coords
+        self.append(target_vehicle.spawn_X)  # coords and rotations: not read by the client
         self.append(target_vehicle.spawn_Y)
         self.append(target_vehicle.spawn_Z)
         self.append(target_vehicle.angular_X)

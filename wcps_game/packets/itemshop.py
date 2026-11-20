@@ -20,9 +20,9 @@ class ItemShop(OutPacket):
         else:
             self.append(corerr.SUCCESS)
             self.append(ItemAction.BUY)
-            self.append(-1)  # ??
-            self.append(3)  # ? client version as reported in request time? buy type??
-            self.append(len(user.inventory.item_list))
+            self.append(-1)  # read and not used (0x5faa60)
+            self.append(3)  # must be 2 or 3, otherwise the client drops the packet (0x5faad5)
+            self.append(len(user.inventory.item_list))  # read and not used
             self.append(user.inventory.inventory_string)
             self.append(user.money)
             self.append(user.inventory.get_slot_string())
