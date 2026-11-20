@@ -25,7 +25,7 @@ class PacketList:
     DO_SBI_CHANGE = 0x7900  # Also controls when items expire
     DO_ITEM_PROCESS = 0x7600
     DO_NCASH_PROCESS = 0x7800
-    DO_COUPON = 0x8100  # Id by DarkRaptor
+    DO_COUPON = 0x7910  # Id by DarkRaptor (0x8100 up to PF20; renumbered in PF21)
 
     # Room
     DO_ROOM_LIST = 0x7200
@@ -50,7 +50,9 @@ class PacketList:
     DO_GAME_UPDATE_DATA = 0x7541
     DO_GAME_SCORE = 0x7550
     DO_GAME_RESULT = 0x7560
-    DO_PROMOTION_OLD = 0x8200
+    DO_PROMOTION = 0x7920  # 0x8200 up to PF20 (renumbered in PF21)
+    DO_LEVEL_UP_CONGRATS = 0x7930  # 0x8210 up to PF20: "congratulations!" on level up (client 0x5fe8b0), unused
+    DO_UNKNOWN_7940 = 0x7940  # 0x8300 up to PF20: client request with one integer, never sent (no callers); unused
 
     # Subpackets of DO_GAME_PROCESS
     # Lobby related #

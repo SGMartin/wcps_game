@@ -12,10 +12,12 @@ from wcps_game.packets.packet_list import PacketList, ClientXorKeys
 class Promotion(OutPacket):
     def __init__(self, user: "User", money_earned: int):
         super().__init__(
-            packet_id=PacketList.DO_PROMOTION_OLD,
+            packet_id=PacketList.DO_PROMOTION,
             xor_key=ClientXorKeys.SEND
         )
-        self.append(user.room_slot)
+        # Message format: 0 = rank and grade from the XP below; any other value reads the level as a rank index
+        # (0..17), so the room slot used here showed an unknown rank from level 18 on
+        self.append(0)
         self.append(0)
         self.append(get_level_for_exp(user.xp))
         self.append(user.xp)
