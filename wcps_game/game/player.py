@@ -23,11 +23,15 @@ class Player:
         self.user = user
 
         self.reset_game_state()
+        # A player who has not played a game yet has nothing pending (#63)
+        self.mission_requested = True
 
     def toggle_ready(self):
         self.ready = not self.ready
 
     def reset_game_state(self):
+        # Whether this player sent DO_REQUEST_MISSION (402) in the current game, and whether its back to
+        # room request (9) is waiting for it (#63)
         self.mission_requested = False
         self.back_to_lobby_pending = False
 
@@ -42,10 +46,6 @@ class Player:
         self.bleeding_timer = 0
         self.alive = True
         self.round_waiting = False
-        # Whether this player sent DO_REQUEST_MISSION (402) in the current game, and whether its back to
-        # room request (9) is waiting for it (#63). True for a player who has not played a game yet
-        self.mission_requested = True
-        self.back_to_lobby_pending = False
 
         # game stats
         self.assists = 0
