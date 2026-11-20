@@ -221,7 +221,7 @@ class User(NetworkEntity):
             self.money += reward_money
 
             level_up = PacketFactory.create_packet(
-                packet_id=PacketList.DO_PROMOTION,
+                packet_id=PacketList.DO_PROMOTION_OLD,
                 user=self,
                 money_earned=reward_money
             )
