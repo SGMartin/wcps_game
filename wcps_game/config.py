@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     # ("Reloading 105MM Cannon."): 30 s, as the game had it. artillery_active_time only frees a strike
     # whose end the client never sends
     artillery_active_time: int = 30
+    # Seconds a back-to-room request (subpacket 9) waits for that player's DO_REQUEST_MISSION (#63)
+    back_to_lobby_wait: int = 20
     artillery_cooldown: int = 30
 
     # Global multipliers for money and xp

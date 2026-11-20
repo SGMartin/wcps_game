@@ -5,6 +5,9 @@ from wcps_game.packets.packet_list import PacketList
 
 class GameSetupHandler(GameProcessHandler):
     async def handle(self):
+        # Noted even after the game ended: a back to room answer may be waiting for it (#63)
+        self.player.mission_requested = True
+
         # A client still loading the map can send this after the game has ended. Answering it then
         # used to leave the room loop flag stuck, so the next game had no loop (#40). Ignored, as the
         # 2018 C# server did (Setup.cs: only while Playing).
