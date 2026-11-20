@@ -23,8 +23,6 @@ class Player:
         self.user = user
 
         self.reset_game_state()
-        # A player who has not played a game yet has nothing pending (#63)
-        self.mission_requested = True
 
     def toggle_ready(self):
         self.ready = not self.ready
