@@ -848,8 +848,8 @@ class Room:
             return
 
         for player in self.get_all_players():
-            # Bleeding threshold: 300 = 30 HP (1000 = full). The client shows its warning (m34, or
-            # m986_6 with the compressed bandage) while 0 < health < 300 (0x5f8b80)
+            # Bleeding threshold: 300 (3 in the CP1 HUD, which counts health in hundreds). The client
+            # shows its warning (m34, or m986_6 with the compressed bandage) while 0 < health < 300 (0x5f8b80)
             if not player.alive or player.health > 300:
                 continue
 
