@@ -14,6 +14,7 @@ from wcps_core.constants import ErrorCodes as corerr
 
 from wcps_game.client.maps import MapDatabase
 from wcps_game.client.vehicle_catalogue import VehicleCatalogue
+from wcps_game.config import settings
 from wcps_game.game import constants as gconstants
 from wcps_game.game.player import Player
 from wcps_game.game.ground_item import GroundItem
@@ -196,6 +197,10 @@ class Room:
         if self.state != gconstants.RoomStatus.WAITING:
             return False
 
+        # A player still on the results screen waiting for its back to room answer (#63)
+        if any(player.back_to_lobby_pending for player in self.get_all_players()):
+            return False
+
         # Members-only maps need a master whose premium tier reaches the map's PayType
         required_premium = MapDatabase().get_map_premium(map_id=self.current_map)
         if required_premium is None:  # map not in maps.csv
@@ -230,6 +235,39 @@ class Room:
         await self.notify_lobby()
 
         await self.start()
+
+    async def back_to_lobby(self, player: Player, answer: "OutPacket"):
+        """A player leaves the results screen (subpacket 9): answer it and update the lobby."""
+        player.state = gconstants.RoomStatus.WAITING
+        await player.user.send(answer.build())
+
+        # The lobby shows the room as Playing until every player is back (Room.lobby_state):
+        # the last one to come back turns it to Waiting
+        await self.notify_lobby()
+
+    async def back_to_lobby_after_mission(self, player: Player, answer: "OutPacket"):
+        """#63: the client unloads its map when it gets the answer to 9. If it finished loading but has not
+        sent its 402 yet (the game ended while it was loading), that pending 402 then uses up the one-shot
+        "request mission" flag (PF23 0x940804) with no map left to re-arm it, and the client cannot enter the
+        next game. So the answer waits for that player's 402 (or back_to_lobby_wait seconds)."""
+        player.back_to_lobby_pending = True
+        try:
+            waited = 0.0
+            while not player.mission_requested and waited < settings().back_to_lobby_wait:
+                if player not in self.get_all_players():  # left or disconnected
+                    return
+                await asyncio.sleep(0.25)
+                waited += 0.25
+
+            if player not in self.get_all_players():
+                return
+            if not player.mission_requested:
+                logging.warning(f"Room {self.id}: no mission request from {player.user.username}, "
+                                "answering back to room anyway")
+            await self.back_to_lobby(player, answer)
+        finally:
+            player.back_to_lobby_pending = False
+            await self.check_autostart()
 
     def start_loop(self):
         """Start the room loop (clock, map data, game mode processing, game end checks...) once a

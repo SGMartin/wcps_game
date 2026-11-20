@@ -28,6 +28,10 @@ class Player:
         self.ready = not self.ready
 
     def reset_game_state(self):
+        # Whether this player sent DO_REQUEST_MISSION (402) in the current game, and whether its back to
+        # room request (9) is waiting for it (#63)
+        self.mission_requested = False
+        self.back_to_lobby_pending = False
 
         # game data
         self.health = 1000
