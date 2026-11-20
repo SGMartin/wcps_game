@@ -7,6 +7,10 @@ class SwitchWeaponHandler(GameProcessHandler):
         if not self.player.user.authorized:
             return
 
+        # A dead player has no weapon in hand to switch (only a modified client sends it)
+        if not self.player.alive:
+            return
+
         if self.room.state == RoomStatus.PLAYING:
             self.player.weapon = int(self.get_block(2))
             self.answer = True
