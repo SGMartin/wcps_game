@@ -105,7 +105,8 @@ class BaseGameMode(ABC):
         else:
             radius = 0
         attacker = damage_handler.player
-        victim = damage_handler.room.players[target_id]
+        # A target outside the room slots (only a modified client sends it) used to raise KeyError
+        victim = damage_handler.room.players.get(target_id)
 
         if victim is None:
             return
