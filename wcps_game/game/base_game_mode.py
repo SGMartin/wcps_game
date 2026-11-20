@@ -31,7 +31,7 @@ RPG7_DIRECT_HIT_DAMAGE = 1000
 # Channel limits enforced by the client; a hit outside them means a tampered client
 # Barrett M82, AW50F, flash mine and land mine: UO/BG only (Legacy client, exe group Q)
 NO_CQC_WEAPONS = ("DG02", "DG08", "DS05", "DU02")
-# MK1S and HK69: BG only (original client, 0x4fc900 in PF23)
+# MK1S and HK69: BG only, as in the original client
 BG_ONLY_WEAPONS = ("DT03", "DT04")
 
 

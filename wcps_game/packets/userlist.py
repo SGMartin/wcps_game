@@ -2,8 +2,7 @@ from wcps_core.packets import OutPacket
 
 from wcps_game.packets.packet_list import ClientXorKeys, PacketList
 
-# The client keeps one page of the lobby user list: 10 entries of 0x1a40 bytes (PF20 0xc1bfc8..0xc2c648,
-# PF23 0xc2ffc0..0xc40640). Its reader (PF20 0x4fa7a0, PF23 0x603250) writes each entry to row
+# The client keeps one page of the lobby user list: 10 entries. Its reader writes each entry to row
 # 'index - page * 10' with no bounds check, so a packet must only carry the users of that page.
 USER_LIST_PAGE_SIZE = 10
 

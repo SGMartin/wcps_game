@@ -113,8 +113,8 @@ class DamageMultipliers:
     HEADNECK = 120
     TORSOLIMBS = 60
     FEETHANDS = 30
-    # Upper chest (clavicles, Spine2) or left arm hit by an infantry PSG-1, Barrett M82 or AW50F
-    # (client 0x4ad040 in PF23): the "heart" shot of the beta PSG-1 description
+    # Upper chest (clavicles, Spine2) or left arm hit by an infantry PSG-1, Barrett M82 or AW50F:
+    # the "heart" shot of the beta PSG-1 description
     SNIPERBONE = 150
 
 
@@ -378,7 +378,7 @@ BranchSlotCodes = {
 
 
 class DeathCause:
-    """p1 of DO_SUICIDE 0x9d: the message the client shows (handler PF23 0x4e6d70)."""
+    """p1 of DO_SUICIDE 0x9d: the message the client shows."""
     SUICIDE = 0  # m859 "Suicide"
     BLEEDING = 1  # m62 "killed by not having medical treatment"
     FALL = 2  # m63 "killed by falling from high ground"
@@ -393,7 +393,7 @@ class RoomPingLimit:
     ALL = 2
 
     # Highest ping (ms, exclusive) each limit lets in. The client colours a ping green below 100 ms,
-    # yellow below 175 ms and red from there on (PF20 0x4b3370, PF23 0x4b4c80).
+    # yellow below 175 ms and red from there on.
     MAX_PING = {GREEN: 100, YELLOW: 175}
 
 

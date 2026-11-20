@@ -18,7 +18,7 @@ class HealPlayerHandler(GameProcessHandler):
         target = int(self.get_block(2))
         is_healing_post = bool(int(self.get_block(3)))
 
-        # p2: 0 heal, 1 drowning, 2 adrenaline (client 0x4e4860). 3 (stamina) is only sent by the server
+        # p2: 0 heal, 1 drowning, 2 adrenaline. 3 (stamina) is only sent by the server
         drowning_byte = int(self.get_block(4))
 
         if drowning_byte in (0, 2):

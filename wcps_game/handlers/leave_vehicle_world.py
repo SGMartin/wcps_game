@@ -24,7 +24,7 @@ class LeaveVehicleHandler(PacketHandler):
         coord_Y = float(self.get_block(2))
         coord_Z = float(self.get_block(3))
 
-        # Rotation as a quaternion (qx, qy, qz, qw; client 0x630ad0). Forwarded in the same order in 0x7510
+        # Rotation as a quaternion (qx, qy, qz, qw). Forwarded in the same order in 0x7510
         angle_X = float(self.get_block(4))  # qx
         angle_Y = float(self.get_block(5))  # qy
         angle_Z = float(self.get_block(6))  # qz

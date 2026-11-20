@@ -297,8 +297,7 @@ class RoomLeaveHandler(PacketHandler):
 
 
 class RoomListHandler(PacketHandler):
-    """DO_ROOM_LIST request: <target> <waiting only> <backward> (client builder PF20 0x469114,
-    PF23 0x469590).
+    """DO_ROOM_LIST request: <target> <waiting only> <backward>.
 
     - All rooms (block 1 = 0, the default): block 0 is the page the client wants. Next / previous
       send page+1 / page-1, the SHOW ALL / SHOW AVAIL toggle and /go send page 0 or the page of a room.
