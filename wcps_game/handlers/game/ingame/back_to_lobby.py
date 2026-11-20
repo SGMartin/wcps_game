@@ -1,22 +1,30 @@
+import asyncio
+
+from wcps_core.constants import ErrorCodes as corerr
+
 from wcps_game.game.constants import RoomStatus
 from wcps_game.handlers.packet_handler import GameProcessHandler
+from wcps_game.packets.packet_factory import PacketFactory
+from wcps_game.packets.packet_list import PacketList
 
 
 class BackToLobbyHandler(GameProcessHandler):
     async def handle(self):
-        if self.room.state == RoomStatus.WAITING:
+        if self.room.state != RoomStatus.WAITING:
+            return
 
-            if self.player.state != RoomStatus.WAITING:
-                self.player.state = RoomStatus.WAITING
+        if self.player.state == RoomStatus.WAITING or self.player.back_to_lobby_pending:
+            return
 
-                self.answer = True
-                self.self_target = True
+        # Same answer the generic path builds: the request echoed back to this player only
+        answer = PacketFactory.create_packet(
+            packet_id=PacketList.DO_GAME_PROCESS,
+            blocks=[corerr.SUCCESS, self.room_slot, self.room.id, self.packet.blocks[2], self.sub_packet]
+            + self.blocks,
+        )
 
-                # The lobby shows the room as Playing until every player is back (Room.lobby_state):
-                # the last one to come back turns it to Waiting
-                await self.room.notify_lobby()
-
-                if self.player.user.room is None:
-                    self.player.user.set_room(None, 0)
-
-                    await self.room.channel.send_user_list(self.player.user)
+        if self.player.mission_requested:
+            await self.room.back_to_lobby(self.player, answer)
+        else:
+            # The game ended while this client was loading: wait for its 402 first (#63)
+            asyncio.create_task(self.room.back_to_lobby_after_mission(self.player, answer))
