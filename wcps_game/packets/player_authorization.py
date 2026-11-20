@@ -27,12 +27,12 @@ class PlayerAuthorization(OutPacket):
             self.append(u.session_id)  # user id? Used to be internal id
             self.append(u.session_id)   # session.id
             self.append(u.displayname)  # displayname
-            # clan blocks: id, name (read as a string here), two more ints (0x5fbf60)
+            # clan blocks: id, name (read as a string here), two more ints
             self.fill(-1, 4)
 
             # user stats
             self.append(u.premium)       # premium state
-            self.append(0)       # portal logo: 1..8 draws a sprite of texCPLOGO, 0 = none (0x541a5d)
+            self.append(0)       # portal logo: 1..8 draws a sprite of texCPLOGO, 0 = none
             self.append(0)       # stored, no client reader found
             self.append(get_level_for_exp(u.xp))      # player level
             self.append(u.xp)  # exp
@@ -53,6 +53,6 @@ class PlayerAuthorization(OutPacket):
 
             # inventory (max 31)
             self.append(u.inventory.inventory_string)
-            # The client reads only the first one (no reader found for it) and ignores the second
-            # (0x5fbf60). Two more ints would come first, behind a flag (+0x4e434) the client never sets.
+            # The client reads only the first one (no reader found for it) and ignores the second.
+            # Two more ints would come first, behind a flag the client never sets.
             self.fill(0, 2)

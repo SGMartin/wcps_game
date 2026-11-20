@@ -45,13 +45,13 @@ class PacketList:
     DO_VEHICLE_LEAVE_WORLD = 0x7511  # Named by DarkRaptor. Present in older sources. Maybe it moved
     DO_BOMB_PROCESS = 0x7520
     DO_GAME_PROCESS = 0x7530
-    DO_GAME_LAUNCH_CLOCK = 0x7531  # Auto Start countdown (client handler PF20 0x4ede90, PF23 0x5f7450)
+    DO_GAME_LAUNCH_CLOCK = 0x7531  # Auto Start countdown
     DO_GAME_UPDATE_CLOCK = 0x7540
     DO_GAME_UPDATE_DATA = 0x7541
     DO_GAME_SCORE = 0x7550
     DO_GAME_RESULT = 0x7560
     DO_PROMOTION = 0x7920  # 0x8200 up to PF20 (renumbered in PF21)
-    DO_LEVEL_UP_CONGRATS = 0x7930  # 0x8210 up to PF20: "congratulations!" on level up (client 0x5fe8b0), unused
+    DO_LEVEL_UP_CONGRATS = 0x7930  # 0x8210 up to PF20: "congratulations!" on level up, unused
     DO_UNKNOWN_7940 = 0x7940  # 0x8300 up to PF20: client request with one integer, never sent (no callers); unused
 
     # Subpackets of DO_GAME_PROCESS

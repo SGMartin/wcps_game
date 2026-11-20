@@ -3,7 +3,7 @@ from wcps_game.game.constants import RoomStatus
 
 
 class CaptureFlagHandler(GameProcessHandler):
-    """DO_CONQUEST_CAMP 0x9c. The client (PF23 0x4e0b60) sets flag p0 to owner p1 and picks the message
+    """DO_CONQUEST_CAMP 0x9c. The client sets flag p0 to owner p1 and picks the message
     relative to the local side: p1 < 0 neutralised (m58); p1 = own side and p2 = own side "recaptured"
     (m59); p1 = own side and p2 != own side "secured" (m60); p1 = enemy "captured by the enemy" (m61).
     p2 is the team that owned the flag before it went neutral (or its starting owner)."""
