@@ -27,7 +27,7 @@ class UpdateGameData(OutPacket):
         self.append(len(room.vehicles))
         # Reverse engineered by trial and error in the pserver
         # Most sources expand this part of the packet with more info
-        # The client reads one health per vehicle (PF23 0x5f8980) and applies it by position in the
-        # map's vehicle list, not by id (PF23 0x5f8cd0)
+        # The client reads one health per vehicle and applies it by position in the
+        # map's vehicle list, not by id
         for vehicle in room.vehicles.values():
             self.append(vehicle.health)

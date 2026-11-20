@@ -60,7 +60,7 @@ class RoomCreateError:
 
 
 class RoomJoinError:
-    # Messages from the client's join reply (PF20 0x4e97d5, PF23 0x5f2f20, same table); any other code shows
+    # Messages from the client's join reply (same table in PF20 and PF23); any other code shows
     # m19 "You cannot join"
     GENERIC = 94010              # m19 "You cannot join" (not in the table)
     INVALID_PASSWORD = 94030     # m18 "Invalid Password"

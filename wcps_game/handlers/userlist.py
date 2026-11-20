@@ -15,7 +15,7 @@ class UserListHandler(PacketHandler):
         if not u.authorized:
             return
 
-        # The page the client wants (PF23 0x46b130): its page -1 (min 0) or +1, with no upper limit
+        # The page the client wants: its page -1 (min 0) or +1, with no upper limit
         target_page = max(0, int(self.get_block(0)))
 
         # TODO: filter those that are in the lobby / channel?

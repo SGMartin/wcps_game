@@ -21,7 +21,7 @@ class GameDataInfo(OutPacket):
         for flag in room.flags.values():
             self.append(flag)
 
-        self.append(0)  # index of the game mode 5 key point (PF23 0x4e0cac)
+        self.append(0)  # index of the game mode 5 key point
         self.append(room.get_player_count())
 
         players = room.get_all_players()

@@ -20,6 +20,6 @@ class StartRoomHandler(GameProcessHandler):
         if self.room.can_start():
             await self.room.launch()
         else:
-            # m774 "Not enough players. Cannot start game." (client 0x7530 error table, PF23 0x5f79e0)
+            # m774 "Not enough players. Cannot start game." (client DO_GAME_PROCESS error table)
             self.error_code = RoomKickError.NOT_ENOUGH_PLAYERS
             self.answer = True

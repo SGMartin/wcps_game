@@ -7,7 +7,7 @@ from wcps_game.packets.packet_list import ClientXorKeys, PacketList
 
 
 class ManualVoteKick(OutPacket):
-    """Vote kick result. The client (PF23 0x4e76e0, PF20 0x4e83b0) reads p0 = 2 as the result, p1 = target
+    """Vote kick result. The client reads p0 = 2 as the result, p1 = target
     and compares p3 with a threshold of 80 (60 in CQC) to show the kick. The old layout (b0 = 4, p0 = 0,
     p1 = 0, p3 = 75) read as "vote state 0, target slot 0": the HUD closed but no result was shown."""
 

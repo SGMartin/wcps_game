@@ -6,9 +6,9 @@ from wcps_game.game.constants import Classes, ChannelType, RoomStatus
 
 
 class ArtilleryPhase:
-    REQUEST = 0  # ext = 1, f0..f2 target (client 0x5e5c20)
+    REQUEST = 0  # ext = 1, f0..f2 target
     END = 1  # end / cancel
-    SHELL = 2  # f0..f2 impact, f3..f5 origin, sent three times ~11 s after the request (0x4f6540)
+    SHELL = 2  # f0..f2 impact, f3..f5 origin, sent three times ~11 s after the request
 
 
 class ArtilleryReject:
@@ -17,7 +17,7 @@ class ArtilleryReject:
 
 
 class CallArtilleryHandler(GameProcessHandler):
-    """DO_FIRE_ARTILLERY 0x9f (client handler PF23 0x4e2540). The server keeps one strike per team: a request
+    """DO_FIRE_ARTILLERY 0x9f. The server keeps one strike per team: a request
     is accepted (p1 = 1) or rejected to the requester only (p1 = 0, p2 = in use / reloading). The end and
     the shells are only checked against that active strike: a sniper who dies or changes class during the
     ~11 s wait no longer loses the shells (and the incoming-fire marker no longer stays on)."""

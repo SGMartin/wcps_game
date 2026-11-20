@@ -11,7 +11,7 @@ class Coupon(OutPacket):
         )
 
         self.append(error_code)
-        # Reward type (PF23 0x5f3dd0): 0 Dinar, followed by the new money total; 1 inventory string;
+        # Reward type: 0 Dinar, followed by the new money total; 1 inventory string;
         # 2/3 inventory, slot string and money.
         self.append(0)
         self.append(awarded_dinars)  # new money total: the client replaces its money with it

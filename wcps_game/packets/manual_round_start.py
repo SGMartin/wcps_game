@@ -7,7 +7,7 @@ from wcps_game.packets.packet_list import ClientXorKeys, PacketList
 
 
 class ManualRoundStart(OutPacket):
-    """The client (PF23 0x5f5bd0, case 5) reads p0: the winner of the round just played, compared with the
+    """The client reads p0: the winner of the round just played, compared with the
     local side to replay the round result sound (0xd2 as ROUND_END) and shown as ROUND_END's p0; p1 and p2:
     Derbaran and NIU rounds won. The old layout (from the 2018 C# server) was two fields off: Derbaran
     rounds in ext, NIU rounds in p0."""

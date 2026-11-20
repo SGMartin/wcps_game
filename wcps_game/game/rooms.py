@@ -252,7 +252,7 @@ class Room:
     async def back_to_lobby_after_mission(self, player: Player, answer: "OutPacket"):
         """#63: the client unloads its map when it gets the answer to 9. If it finished loading but has not
         sent its 402 yet (the game ended while it was loading), that pending 402 then uses up the one-shot
-        "request mission" flag (PF23 0x940804) with no map left to re-arm it, and the client cannot enter the
+        "request mission" flag with no map left to re-arm it, and the client cannot enter the
         next game. So the answer waits for that player's 402 (or back_to_lobby_wait seconds)."""
         player.back_to_lobby_pending = True
         try:
@@ -910,7 +910,7 @@ class Room:
         if not self.votekick.running:
             return
 
-        # The rule of the client (PF23 0x4e76e0, PF20 0x4e83b0): the result carries the percentage of YES
+        # The rule of the client: the result carries the percentage of YES
         # votes and the client shows the kick from 80% (60% in CQC). The voters are the target's team
         # without the target, who cannot vote in their own favour.
         votes_to_kick = len(self.votekick.get_positive_votes())
@@ -929,7 +929,7 @@ class Room:
 
         for player in self.get_all_players():
             # Bleeding threshold: 300 (3 in the CP1 HUD, which counts health in hundreds). The client
-            # shows its warning (m34, or m986_6 with the compressed bandage) while 0 < health < 300 (PF23 0x5f8b80)
+            # shows its warning (m34, or m986_6 with the compressed bandage) while 0 < health < 300
             if not player.alive or player.health > 300:
                 continue
 
