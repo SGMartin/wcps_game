@@ -213,7 +213,7 @@ class RoomSpectators(OutPacket):
         self.append(spec.session_id)
         self.append(spec.session_id)
         self.append(spec.displayname)
-        # Only 3 shows players a "%s is spectating" notice; meaning unknown
+        # Only 3 makes players store a "%s is spectating" notice (never drawn in PF23)
         self.append(999)
         if not joined:
             return

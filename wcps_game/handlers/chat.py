@@ -92,6 +92,10 @@ class ChatHandler(PacketHandler):
                 if user.room.state != RoomStatus.PLAYING:
                     return
 
+                # Spectators have no team
+                if user.room.is_spectator(user):
+                    return
+
                 this_user_team = user.room.get_player_team(user.room_slot)
 
                 if this_user_team is None:
