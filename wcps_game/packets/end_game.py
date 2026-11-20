@@ -34,12 +34,13 @@ class EndGame(OutPacket):
                 niu_kills += player.kills
                 niu_deaths += player.deaths
 
+        # Team totals in the order the client reads them: kills D/N, deaths D/N, team score D/N
         self.append(derbaran_kills)
-        self.append(derbaran_deaths)
         self.append(niu_kills)
+        self.append(derbaran_deaths)
         self.append(niu_deaths)
-        self.append(0)
-        self.append(0)
+        self.append(room.current_game_mode.scoreboard_derbaran())
+        self.append(room.current_game_mode.scoreboard_niu())
         self.append(len(players))
 
         for player in players:
