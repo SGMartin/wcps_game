@@ -24,12 +24,11 @@ class LeaveVehicleHandler(PacketHandler):
         coord_Y = float(self.get_block(2))
         coord_Z = float(self.get_block(3))
 
-        angle_X = float(self.get_block(4))
-        angle_Y = float(self.get_block(5))
-        angle_Z = float(self.get_block(6))
-
-        # Unsure
-        turret_angle = float(self.get_block(7))
+        # Rotation as a quaternion (qx, qy, qz, qw; client 0x630ad0). Forwarded in the same order in 0x7510
+        angle_X = float(self.get_block(4))  # qx
+        angle_Y = float(self.get_block(5))  # qy
+        angle_Z = float(self.get_block(6))  # qz
+        turret_angle = float(self.get_block(7))  # qw
 
         update_string = self.get_block(8)
 
@@ -42,7 +41,8 @@ class LeaveVehicleHandler(PacketHandler):
         target_vehicle = user.room.vehicles.get(vehicle_id)
 
         if target_vehicle is None:
-            logging.error(f"Failed to get coords for vehicle {target_vehicle}")
+            logging.error(f"Failed to get coords for vehicle {vehicle_id}")
+            return
 
         target_vehicle.update_position({"X": coord_X, "Y": coord_Y, "Z": coord_Z})
         target_vehicle.update_angles({"X": angle_X, "Y": angle_Y, "Z": angle_Z})

@@ -94,6 +94,8 @@ class Room:
         self.votekick = VoteKick(self)  # always instanciate a new votekick object just in case
         self.ground_items = {}
         self.flags = {}
+        self.flag_last_owner = {}  # team that last owned each flag (for the "recaptured" message)
+        self.artillery = {}  # per team: {"owner": Player, "active_until": t, "cooldown_until": t}
         self.spawn_flags = {}
         self.vehicles = {}
 
@@ -660,6 +662,8 @@ class Room:
         # Remember that in conquest we flush spawn flags so this better be ready
         self.flags[self.spawn_flags[gconstants.Team.DERBARAN]] = gconstants.Team.DERBARAN
         self.flags[self.spawn_flags[gconstants.Team.NIU]] = gconstants.Team.NIU
+        self.flag_last_owner = dict(self.flags)
+        self.artillery = {}
 
         # Populate the vehicle dictionary if needed
         vehicle_catalogue = VehicleCatalogue()
