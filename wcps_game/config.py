@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     game_time_limit: int = 3600
     # Time to wait until unused vehicles are killed and reset
     unused_vehicle_time: int = 600
+    # Artillery (BG): one strike per team at a time (not one per map). Reload time after a strike ends
+    # ("Reloading 105MM Cannon."): 30 s, as the game had it. artillery_active_time only frees a strike
+    # whose end the client never sends
+    artillery_active_time: int = 30
+    artillery_cooldown: int = 30
 
     # Global multipliers for money and xp
     global_xp_rate: int = 1

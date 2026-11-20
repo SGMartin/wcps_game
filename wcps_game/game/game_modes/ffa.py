@@ -82,7 +82,8 @@ class FFA(BaseGameMode):
                 await self.room.end_game(gconstants.Team.NONE)
 
     async def on_flag_capture(self, player, flag_status):
-        raise NotImplementedError
+        # The client sends 0x9c in any non-CQC mode if the map has flags; nothing to count here
+        pass
 
     async def on_suicide(self, player):
         pass

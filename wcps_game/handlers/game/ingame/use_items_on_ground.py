@@ -21,16 +21,17 @@ class UseGroundItemHandler(GameProcessHandler):
         if this_item is None:
             return
 
-        success = await self.room.ground_items[item_id].activate()
-
-        if not success:  # Possible concurrent access or lag. Do nothing
-            return
-
         self_target = self.player == this_item.owner
         self_team = self.player.team == this_item.owner.team
 
-        # No FF for flash or land but it should be possible lol >)
+        # No FF for flash or land mines. Checked before activate(): a teammate stepping on one used to use it
+        # up silently, so it stayed armed on screen but never exploded for an enemy
         if (self_target or self_team) and this_item.code in ["DU02", "DS05"]:
+            return
+
+        success = await self.room.ground_items[item_id].activate()
+
+        if not success:  # Possible concurrent access or lag. Do nothing
             return
 
         if this_item.code == "DU01" and not self_target and self_team:
@@ -56,5 +57,6 @@ class UseGroundItemHandler(GameProcessHandler):
             if not self_target and self_team:
                 await this_item.owner.add_assists(assists=3)
 
+        self.set_block(3, self.player.id)  # p1: who triggers it, the sender (not trusted from the packet)
         self.set_block(6, self.player.health)
         self.answer = True
