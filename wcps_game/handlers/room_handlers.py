@@ -150,7 +150,7 @@ class RoomCreateHandler(PacketHandler):
                 )
                 await user_to_update.send(update_packet.build())
 
-    async def send_generic_error(user: "User"):
+    async def send_generic_error(self, user: "User"):
         error_packet = PacketFactory.create_packet(
             packet_id=PacketList.ROOM_CREATE, error_code=RoomCreateError.GENERIC
         )
