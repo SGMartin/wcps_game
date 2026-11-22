@@ -125,10 +125,12 @@ class DamageTypes:
     SHIP = 3
 
 
-class DamageDistances:
-    SHORT = 0
+class ArmorType:
+    """ARMORTYPE of a vehicle in items.bin. Picks which of the three numbers of a weapon's
+    TARGET_INFO line applies (they are not short/mid/long range). Soldiers use LIGHT."""
+    LIGHT = 0
     MEDIUM = 1
-    LONG = 2
+    HEAVY = 2
 
 
 class ItemAction:
