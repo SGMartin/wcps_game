@@ -52,7 +52,7 @@ def get_exp_for_level(level: int) -> int:
 
 
 def get_level_for_exp(exp: int) -> int:
-    if exp > EXPTABLE[-1]:
+    if exp >= EXPTABLE[-1]:
         return 100
     else:
         for lvl, required_exp in enumerate(EXPTABLE):
