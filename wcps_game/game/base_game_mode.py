@@ -86,7 +86,7 @@ class BaseGameMode(ABC):
     async def on_flag_capture(self, player, flag_status):
         pass
 
-    async def handle_explosives(self, player) -> bool:
+    async def handle_explosives(self, player, bomb_site: int) -> bool:
         return False
 
     async def get_spawn_id(self) -> int:

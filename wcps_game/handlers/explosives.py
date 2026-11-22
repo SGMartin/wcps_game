@@ -47,7 +47,9 @@ class ExplosivesHandler(PacketHandler):
             if user.room.game_mode != GameMode.EXPLOSIVE:
                 return
 
-            should_answer = await user.room.current_game_mode.handle_explosives(player=this_player)
+            should_answer = await user.room.current_game_mode.handle_explosives(
+                player=this_player, bomb_site=bomb_site
+            )
 
             if should_answer:
                 explosives = PacketFactory.create_packet(
