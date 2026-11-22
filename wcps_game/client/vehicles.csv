@@ -1,4 +1,4 @@
-name,code,health,seat_id,weapon_code,weapon_ammo,weapon_magazine,armor_type,armor
+name,code,health,seat_id,weapon_code,weapon_ammo,weapon_magazine,seat_weapon_armor_type,armor
 FIXED_CAL50,EA01,3000,0,FB01,30000,0,0,0
 FIXED_TOW,EA02,3000,0,FJ01,16,1,1,1
 FIXED_OERLIKON,EB01,10000,0,FD01,30000,0,1,1
