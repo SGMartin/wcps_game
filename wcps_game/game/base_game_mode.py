@@ -89,7 +89,6 @@ class BaseGameMode(ABC):
 
         weapon_code = damage_handler.get_block(22)
         # Blocks 14-16 are where the shot landed on the victim, not where the shooter stood.
-        # The packet carries no shooter position, so damage never depends on distance.
 
         if is_radius_damage:
             radius = hitbox_location
