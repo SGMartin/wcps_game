@@ -97,9 +97,16 @@ class Explosive(BaseGameMode):
         # The client sends 0x9c in any non-CQC mode if the map has flags; nothing to count here
         pass
 
-    async def handle_explosives(self, player) -> bool:
+    async def handle_explosives(self, player, bomb_site: int) -> bool:
+        # Every Explosive map has two bomb sites, 0 and 1
+        if bomb_site not in (0, 1):
+            return False
 
         if player.team == gconstants.Team.DERBARAN:
+            # A second plant would restart the bomb countdown
+            if self.bomb_planted:
+                return False
+
             # TODO: statistics here
             player.bombs_planted += 1
             self.bomb_planted = True
@@ -107,7 +114,7 @@ class Explosive(BaseGameMode):
             self.room.down_ticks = settings().explosive_bomb_time * 1000
             return True
         else:
-            if self.bomb_planted:
+            if self.bomb_planted and not self.bomb_defused:
                 player.bombs_defused += 1
                 self.bomb_defused = True
                 return True
