@@ -107,6 +107,7 @@ class Explosive(BaseGameMode):
             if self.bomb_planted:
                 return False
 
+            # TODO: statistics here
             player.bombs_planted += 1
             self.bomb_planted = True
 
