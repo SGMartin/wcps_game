@@ -193,7 +193,7 @@ class BaseGameMode(ABC):
                 damage_type=DamageTypes.INFANTRY,
                 hitbox=None,
                 percent=percent,
-                apply_target_coef=False,
+                apply_armor_multiplier=False,
             )
         else:
             # Direct hit (e.g. the Humvee Cal.50): block 11 is 0 and the bone group travels
@@ -305,7 +305,7 @@ class BaseGameMode(ABC):
 
         # A weapon whose number against this armor is 0 cannot hurt the vehicle: a real client
         # does not even send the hit
-        if self.target_coef(weapon_code, vehicle_class, vehicle.armor) == 0:
+        if self.armor_multiplier(weapon_code, vehicle_class, vehicle.armor) == 0:
             logging.warning(
                 f"{attacker.user.displayname} hit vehicle {vehicle.code} (armor {vehicle.armor})"
                 f" with {weapon_code}, which cannot damage it"
@@ -428,22 +428,30 @@ class BaseGameMode(ABC):
         can_be_damaged = True
         return can_be_damaged
 
-    def target_coef(
-        self, weapon: str, damage_type: int, armor: int = ArmorType.LIGHT
+    def armor_multiplier(
+        self, weapon: str, target_class: int, armor: int = ArmorType.LIGHT
     ) -> float:
-        """Share of the weapon's POWER that its TARGET_INFO gives against this target.
+        """How much of the weapon's POWER reaches a target with this armor (0.0 to 1.0+).
 
-        The line (PERSONAL, SURFACE, AIR, SHIP) comes from the target type and, inside it, the
-        target's armor picks one of the three numbers (soldiers: LIGHT). The client never sends
-        the distance, so the three numbers are not short / mid / long range.
+        Every weapon has a TARGET_INFO line per target class (PERSONAL, SURFACE, AIR, SHIP)
+        with three numbers: the damage % against light, medium and heavy armor.
+        Soldiers always count as light armor.
+
+        Example: Barrett, SURFACE = 50,20,0 -> Humvee (light) 0.5, K200 (medium) 0.2,
+        K1A1 (heavy) 0.
         """
-        is_vehicle_weapon = weapon[0] == "F"  # items settings in items-bin defines this
-        coefs = ItemDatabase().get_weapon_damage_class(
-            code=weapon, damage_class=damage_type, is_vehicle=is_vehicle_weapon
+        is_vehicle_weapon = weapon.startswith("F")
+        percent_by_armor = ItemDatabase().get_weapon_damage_class(
+            code=weapon, damage_class=target_class, is_vehicle=is_vehicle_weapon
         )
-        if not coefs or not 0 <= armor < len(coefs):
+
+        # Unknown weapon or armor outside 0..2: the client gives 0 too
+        if percent_by_armor is None or armor not in (
+            ArmorType.LIGHT, ArmorType.MEDIUM, ArmorType.HEAVY
+        ):
             return 0
-        return coefs[armor] / 100
+
+        return percent_by_armor[armor] / 100
 
     def damage_calculator(
         self,
@@ -452,14 +460,14 @@ class BaseGameMode(ABC):
         hitbox: int,
         percent: int,
         armor: int = ArmorType.LIGHT,
-        apply_target_coef: bool = True,
+        apply_armor_multiplier: bool = True,
     ):
         """Damage of one hit.
 
         percent: block 11 of the damage packet on a blast or against a vehicle, the % of the
         damage that reaches the target (100 on a direct hit or at the centre of a blast). 0 means
         a direct hit on a soldier, which uses the bone in hitbox.
-        apply_target_coef: False when the client has already applied TARGET_INFO to percent
+        apply_armor_multiplier: False when the client has already applied TARGET_INFO to percent
         (blasts from vehicle weapons hitting soldiers).
         """
         item_database = ItemDatabase()
@@ -471,13 +479,13 @@ class BaseGameMode(ABC):
         weapon_power = item_database.get_weapon_power(
             code=weapon, is_vehicle=is_vehicle_weapon
         )
-        if apply_target_coef:
-            damage_type = self.target_coef(weapon, damage_type, armor)
+        if apply_armor_multiplier:
+            armor_multiplier = self.armor_multiplier(weapon, damage_type, armor)
         else:
-            damage_type = 1
+            armor_multiplier = 1
 
         if percent > 0 or not hitbox:  # blast, or any hit on a vehicle
-            damage_taken = weapon_power * (percent / 100) * damage_type
+            damage_taken = weapon_power * (percent / 100) * armor_multiplier
         else:
             # Hitbox
             bone_multipliers = {
@@ -487,7 +495,7 @@ class BaseGameMode(ABC):
                 HitboxBone.SNIPERBONE: DamageMultipliers.SNIPERBONE,
             }
             bone_coef = bone_multipliers[hitbox] / 100
-            damage_taken = weapon_power * damage_type * bone_coef
+            damage_taken = weapon_power * armor_multiplier * bone_coef
 
         final_damage = round(damage_taken)
         return final_damage
