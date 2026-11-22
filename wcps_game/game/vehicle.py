@@ -3,9 +3,17 @@ from wcps_game.game.constants import Team, VehicleClass
 
 
 class Vehicle():
-    def __init__(self, health: int, code: str, vehicle_class: VehicleClass = VehicleClass.GROUND):
+    def __init__(
+        self,
+        health: int,
+        code: str,
+        vehicle_class: VehicleClass = VehicleClass.GROUND,
+        armor: int = 0,
+    ):
 
         self.type = vehicle_class
+        # ARMORTYPE (0 light, 1 medium, 2 heavy): which TARGET_INFO number hurts this vehicle
+        self.armor = armor
         self.seats = {}
         self.code = code
         self.max_health = self.health = health

@@ -50,8 +50,10 @@ class VehicleCatalogue:
                 veh_code[1], VehicleClass.GROUND
             )
 
+            armor = int(vehicle_df["armor"].values[0])
+
             this_vehicle = Vehicle(
-                health=health, code=veh_code, vehicle_class=vehicle_class
+                health=health, code=veh_code, vehicle_class=vehicle_class, armor=armor
             )
 
             # Create seats and weapons
