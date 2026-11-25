@@ -79,7 +79,7 @@ class BaseGameMode(ABC):
     async def on_flag_capture(self, player, flag_status):
         pass
 
-    async def handle_explosives(self, player) -> bool:
+    async def handle_explosives(self, player, bomb_site: int) -> bool:
         return False
 
     async def get_spawn_id(self) -> int:
@@ -93,6 +93,7 @@ class BaseGameMode(ABC):
         hitbox_location = int(damage_handler.get_block(11))
 
         weapon_code = damage_handler.get_block(22)
+        # Blocks 14-16 are where the shot landed on the victim, not where the shooter stood.
 
         if is_radius_damage:
             percent = hitbox_location
