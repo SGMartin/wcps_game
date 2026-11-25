@@ -23,6 +23,10 @@ from wcps_game.game.constants import (
 from wcps_game.client.items import ItemDatabase
 from wcps_game.packets.packet_list import PacketList
 
+# Rocket launchers (Panzerfaust, RPG-7, Javelin, Stinger). When the rocket hits a soldier
+# squarely, the client sends a single direct hit with a fixed torso bone and no blast
+ROCKET_TYPES = (WeaponTypes.ANTITANK_WEAPON, WeaponTypes.GROUND_TO_AIR_WEAPON)
+
 
 class BaseGameMode(ABC):
     def __init__(self, id: int, name: str):
@@ -145,12 +149,23 @@ class BaseGameMode(ABC):
 
         is_headshot = (bone_id == HitboxBone.HEADNECK) and can_headhot
 
-        damage_taken = self.damage_calculator(
-            weapon=weapon_code,
-            damage_type=DamageTypes.INFANTRY,
-            hitbox=bone_id,
-            percent=percent,
-        )
+        if not is_radius_damage and self.is_rocket(weapon_code):
+            # A rocket that hits a soldier squarely counts as the centre of its blast
+            # (POWER x PERSONAL), not as a bullet in the torso: otherwise a direct hit would do
+            # less than a near miss
+            damage_taken = self.damage_calculator(
+                weapon=weapon_code,
+                damage_type=DamageTypes.INFANTRY,
+                hitbox=None,
+                percent=100,
+            )
+        else:
+            damage_taken = self.damage_calculator(
+                weapon=weapon_code,
+                damage_type=DamageTypes.INFANTRY,
+                hitbox=bone_id,
+                percent=percent,
+            )
         await self.damage_player(
             handler=damage_handler,
             attacker=attacker,
@@ -196,13 +211,14 @@ class BaseGameMode(ABC):
                 apply_armor_multiplier=False,
             )
         else:
-            # Direct hit (e.g. the Humvee Cal.50): block 11 is 0 and the bone group travels
-            # elsewhere, so use the torso
+            # Direct hit: machine guns like the Humvee Cal.50 send no bone in block 11, and
+            # cannon shells and missiles that hit a soldier squarely send a fixed torso bone and
+            # no blast. No bone multiplier: POWER x PERSONAL, the same as the centre of a blast
             damage_taken = self.damage_calculator(
                 weapon=weapon_code,
                 damage_type=DamageTypes.INFANTRY,
-                hitbox=HitboxBone.TORSOLIMBS,
-                percent=0,
+                hitbox=None,
+                percent=100,
             )
         await self.damage_player(
             handler=handler,
@@ -499,6 +515,9 @@ class BaseGameMode(ABC):
 
         final_damage = round(damage_taken)
         return final_damage
+
+    def is_rocket(self, weapon: str) -> bool:
+        return weapon[0] == "D" and weapon[1] in ROCKET_TYPES
 
     def is_projectile_weapon(self, weapon: str) -> bool:
 
