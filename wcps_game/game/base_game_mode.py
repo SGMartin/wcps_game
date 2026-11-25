@@ -14,7 +14,7 @@ from wcps_game.game.constants import (
     HitboxBone,
     DamageTypes,
     DamageMultipliers,
-    DamageDistances,
+    ArmorType,
     DefaultWeapon,
     EquipmentWeaponTypes,
     Team,
@@ -22,6 +22,10 @@ from wcps_game.game.constants import (
 )
 from wcps_game.client.items import ItemDatabase
 from wcps_game.packets.packet_list import PacketList
+
+# Rocket launchers (Panzerfaust, RPG-7, Javelin, Stinger). When the rocket hits a soldier
+# squarely, the client sends a single direct hit with a fixed torso bone and no blast
+ROCKET_TYPES = (WeaponTypes.ANTITANK_WEAPON, WeaponTypes.GROUND_TO_AIR_WEAPON)
 
 
 class BaseGameMode(ABC):
@@ -85,14 +89,15 @@ class BaseGameMode(ABC):
         is_player = bool(int(damage_handler.get_block(2)))
         target_id = int(damage_handler.get_block(3))
         is_radius_damage = bool(int(damage_handler.get_block(10)))
+        # Bone on a direct hit; on a blast, the % of damage that reaches the victim
         hitbox_location = int(damage_handler.get_block(11))
 
         weapon_code = damage_handler.get_block(22)
 
         if is_radius_damage:
-            radius = hitbox_location
+            percent = hitbox_location
         else:
-            radius = 0
+            percent = 0
         attacker = damage_handler.player
         # A target outside the room slots (only a modified client sends it) used to raise KeyError
         victim = damage_handler.room.players.get(target_id)
@@ -144,13 +149,23 @@ class BaseGameMode(ABC):
 
         is_headshot = (bone_id == HitboxBone.HEADNECK) and can_headhot
 
-        damage_taken = self.damage_calculator(
-            weapon=weapon_code,
-            damage_type=DamageTypes.INFANTRY,
-            hitbox=bone_id,
-            distance=0,  # TODO,
-            radius=radius,
-        )
+        if not is_radius_damage and self.is_rocket(weapon_code):
+            # A rocket that hits a soldier squarely counts as the centre of its blast
+            # (POWER x PERSONAL), not as a bullet in the torso: otherwise a direct hit would do
+            # less than a near miss
+            damage_taken = self.damage_calculator(
+                weapon=weapon_code,
+                damage_type=DamageTypes.INFANTRY,
+                hitbox=None,
+                percent=100,
+            )
+        else:
+            damage_taken = self.damage_calculator(
+                weapon=weapon_code,
+                damage_type=DamageTypes.INFANTRY,
+                hitbox=bone_id,
+                percent=percent,
+            )
         await self.damage_player(
             handler=damage_handler,
             attacker=attacker,
@@ -179,23 +194,32 @@ class BaseGameMode(ABC):
         if not self.can_be_damaged(attacker, victim, weapon_code):
             return
 
-        # most vehicles use radius calc. even for machine guns but just in case handle everything
-        damage_taken = 0
+        # Whether the client sends a blast or a direct hit depends on the weapon's EFFECTRANGE:
+        # most vehicle weapons blast, even machine guns like the miniguns or the 25 mm, while the
+        # Cal.50 or the M60 (EFFECTRANGE 1) send direct hits. Handle both
+        is_radius = bool(int(handler.get_block(10)))
+        percent = int(handler.get_block(11))
 
-        # is_radius = bool(int(handler.get_block(10)))
-
-        # Vehicles do not use bones, but may set is_radius to FALSE. Use a default bone
-        radius = int(handler.get_block(11))
-        bone_id = HitboxBone.TORSOLIMBS
-
-        # If radius is 0, it will use the bone_id
-        damage_taken = self.damage_calculator(
-            weapon=weapon_code,
-            damage_type=DamageTypes.INFANTRY,
-            hitbox=bone_id,
-            distance=0,  # TODO
-            radius=radius,
-        )
+        if is_radius:
+            # Blast from a vehicle weapon (cannon, bomb): the client has already multiplied the
+            # closeness by the weapon's PERSONAL number, so applying it again would halve the hit
+            damage_taken = self.damage_calculator(
+                weapon=weapon_code,
+                damage_type=DamageTypes.INFANTRY,
+                hitbox=None,
+                percent=percent,
+                apply_armor_multiplier=False,
+            )
+        else:
+            # Direct hit: machine guns like the Humvee Cal.50 send no bone in block 11, and
+            # cannon shells and missiles that hit a soldier squarely send a fixed torso bone and
+            # no blast. No bone multiplier: POWER x PERSONAL, the same as the centre of a blast
+            damage_taken = self.damage_calculator(
+                weapon=weapon_code,
+                damage_type=DamageTypes.INFANTRY,
+                hitbox=None,
+                percent=100,
+            )
         await self.damage_player(
             handler=handler,
             attacker=attacker,
@@ -214,7 +238,8 @@ class BaseGameMode(ABC):
         # slot_id = int(handler.get_block(4)) Unused, we use our own data
         is_sub_weapon = bool(int(handler.get_block(9)))
         # is_radius_weapon = bool(int(handler.get_block(10))) Unused
-        radius = int(handler.get_block(11))
+        # How close the hit was: 100 on a direct hit, less on a blast further away
+        percent = int(handler.get_block(11))
 
         weapon_code = handler.get_block(22)
 
@@ -241,9 +266,9 @@ class BaseGameMode(ABC):
             damage_taken = self.damage_calculator(
                 weapon=weapon_code,
                 damage_type=vehicle_class,
-                hitbox=0,  # Vehicles do not have a hitbox AFAIK
-                distance=0,  # TODO
-                radius=radius,
+                hitbox=None,  # Vehicles do not have a hitbox AFAIK
+                percent=percent,
+                armor=vehicle.armor,
             )
         else:  # Vehicle - vehicle combat
             if attacker.vehicle_id == -1:  # artillery strike
@@ -258,12 +283,13 @@ class BaseGameMode(ABC):
                 if not attacker.branch == Classes.SNIPER:
                     return
 
+                weapon_code = "FG02"
                 damage_taken = self.damage_calculator(
-                    weapon="FG02",
+                    weapon=weapon_code,
                     damage_type=vehicle_class,
                     hitbox=None,
-                    distance=0,  # TODO
-                    radius=radius,
+                    percent=percent,
+                    armor=vehicle.armor,
                 )
             else:
                 attacker_vehicle = handler.room.vehicles.get(attacker.vehicle_id)
@@ -289,9 +315,18 @@ class BaseGameMode(ABC):
                     weapon=weapon_code,
                     damage_type=vehicle_class,
                     hitbox=None,
-                    distance=0,  # TODO
-                    radius=radius,
+                    percent=percent,
+                    armor=vehicle.armor,
                 )
+
+        # A weapon whose number against this armor is 0 cannot hurt the vehicle: a real client
+        # does not even send the hit
+        if self.armor_multiplier(weapon_code, vehicle_class, vehicle.armor) == 0:
+            logging.warning(
+                f"{attacker.user.displayname} hit vehicle {vehicle.code} (armor {vehicle.armor})"
+                f" with {weapon_code}, which cannot damage it"
+            )
+            return
 
         await self.damage_vehicle(
             handler=handler,
@@ -409,9 +444,48 @@ class BaseGameMode(ABC):
         can_be_damaged = True
         return can_be_damaged
 
+    def armor_multiplier(
+        self, weapon: str, target_class: int, armor: int = ArmorType.LIGHT
+    ) -> float:
+        """How much of the weapon's POWER reaches a target with this armor (0.0 to 1.0+).
+
+        Every weapon has a TARGET_INFO line per target class (PERSONAL, SURFACE, AIR, SHIP)
+        with three numbers: the damage % against light, medium and heavy armor.
+        Soldiers always count as light armor.
+
+        Example: Barrett, SURFACE = 50,20,0 -> Humvee (light) 0.5, K200 (medium) 0.2,
+        K1A1 (heavy) 0.
+        """
+        is_vehicle_weapon = weapon.startswith("F")
+        percent_by_armor = ItemDatabase().get_weapon_damage_class(
+            code=weapon, damage_class=target_class, is_vehicle=is_vehicle_weapon
+        )
+
+        # Unknown weapon or armor outside 0..2: the client gives 0 too
+        if percent_by_armor is None or armor not in (
+            ArmorType.LIGHT, ArmorType.MEDIUM, ArmorType.HEAVY
+        ):
+            return 0
+
+        return percent_by_armor[armor] / 100
+
     def damage_calculator(
-        self, weapon: str, damage_type: int, hitbox: int, distance: int, radius: int
+        self,
+        weapon: str,
+        damage_type: int,
+        hitbox: int,
+        percent: int,
+        armor: int = ArmorType.LIGHT,
+        apply_armor_multiplier: bool = True,
     ):
+        """Damage of one hit.
+
+        percent: block 11 of the damage packet on a blast or against a vehicle, the % of the
+        damage that reaches the target (100 on a direct hit or at the centre of a blast). 0 means
+        a direct hit on a soldier, which uses the bone in hitbox.
+        apply_armor_multiplier: False when the client has already applied TARGET_INFO to percent
+        (blasts from vehicle weapons hitting soldiers).
+        """
         item_database = ItemDatabase()
         is_vehicle_weapon = weapon[0] == "F"  # items settings in items-bin defines this
 
@@ -421,20 +495,13 @@ class BaseGameMode(ABC):
         weapon_power = item_database.get_weapon_power(
             code=weapon, is_vehicle=is_vehicle_weapon
         )
-        # A list of coefs. for personal/surface/air/ship etc.
-        damage_type_coefs = item_database.get_weapon_damage_class(
-            code=weapon, damage_class=damage_type, is_vehicle=is_vehicle_weapon
-        )
-        # Distance can only be short / mid / long, but the server cannot know it:
-        # DO_DAMAGED_PLAYER carries the shot origin (attacker position) and no
-        # victim position or distance, and in P2P the position updates never
-        # reach the server. The original server most likely did not apply the
-        # mid/long coefficients against infantry either, so SHORT is always used.
-        damage_type = damage_type_coefs[DamageDistances.SHORT] / 100
+        if apply_armor_multiplier:
+            armor_multiplier = self.armor_multiplier(weapon, damage_type, armor)
+        else:
+            armor_multiplier = 1
 
-        if radius > 0 or not hitbox:  # Then it is a radius damage
-            radius_coef = radius / 100
-            damage_taken = weapon_power * radius_coef * damage_type
+        if percent > 0 or not hitbox:  # blast, or any hit on a vehicle
+            damage_taken = weapon_power * (percent / 100) * armor_multiplier
         else:
             # Hitbox
             bone_multipliers = {
@@ -444,10 +511,13 @@ class BaseGameMode(ABC):
                 HitboxBone.SNIPERBONE: DamageMultipliers.SNIPERBONE,
             }
             bone_coef = bone_multipliers[hitbox] / 100
-            damage_taken = weapon_power * damage_type * bone_coef
+            damage_taken = weapon_power * armor_multiplier * bone_coef
 
         final_damage = round(damage_taken)
         return final_damage
+
+    def is_rocket(self, weapon: str) -> bool:
+        return weapon[0] == "D" and weapon[1] in ROCKET_TYPES
 
     def is_projectile_weapon(self, weapon: str) -> bool:
 
