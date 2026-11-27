@@ -1,7 +1,7 @@
 from wcps_game.handlers.packet_handler import GameProcessHandler
 
 from wcps_game.config import settings
-from wcps_game.game.constants import GameMode, RoomStatus, room_time_limit_index
+from wcps_game.game.constants import ChannelType, GameMode, RoomStatus, room_time_limit_index
 from wcps_game.client.maps import MapDatabase
 
 
@@ -21,6 +21,15 @@ class ChangeGameModeHandler(GameProcessHandler):
 
         if new_game_mode < 0:
             new_game_mode = 0
+
+        # CQC team deathmatch is 4 vs 4: only in 8 player rooms. A room's size cannot change once it is
+        # created and CQC rooms start in Explosive, so this is the only way in
+        if (
+            new_game_mode == GameMode.TDM
+            and self.room.channel.type == ChannelType.CQC
+            and self.room.max_players > 8
+        ):
+            return
 
         self.room.game_mode = new_game_mode
 
