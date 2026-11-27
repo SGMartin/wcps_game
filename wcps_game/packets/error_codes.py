@@ -46,6 +46,11 @@ class ItemShopError:
     CANNOT_BUY_TWICE = 97090    # You cannot purchase the item twice.
 
 
+class ItemDestroyError:
+    # The client only checks for success (1): anything else shows m_itemdelete_4
+    FAILED = 0
+
+
 class CouponError:
     SUCCESS = 0
     ALREADY_USED = -1
