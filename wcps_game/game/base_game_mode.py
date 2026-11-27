@@ -121,6 +121,20 @@ class BaseGameMode(ABC):
             logging.error(f"Weapon {weapon_code} is not yet implemented")
             return
 
+        # Blocks 5 and 7 carry the weapon's client number. The victim's client works the damage out
+        # from that number, not from the code or from the health the server sends back: if the number
+        # belongs to another weapon, each side takes a different amount off, and sooner or later the
+        # server kills a player whose client is still alive. That player then plays on as a ghost,
+        # with every hit refused. Real clients always send the matching number, so refuse the rest.
+        weapon_numbers = (int(damage_handler.get_block(5)), int(damage_handler.get_block(7)))
+        if any(item_database.weapon_code(number) != weapon_code for number in weapon_numbers):
+            logging.error(
+                f"{attacker.user.displayname} sent a {weapon_code} hit with weapon numbers "
+                f"{weapon_numbers}, which belong to "
+                f"{[item_database.weapon_code(number) for number in weapon_numbers]}"
+            )
+            return
+
         if (
             not attacker.user.inventory.has_item(weapon_code)
             and weapon_code not in DefaultWeapon.DEFAULTS
