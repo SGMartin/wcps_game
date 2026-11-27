@@ -1,5 +1,5 @@
 from wcps_game.handlers.packet_handler import GameProcessHandler
-from wcps_game.game.constants import RoomStatus
+from wcps_game.game.constants import GameMode, RoomStatus
 
 
 class UseGroundItemHandler(GameProcessHandler):
@@ -22,7 +22,9 @@ class UseGroundItemHandler(GameProcessHandler):
             return
 
         self_target = self.player == this_item.owner
-        self_team = self.player.team == this_item.owner.team
+        # FFA keeps the slot teams (first half of the slots Derbaran), but there everyone else is an enemy:
+        # boxes give no assists, and mines and flashes go off for anyone but their owner
+        self_team = self.player.team == this_item.owner.team and self.room.game_mode != GameMode.FFA
 
         # No FF for flash or land mines. Checked before activate(): a teammate stepping on one used to use it
         # up silently, so it stayed armed on screen but never exploded for an enemy
