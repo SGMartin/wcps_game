@@ -1,7 +1,7 @@
 from wcps_game.handlers.packet_handler import GameProcessHandler
 
 from wcps_game.config import settings
-from wcps_game.game.constants import GameMode, Premium, RoomStatus, room_time_limit_index
+from wcps_game.game.constants import ChannelType, GameMode, Premium, RoomStatus, room_time_limit_index
 from wcps_game.client.maps import MapDatabase
 
 # Modes an F2P room master can choose; FFA and Conquest need premium
@@ -28,6 +28,15 @@ class ChangeGameModeHandler(GameProcessHandler):
         # Premium modes: an F2P master may only pick the modes the client allows them.
         # The client already blocks the others, so this is a defensive check with no answer.
         if self.player.user.premium < Premium.BRONZE and new_game_mode not in F2P_GAME_MODES:
+            return
+
+        # CQC team deathmatch is 4 vs 4: only in 8 player rooms. A room's size cannot change once it is
+        # created and CQC rooms start in Explosive, so this is the only way in
+        if (
+            new_game_mode == GameMode.TDM
+            and self.room.channel.type == ChannelType.CQC
+            and self.room.max_players > 8
+        ):
             return
 
         self.room.game_mode = new_game_mode
