@@ -24,6 +24,7 @@ class PacketList:
     DO_BITEM_CHANGE = 0x7512
     DO_SBI_CHANGE = 0x7900  # Also controls when items expire
     DO_ITEM_PROCESS = 0x7600
+    DO_ITEM_DESTROY = 0x7610
     DO_NCASH_PROCESS = 0x7800
     DO_COUPON = 0x8100  # Id by DarkRaptor
 
