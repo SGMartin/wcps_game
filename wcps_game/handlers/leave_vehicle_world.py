@@ -9,9 +9,20 @@ from wcps_game.game.constants import RoomStatus
 from wcps_game.handlers.packet_handler import PacketHandler
 
 """
-This handler handles packet 29969. Not all sources have it. It is sent right after you
-answer to the usual LeaveVehicle subpacket for packet 30000. It seems to report the vehicle
-coordinates so that the room can keep them stored for a full game update packet later.
+DO_VEHICLE_LEAVE_WORLD (0x7511): where a vehicle has come to rest, so the server can place it for
+players who join a running match (DO_GDATA_INFO, 0x7510).
+
+The client sends it once after its player gets out, when the vehicle has stopped moving (until then
+it keeps sending the UDP vehicle packet); at once when its player is killed inside; and before leaving
+the room while still in a vehicle.
+
+  0      vehicle id
+  1-3    position of the hull's body (its centre of mass), in the vehicle packets' units: map units / 20
+  4-7    rotation of the hull as a quaternion (x, y, z, w)
+  8      wheel suspension, "@" plus one character per wheel (see Vehicle.update_string)
+  9-16   eight int16: turn and elevation (radians x 360) of up to four turrets
+
+The vehicle's health is not in it: it travels apart.
 """
 
 
@@ -24,13 +35,13 @@ class LeaveVehicleHandler(PacketHandler):
         coord_Y = float(self.get_block(2))
         coord_Z = float(self.get_block(3))
 
-        # Rotation as a quaternion (qx, qy, qz, qw). Forwarded in the same order in 0x7510
-        angle_X = float(self.get_block(4))  # qx
-        angle_Y = float(self.get_block(5))  # qy
-        angle_Z = float(self.get_block(6))  # qz
-        turret_angle = float(self.get_block(7))  # qw
+        rotation = [float(self.get_block(block)) for block in range(4, 8)]
 
         update_string = self.get_block(8)
+
+        # Every client sends the eight turret values; keep the stored ones if a packet comes without them
+        has_turrets = len(self.in_packet.blocks) >= 17
+        turrets = [int(self.get_block(block)) for block in range(9, 17)] if has_turrets else None
 
         if user.room is None:
             return
@@ -45,6 +56,7 @@ class LeaveVehicleHandler(PacketHandler):
             return
 
         target_vehicle.update_position({"X": coord_X, "Y": coord_Y, "Z": coord_Z})
-        target_vehicle.update_angles({"X": angle_X, "Y": angle_Y, "Z": angle_Z})
-        target_vehicle.turret_angle = turret_angle
+        target_vehicle.update_rotation(*rotation)
         target_vehicle.update_string = update_string
+        if turrets is not None:
+            target_vehicle.turrets = turrets

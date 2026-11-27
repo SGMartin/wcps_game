@@ -37,20 +37,22 @@ class CollisionDamageHandler(GameProcessHandler):
 
                 # Now wipe every player seat
                 for seat in target_vehicle.seats.values():
-                    if seat.player is None:
+                    # Kept apart: the death frees the seat (seat.player becomes None)
+                    occupant = seat.player
+                    if occupant is None:
                         continue
 
-                    if seat.player.health <= 0:
+                    if occupant.health <= 0:
                         continue
 
-                    await seat.player.add_deaths()
-                    await self.room.current_game_mode.on_suicide(seat.player)
+                    await occupant.add_deaths()
+                    await self.room.current_game_mode.on_suicide(occupant)
 
                     # The crash packet's p1 (0xc) is no death cause the client knows: no message
                     occupant_death = PacketFactory.create_packet(
                         packet_id=PacketList.DO_SUICIDE,
                         room=self.room,
-                        player=seat.player,
+                        player=occupant,
                         suicide_type=DeathCause.VEHICLE,
                         out_of_map_limits=False,
                     )

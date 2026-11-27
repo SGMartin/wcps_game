@@ -36,9 +36,9 @@ class VehicleSpawn(OutPacket):
         self.append(target_vehicle.spawn_X)  # coords and rotations: not read by the client
         self.append(target_vehicle.spawn_Y)
         self.append(target_vehicle.spawn_Z)
-        self.append(target_vehicle.angular_X)
-        self.append(target_vehicle.angular_Y)
-        self.append(target_vehicle.angular_Z)
+        self.append(target_vehicle.rotation_x)
+        self.append(target_vehicle.rotation_y)
+        self.append(target_vehicle.rotation_z)
         self.append(0)
         self.append(0)
         self.append(target_vehicle.code)
