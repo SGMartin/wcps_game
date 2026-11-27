@@ -269,7 +269,9 @@ class GameServer(NetworkEntity):
             reader=reader,
             writer=writer,
             xor_key_send=InternalKeys.XOR_GAME_SEND,
-            xor_key_receive=InternalKeys.XOR_AUTH_SEND
+            xor_key_receive=InternalKeys.XOR_AUTH_SEND,
+            # This is our link to auth: auth greets us, we do not greet it
+            send_greeting=False,
             )
 
         # Network data
