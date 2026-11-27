@@ -15,6 +15,7 @@ from wcps_game.handlers.chat import ChatHandler
 from wcps_game.handlers.userlist import UserListHandler
 from wcps_game.handlers.equipment import EquipmentHandler
 from wcps_game.handlers.itemshop import ItemShopHandler
+from wcps_game.handlers.item_destroy import ItemDestroyHandler
 from wcps_game.handlers.coupon import CouponHandler
 from wcps_game.handlers.room_handlers import (
     RoomCreateHandler,
@@ -48,6 +49,7 @@ HANDLER_MAP = {
     # Shop
     PacketList.DO_BITEM_CHANGE: EquipmentHandler,
     PacketList.DO_ITEM_PROCESS: ItemShopHandler,
+    PacketList.DO_ITEM_DESTROY: ItemDestroyHandler,
     PacketList.DO_COUPON: CouponHandler,
     # Room
     PacketList.ROOM_CREATE: RoomCreateHandler,
