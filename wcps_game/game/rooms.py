@@ -455,7 +455,33 @@ class Room:
                             await user.send(room_update.build())
                     break
 
+        if this_player is not None:
+            await self.fit_ffa_map_to_players()
+
         return this_player
+
+    async def fit_ffa_map_to_players(self):
+        """FFA rooms play small maps up to 8 players and medium ones from 9 on (see MapDatabase). When a
+        player joins or leaves across that line, the room moves to the first map of the new size by id,
+        as the original did: the 9th player brought the room to Harbor Ida. The client only warns about
+        it (m953/m954), so the server tells the room as if the master had picked the map."""
+        if self.game_mode != gconstants.GameMode.FFA or self.state != gconstants.RoomStatus.WAITING:
+            return
+
+        map_database = MapDatabase()
+        scale = MapDatabase.ffa_scale_for_players(self.get_player_count())
+        if map_database.get_ffa_scale(self.current_map) == scale:
+            return
+
+        self.current_map = map_database.get_first_ffa_map(scale)
+
+        map_change = PacketFactory.create_packet(
+            packet_id=PacketList.DO_GAME_PROCESS,
+            blocks=[corerr.SUCCESS, self.master_slot, self.id, 2, PacketList.DO_MAP_CLICK,
+                    1, 0, self.current_map, 0, 0, 0, 0, 0, 0, 0],
+        )
+        await self.send(map_change.build())
+        await self.notify_lobby()
 
     async def add_spectator(self, spectator: "User"):
         """Add a spectator in the first free slot (32-36).
@@ -661,6 +687,7 @@ class Room:
         await self.send(room_leave)
 
         if self.get_player_count() > 0:
+            await self.fit_ffa_map_to_players()
             # The player count changed, and if they were the last one on the results screen the room
             # is back to Waiting. Covers the leave button and a disconnect alike.
             await self.notify_lobby()

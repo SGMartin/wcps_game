@@ -1,6 +1,6 @@
 from wcps_game.handlers.packet_handler import GameProcessHandler
 
-from wcps_game.game.constants import RoomStatus
+from wcps_game.game.constants import GameMode, RoomStatus
 from wcps_game.client.maps import MapDatabase
 
 
@@ -24,14 +24,20 @@ class ChangeMapHandler(GameProcessHandler):
         available_channels = map_database.get_map_channels(map_id=new_map)
         available_modes = map_database.get_map_modes(map_id=new_map)
 
-        # Map inactive or not available for this channel
-        # TODO: some of this stuff may be cheating. Log it
-        if not is_active or not available_channels[this_room_channel]:
+        if not is_active:
             return
 
-        # Map mode is invalid
-        if not available_modes[this_room_mode]:
-            return
+        if this_room_mode == GameMode.FFA:
+            # The client's FFA selector looks only at the map's size against the players in the room,
+            # not at the channel: a full CQC room moves to the medium maps, which are UO maps
+            scale = MapDatabase.ffa_scale_for_players(self.room.get_player_count())
+            if map_database.get_ffa_scale(map_id=new_map) != scale:
+                return
+        else:
+            # Map not available for this channel or mode
+            # TODO: some of this stuff may be cheating. Log it
+            if not available_channels[this_room_channel] or not available_modes[this_room_mode]:
+                return
 
         self.room.current_map = new_map
 

@@ -156,3 +156,23 @@ class MapDatabase:
             max_flags = self._maps.loc[self._maps["map_id"] == map_id, "flags"].values[0]
 
         return max_flags
+
+    # FFA maps come in two sizes, the FFA "Scale" of the client's MapInfo (column "ffa"): small (8), the CQC
+    # maps, and medium (16), four UO maps kept with no vehicles for this. The client's map selector offers
+    # small maps while the room has up to 8 players and medium ones from 9 on, whatever the room's channel.
+    FFA_SMALL = 8
+    FFA_MEDIUM = 16
+
+    @classmethod
+    def ffa_scale_for_players(cls, player_count: int) -> int:
+        return cls.FFA_SMALL if player_count < 9 else cls.FFA_MEDIUM
+
+    def get_ffa_scale(self, map_id: int) -> int:
+        """FFA size of the map (8 or 16), 0 if it has no FFA."""
+        rows = self._maps.loc[self._maps["map_id"] == map_id, "ffa"]
+        return int(rows.values[0]) if len(rows) else 0
+
+    def get_first_ffa_map(self, scale: int) -> int:
+        """Active FFA map of this size with the lowest id: where the room goes when it changes size."""
+        maps = self._maps.loc[(self._maps["ffa"] == scale) & (self._maps["active"]), "map_id"]
+        return int(maps.min())
