@@ -74,12 +74,12 @@ class FFA(BaseGameMode):
         return self.b_spawn_point
 
     async def on_death(self, killer, victim):
-        if killer is not None:
-            if killer.kills > self.current_winner_kills:
-                self.current_winner_kills = killer.kills
-
-            if self.current_winner_kills >= self.max_kills:
-                await self.room.end_game(gconstants.Team.NONE)
+        # Only the count: the room loop ends the match when is_goal_reached() sees the limit, as in the
+        # other modes. Ending it here too raced the loop: both calls got past the PLAYING check while the
+        # first waited on the players' database writes, every reward was paid twice and the second call
+        # failed building the result on a room without a game mode
+        if killer is not None and killer.kills > self.current_winner_kills:
+            self.current_winner_kills = killer.kills
 
     async def on_flag_capture(self, player, flag_status):
         # The client sends 0x9c in any non-CQC mode if the map has flags; nothing to count here
