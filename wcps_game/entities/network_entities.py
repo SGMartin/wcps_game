@@ -3,6 +3,8 @@ import logging
 
 from wcps_core.packets import PacketBuffer, Connection
 
+from wcps_game.packets.packet_list import PacketList
+
 
 class NetworkEntity:
     def __init__(
@@ -41,7 +43,7 @@ class NetworkEntity:
 
                 for packet in incoming_packets.packet_stack:
 
-                    if packet.packet_id != 25600:
+                    if packet.packet_id != PacketList.DO_KEEPALIVE:  # one per user every ping round
                         logging.info(f"IN:: {packet.decoded_buffer}")
 
                     handler = self.get_handler_for_packet(packet.packet_id)
