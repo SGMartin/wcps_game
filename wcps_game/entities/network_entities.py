@@ -3,6 +3,8 @@ import logging
 
 from wcps_core.packets import PacketBuffer, Connection
 
+from wcps_game.packets.packet_list import PacketList
+
 
 class NetworkEntity:
     def __init__(
@@ -18,69 +20,102 @@ class NetworkEntity:
         self.xor_key_receive = xor_key_receive
         self.authorized = False
         self.session_id = -1
+        # Set the first time disconnect() runs: the cleanup happens once, and nothing is sent after it
+        self.disconnected = False
 
         self._connection = Connection(xor_key=self.xor_key_send).build()
         asyncio.create_task(self.send(self._connection))
         asyncio.create_task(self.listen())
 
     async def listen(self):
-        while True:
-            try:
+        try:
+            while not self.disconnected:
                 data = await self.reader.read(1024)
-                if not data:
-                    await self.disconnect()
+                if not data:  # end of stream: the peer is gone, or drop() closed the connection
                     break
 
                 incoming_packets = PacketBuffer(
                     buffer=data, receptor=self, xor_key=self.xor_key_receive
                 )
-                if incoming_packets.decoded_buffer:
-                    for packet in incoming_packets.packet_stack:
-
-                        if packet.packet_id != 25600:
-                            logging.info(f"IN:: {packet.decoded_buffer}")
-
-                        handler = self.get_handler_for_packet(packet.packet_id)
-                        if handler:
-                            asyncio.create_task(handler.handle(packet))
-                        else:
-                            logging.error(
-                                f"Unknown handler for packet {packet.packet_id}"
-                            )
-                else:
+                if not incoming_packets.decoded_buffer:
                     logging.error(f"Cannot decrypt packet {incoming_packets}")
-                    await self.disconnect()
                     break
 
-            except ConnectionResetError as e:
-                logging.error(f"Connection reset by peer: {e}")
-                await self.disconnect()
-                break
-            except asyncio.CancelledError:
-                logging.info("Task was cancelled")
-                break
-            except Exception as e:
-                logging.exception(f"Unexpected error while processing packet: {e}")
-                await self.disconnect()
-                break
+                for packet in incoming_packets.packet_stack:
+
+                    if packet.packet_id != PacketList.DO_KEEPALIVE:  # one per user every ping round
+                        logging.info(f"IN:: {packet.decoded_buffer}")
+
+                    handler = self.get_handler_for_packet(packet.packet_id)
+                    if handler:
+                        asyncio.create_task(handler.handle(packet))
+                    else:
+                        logging.error(
+                            f"Unknown handler for packet {packet.packet_id}"
+                        )
+
+        except asyncio.CancelledError:
+            logging.info("Task was cancelled")
+            raise
+        except ConnectionResetError as e:
+            logging.warning(f"Connection reset by peer: {e}")
+        except Exception as e:
+            logging.exception(f"Unexpected error while processing packet: {e}")
+
+        # The only place where a lost connection is cleaned up, in this entity's own task
+        await self.disconnect()
 
     async def send(self, buffer):
+        writer = self.writer
+        if self.disconnected or writer is None or writer.is_closing():
+            return
+
         try:
-            self.writer.write(buffer)
-            await self.writer.drain()
+            writer.write(buffer)
+            await writer.drain()
         except Exception as e:
-            logging.exception(f"Error sending packet: {e}")
-            await self.disconnect()
+            logging.warning(f"Error sending packet, dropping the connection: {e}")
+            self.drop()
+
+    def drop(self):
+        """Close the connection without cleaning up here.
+
+        The send may come from another entity's task (a room broadcast) that holds a room lock;
+        disconnecting from there would wait for that same lock forever. Closing the transport ends
+        listen(), which then runs disconnect() in this entity's own task.
+        """
+        writer = self.writer
+        if writer is not None and not writer.is_closing():
+            writer.close()
 
     async def disconnect(self):
+        if self.disconnected:
+            return
+        self.disconnected = True
+
         try:
-            self.writer.close()
-            await self.writer.wait_closed()  # Ensure the writer is closed properly
-        except ConnectionResetError:
-            # The connection has already been reset by the peer; no action needed
-            logging.warning("Attempted to close already reset connection.")
+            await self.on_disconnect()
         except Exception as e:
-            logging.exception(f"Error during disconnection: {e}")
+            logging.exception(f"Error cleaning up after disconnection: {e}")
+
+        await self.close_connection()
+
+    async def on_disconnect(self):
+        """What to clean up when the connection ends. Runs once, before the connection is closed."""
+        pass
+
+    async def close_connection(self):
+        writer = self.writer
+        if writer is None:
+            return
+
+        try:
+            writer.close()
+            await writer.wait_closed()
+        except (ConnectionResetError, BrokenPipeError):
+            pass  # already closed by the peer
+        except Exception as e:
+            logging.warning(f"Error closing the connection: {e}")
 
     def get_handler_for_packet(self, packet_id: int):
         raise NotImplementedError("Subclasses must implement this method.")

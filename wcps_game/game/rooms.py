@@ -592,10 +592,11 @@ class Room:
             return
 
         async with self._players_lock:
-            if self.players.get(user.room_slot) is None:
+            # Checked again under the lock: a leave request and a disconnect can both get here, and
+            # once the first one is done the user's slot is 0, which may be someone else's
+            old_player = self.players.get(user.room_slot)
+            if user.room is not self or old_player is None or old_player.user is not user:
                 return
-
-            old_player = self.players[user.room_slot]
 
             # Are we playing and is he in a vehicle?
             if old_player.vehicle_id != -1:
@@ -647,17 +648,17 @@ class Room:
                         await self.destroy()
                         logging.error(f"Could not find a new master for room {self.id}")
 
-            # Finally, send the room leave packet
             room_leave = PacketFactory.create_packet(
                 packet_id=PacketList.DO_EXIT_ROOM,
                 user=user,
                 room=self,
                 old_slot=old_player.id,
-            )
-            # Send it to the user
-            await user.send(room_leave.build())
-            # Send it to the rest of the room
-            await self.send(room_leave.build())
+            ).build()
+
+        # Sent once the lock is released: nothing waits on the network while holding it
+        # To the user (skipped if it is disconnecting) and to the rest of the room
+        await user.send(room_leave)
+        await self.send(room_leave)
 
         if self.get_player_count() > 0:
             # The player count changed, and if they were the last one on the results screen the room

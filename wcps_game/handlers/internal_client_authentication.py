@@ -29,8 +29,8 @@ class AuthorizeClientHandler(PacketHandler):
         this_user = await server.get_player(reported_user)
 
         if not this_user:
+            # Gone before auth answered (or never listed): nobody to answer or disconnect
             logging.error(f"Unknown player to authorize {reported_user}")
-            this_user.disconnect()
         else:
             # TODO: implement update in the future if needed
             if error_code == ErrorCodes.SUCCESS or error_code == ErrorCodes.UPDATE:
