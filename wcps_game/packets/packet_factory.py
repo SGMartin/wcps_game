@@ -12,6 +12,7 @@ from wcps_game.packets.userlist import UserList
 from wcps_game.packets.equipment import Equipment
 from wcps_game.packets.update_inventory import UpdateInventory
 from wcps_game.packets.itemshop import ItemShop
+from wcps_game.packets.item_destroy import ItemDestroy
 from wcps_game.packets.coupon import Coupon
 from wcps_game.packets.use_px_item import UsePXItem
 from wcps_game.packets.select_channel import SelectChannel
@@ -65,6 +66,7 @@ class PacketFactory:
         PacketList.DO_BITEM_CHANGE: Equipment,
         PacketList.DO_SBI_CHANGE: UpdateInventory,
         PacketList.DO_ITEM_PROCESS: ItemShop,
+        PacketList.DO_ITEM_DESTROY: ItemDestroy,
         PacketList.DO_NCASH_PROCESS: UsePXItem,
         PacketList.DO_COUPON: Coupon,
         # Room
