@@ -109,16 +109,24 @@ class Player:
         self.points += 1  # Vanilla WR otherwise the scoreboard bugs?
         self.bleeding_timer = 0
         await self.user.stats.update_deaths(deaths=1)
+        # A dead player frees its seat at once. Before, only the client's death confirmation or its own
+        # get-out packet did, and a client that sent neither kept the seat for the rest of the match: a
+        # cal.50 whose gunner died stayed unusable for everyone. The vehicle id and seat stay on the player
+        # until one of those packets arrives, so they are still answered as before
+        await self.free_vehicle_seat()
 
-    # TODO: We can reset more stuff here. Called on confirm death
-    async def reset_vehicle_status(self):
-        # Free the seat too: if the ALIGHT of this death arrives later, vehicle_leave rejects it (we are no
-        # longer in a vehicle) and the seat would stay taken until the vehicle resets
+    async def free_vehicle_seat(self):
         room = self.user.room
         if self.vehicle_id != -1 and room is not None:
             vehicle = room.vehicles.get(self.vehicle_id)
             if vehicle is not None:
                 await vehicle.leave_vehicle(self)
+
+    # TODO: We can reset more stuff here. Called on confirm death
+    async def reset_vehicle_status(self):
+        # Free the seat too: if the ALIGHT of this death arrives later, vehicle_leave rejects it (we are no
+        # longer in a vehicle) and the seat would stay taken until the vehicle resets
+        await self.free_vehicle_seat()
         self.vehicle_id = -1
         self.vehicle_seat = -1
 

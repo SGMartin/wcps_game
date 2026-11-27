@@ -415,10 +415,12 @@ class BaseGameMode(ABC):
                 )
 
                 for seat in vehicle.seats.values():
-                    if seat.player is not None:
+                    # Kept apart: the death frees the seat (seat.player becomes None)
+                    occupant = seat.player
+                    if occupant is not None:
 
                         # Maybe dead from AW50F and failed to update?
-                        if seat.player.health <= 0:
+                        if occupant.health <= 0:
                             continue
 
                         death_handler = get_subhandler_for_packet(
@@ -427,11 +429,11 @@ class BaseGameMode(ABC):
 
                         asyncio.create_task(
                             death_handler.process(
-                                user=seat.player.user, in_packet=handler.packet
+                                user=occupant.user, in_packet=handler.packet
                             )
                         )
                         await attacker.add_kills()
-                        await self.on_death(killer=attacker, victim=seat.player)
+                        await self.on_death(killer=attacker, victim=occupant)
 
             # Finally, destroy the vehicle
             handler.sub_packet = PacketList.DO_UNIT_DIE
