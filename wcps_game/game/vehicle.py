@@ -26,20 +26,30 @@ class Vehicle():
         self.spawn_time = None
         self.team = Team.NONE
 
-        # Coordinates for the vehicle position
+        # Where the vehicle is, as the client last reported it at rest (DO_VEHICLE_LEAVE_WORLD), so that
+        # players who join a running match see it there. Position of the hull's body (its centre of
+        # mass), in the units of the vehicle packets: map units / 20
         self.spawn_X = self.X = 0
         self.spawn_Y = self.Y = 0
         self.spawn_Z = self.Z = 0
-        self.turret_angle = 0  # Unused?
 
-        # Euler
-        # TODO: get default euler from file
-        self.angular_X = 0
-        self.angular_Y = 0
-        self.angular_Z = 0
-        # WarRock client stuff. It changes when a player leaves the veh. and we update the
-        # position and euler
+        # Rotation of the hull, as a quaternion (x, y, z, w)
+        # TODO: get the spawn rotation from the map
+        self.rotation_x = 0
+        self.rotation_y = 0
+        self.rotation_z = 0
+        self.rotation_w = 0
+
+        # How pressed each wheel's suspension is: "@" followed by one character per wheel, its value x 512
+        # (0-255), the same byte the UDP vehicle packet carries per wheel. The text ends at the first wheel
+        # at 0, and a space or control character in it travels as 0x1d. A joining client ignores the "@"
+        # and sets the wheels from the rest. It has nothing to do with damage.
+        # Empty while nobody has got out of the vehicle: then it is not sent to joiners and its abandon
+        # timer does not run.
         self.update_string = ""
+
+        # Turn and elevation of up to four turrets, radians x 360, in the order the client sends them
+        self.turrets = [0] * 8
 
         self._vehicle_lock = asyncio.Lock()
 
@@ -62,10 +72,11 @@ class Vehicle():
         self.Y = coords["Y"]
         self.Z = coords["Z"]
 
-    def update_angles(self, euler: dict):
-        self.angular_X = euler["X"]
-        self.angular_Y = euler["Y"]
-        self.angular_Z = euler["Z"]
+    def update_rotation(self, x: float, y: float, z: float, w: float):
+        self.rotation_x = x
+        self.rotation_y = y
+        self.rotation_z = z
+        self.rotation_w = w
 
     async def reset(self):
         self.health = self.max_health
@@ -80,7 +91,8 @@ class Vehicle():
         self.X = self.spawn_X
         self.Y = self.spawn_Y
         self.Z = self.spawn_Z
-        self.turret_angle = 0
+        self.update_rotation(0, 0, 0, 0)
+        self.turrets = [0] * 8
 
         # Empty seats and recharge weapons
         for seat in self.seats.values():
