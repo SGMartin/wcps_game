@@ -22,6 +22,10 @@ class ChangeGameModeHandler(GameProcessHandler):
         if new_game_mode < 0:
             new_game_mode = 0
 
+        # FFA is a CQC mode: the client only runs its FFA rules (map sizes) in CQC rooms
+        if new_game_mode == GameMode.FFA and self.room.channel.type != ChannelType.CQC:
+            return
+
         # CQC team deathmatch is 4 vs 4: only in 8 player rooms. A room's size cannot change once it is
         # created and CQC rooms start in Explosive, so this is the only way in
         if (
@@ -35,10 +39,16 @@ class ChangeGameModeHandler(GameProcessHandler):
 
         # Get the first map available for this mode
         map_database = MapDatabase()
-        map_for_mode = map_database.get_first_map_for_mode(
-            game_mode=new_game_mode,
-            channel=self.room.channel.type
+        if new_game_mode == GameMode.FFA:
+            # FFA: by size, small or medium for the players in the room
+            map_for_mode = map_database.get_first_ffa_map(
+                MapDatabase.ffa_scale_for_players(self.room.get_player_count())
             )
+        else:
+            map_for_mode = map_database.get_first_map_for_mode(
+                game_mode=new_game_mode,
+                channel=self.room.channel.type
+                )
         self.room.current_map = map_for_mode
 
         cqc_rounds = self.room.rounds_setting if self.room.game_mode == GameMode.EXPLOSIVE else 0
