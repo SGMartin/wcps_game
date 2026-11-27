@@ -53,28 +53,27 @@ class TDM(BaseGameMode):
             await self.room.end_game(gconstants.Team.NIU)
 
     def is_goal_reached(self):
-        if self.derbaran_tickets == 0 or self.niu_tickets == 0:
-            return True
+        return self.derbaran_tickets <= 0 or self.niu_tickets <= 0
+
+    def take_ticket(self, team):
+        # Never below 0: two deaths between two room loop passes used to leave a side at -1, which
+        # "== 0" missed (the match ran on until the time limit) and the scoreboard showed
+        if team == gconstants.Team.DERBARAN:
+            self.derbaran_tickets = max(0, self.derbaran_tickets - 1)
         else:
-            return False
+            self.niu_tickets = max(0, self.niu_tickets - 1)
 
     async def on_death(self, killer, victim):
-        if victim.team == gconstants.Team.DERBARAN:
-            self.derbaran_tickets -= 1
-        else:
-            self.niu_tickets -= 1
+        self.take_ticket(victim.team)
 
     async def on_suicide(self, player):
-        if player.team == gconstants.Team.DERBARAN:
-            self.derbaran_tickets -= 1
-        else:
-            self.niu_tickets -= 1
+        self.take_ticket(player.team)
 
     async def on_flag_capture(self, player, flag_status):
-        if player.team == gconstants.Team.DERBARAN:
-            self.niu_tickets -= 1
-        else:
-            self.derbaran_tickets -= 1
+        other_team = (
+            gconstants.Team.NIU if player.team == gconstants.Team.DERBARAN else gconstants.Team.DERBARAN
+        )
+        self.take_ticket(other_team)
 
     def current_round_derbaran(self):
         return 0
