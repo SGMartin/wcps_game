@@ -138,38 +138,51 @@ class User(NetworkEntity):
         can_load = await self.inventory.get_inventory_and_equipment_from_db()
         return can_load
 
-    async def disconnect(self):
-        logging.info("Called disconnect to client")
+    async def on_disconnect(self):
+        logging.info(f"Disconnecting {self.username or 'unauthenticated client'}")
 
-        if self.room:
-            if self.room.is_spectator(self):
-                await self.room.remove_spectator(self, notify=False)
-            else:
-                await self.room.remove_player(self)
-        # Call the base class's disconnect for network issues
-        await super().disconnect()
+        # Each step on its own: one failing must not leave the user on the server (login refused
+        # with 72030) or in a room nobody can remove it from
+        room = self.room
+        if room is not None:
+            try:
+                if room.is_spectator(self):
+                    await room.remove_spectator(self, notify=False)
+                else:
+                    await room.remove_player(self)
+            except Exception as e:
+                logging.exception(f"Error removing {self.username} from room {room.id}: {e}")
 
-        self.reader = None
-        self.writer = None
+        was_authorized = self.authorized
+        self.authorized = False
 
-        if self.authorized:
-            self.authorized = False
+        if was_authorized:
             try:
                 # TODO: improve leave server routine including mysql queries
                 await self.this_server.channels[self.channel].remove_user(self)
-                await self.this_server.remove_player(self)
+            except Exception as e:
+                logging.exception(f"Error removing {self.username} from channel {self.channel}: {e}")
+
+        # Also for users who never finished logging in: they are listed from the login request on
+        if self.username:
+            try:
+                await self.this_server.remove_player(self, notify_auth=was_authorized)
             except Exception as e:
                 logging.exception(f"Error removing player {self.username}: {e}")
 
     # TODO: Do we need a lock here?
     async def send_ping(self):
+        if self.disconnected:
+            return
+
         if not self.is_updated_ping:
             self.ping_retries += 1
             logging.warning(f"Ping attempt {self.ping_retries}/{self.max_ping_retries} failed for {self.username}")
 
             if self.ping_retries >= self.max_ping_retries:
                 logging.error(f"User {self.username} exceeded maximum ping attempts. Disconnecting.")
-                await self.disconnect()
+                # Cleaned up by its own listen task, not by the server loop that pings everyone
+                self.drop()
 
             return
         else:
@@ -298,8 +311,16 @@ class GameServer(NetworkEntity):
                 raise Exception(f"User {u.username} already exists")
             self.online_users[u.username] = u
 
-    async def remove_player(self, user: User):
+    async def remove_player(self, user: User, notify_auth: bool = True):
         async with self.lock:
+            # Only this connection: a login refused for the same name must not remove the live user
+            if self.online_users.get(user.username) is user:
+                del self.online_users[user.username]
+                logging.info(f"Removed player {user.username}")
+            else:
+                logging.warning(f"User {user.username} was not online")
+
+        if notify_auth:
             # Tell the auth server to flush the session
             internal_player_leave = PacketFactory.create_packet(
                 packet_id=PacketList.INTERNAL_PLAYER_AUTHENTICATION,
@@ -309,11 +330,6 @@ class GameServer(NetworkEntity):
                 rights=user.rights
             )
             await self.send(internal_player_leave.build())
-            if user.username in self.online_users:
-                del self.online_users[user.username]
-                logging.info(f"Removed player {user.username}")
-            else:
-                raise Exception(f"User {user.username} does not exist")
 
     async def is_online(self, username) -> bool:
         async with self.lock:
