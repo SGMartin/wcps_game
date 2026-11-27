@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 from wcps_core.constants import ErrorCodes
 from wcps_core.packets import OutPacket
 
-from wcps_game.game.constants import Team
+from wcps_game.game.constants import GameMode, Team
 from wcps_game.packets.packet_list import PacketList, ClientXorKeys
 
 
@@ -18,8 +18,17 @@ class EndGame(OutPacket):
         )
 
         self.append(ErrorCodes.SUCCESS)
-        self.append(room.current_game_mode.current_round_derbaran())
-        self.append(room.current_game_mode.current_round_niu())
+        # The client's "win/lose" per team. It takes the winner from these two alone: Derbaran if its value
+        # is greater, NIU otherwise, and shows each player "your team won" or "lost" against their own
+        # team. Explosive sends the rounds each team won. The ticket modes have no rounds and used to send
+        # 0 / 0, which made NIU the winner of every match: Derbaran saw "your team lost" after winning.
+        # They now send 1 for the winner and 0 for the loser. The client has no tie: 0 / 0 shows NIU won.
+        if room.game_mode in (GameMode.TDM, GameMode.CONQUEST):
+            self.append(int(winner_team == Team.DERBARAN))
+            self.append(int(winner_team == Team.NIU))
+        else:
+            self.append(room.current_game_mode.current_round_derbaran())
+            self.append(room.current_game_mode.current_round_niu())
 
         derbaran_kills = 0
         niu_kills = 0
