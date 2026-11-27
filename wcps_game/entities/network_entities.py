@@ -13,6 +13,7 @@ class NetworkEntity:
         writer: asyncio.StreamWriter,
         xor_key_send,
         xor_key_receive,
+        send_greeting: bool = True,
     ):
         self.reader = reader
         self.writer = writer
@@ -23,8 +24,10 @@ class NetworkEntity:
         # Set the first time disconnect() runs: the cleanup happens once, and nothing is sent after it
         self.disconnected = False
 
-        self._connection = Connection(xor_key=self.xor_key_send).build()
-        asyncio.create_task(self.send(self._connection))
+        # The side that accepts the connection greets (0x1200); the one that opens it does not
+        if send_greeting:
+            self._connection = Connection(xor_key=self.xor_key_send).build()
+            asyncio.create_task(self.send(self._connection))
         asyncio.create_task(self.listen())
 
     async def listen(self):
